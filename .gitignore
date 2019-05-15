@@ -1,0 +1,10 @@
+bin
+debug
+dep
+obj
+dev-env
+src/glyphs.c
+src/glyphs.h
+.idea
+.vscode
+gitignore
