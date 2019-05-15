@@ -41,4 +41,4 @@ python test_exemple.py --account_number 12345
 ```
 
 ## Documentation
-This follows the specification available in the [`api.asc`](https://github.com/ledgerHQ/ledger-app-boilerplate/doc/api.asc).
+This follows the specification available in the [`api.asc`](https://github.com/LedgerHQ/ledger-app-boilerplate/blob/master/doc/api.asc).
