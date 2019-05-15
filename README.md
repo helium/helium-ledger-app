@@ -13,7 +13,8 @@ install prerequisite and switch to a Nano X dev-env:
 
 ```bash
 sudo apt install python3-venv
-source prepare-devenv.sh x (or s, depending on your device)
+# (x or s, depending on your device)
+source prepare-devenv.sh x 
 ```
 
 Compile and load the app onto the device:
@@ -36,7 +37,8 @@ make delete
 
 Test functionality:
 ```bash
-source prepare-devenv.sh x (or s, depending on your device)
+# (x or s, depending on your device)
+source prepare-devenv.sh x
 python test_exemple.py --account_number 12345
 ```
 
