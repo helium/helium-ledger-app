@@ -39,7 +39,7 @@ Test functionality:
 ```bash
 # (x or s, depending on your device)
 source prepare-devenv.sh x
-python test_exemple.py --account_number 12345
+python test_example.py --account_number 12345
 ```
 
 ## Documentation
