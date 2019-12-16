@@ -192,7 +192,7 @@ unsigned char io_event(unsigned char channel) {
         case SEPROXYHAL_TAG_TICKER_EVENT:
             UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer,
             {
-            #ifndef TARGET_NANOX
+#ifndef TARGET_NANOX
                 if (UX_ALLOWED) {
                     if (ux_step_count) {
                     // prepare next screen
@@ -201,7 +201,7 @@ unsigned char io_event(unsigned char channel) {
                     UX_REDISPLAY();
                     }
                 }
-            #endif // TARGET_NANOX
+#endif // TARGET_NANOX
             });
             break;
     }
@@ -262,13 +262,13 @@ void nv_app_state_init(){
         storage.dummy_setting_1 = 0x00;
         storage.dummy_setting_2 = 0x00;
         storage.initialized = 0x01;
-        nvm_write(&N_storage, (void*)&storage, sizeof(internalStorage_t));
+        nvm_write((internalStorage_t*)&N_storage, (void*)&storage, sizeof(internalStorage_t));
     }
     dummy_setting_1 = N_storage.dummy_setting_1;
     dummy_setting_2 = N_storage.dummy_setting_2;
 }
 
-__attribute__((section(".boot"))) int main(int arg0) {
+__attribute__((section(".boot"))) int main(void) {
     // exit critical section
     __asm volatile("cpsie i");
 

@@ -76,10 +76,12 @@ DEFINES       += HAVE_BAGL_ELLIPSIS # long label truncation feature
 DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_REGULAR_11PX
 DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_EXTRABOLD_11PX
 DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_LIGHT_16PX
-DEFINES		  += HAVE_UX_FLOW
 else
 DEFINES   	  += IO_SEPROXYHAL_BUFFER_SIZE_B=128
 endif
+
+# Both nano S and X benefit from the flow.
+DEFINES       += HAVE_UX_FLOW
 
 # Enabling debug PRINTF
 DEBUG = 0
