@@ -29,9 +29,10 @@ static unsigned int ui_signTxn_approve_button(unsigned int button_mask, unsigned
 	switch (button_mask) {
 	case BUTTON_LEFT:
 	case BUTTON_EVT_FAST | BUTTON_LEFT: // SEEK LEFT
-		// clear the transaction
+		// make sure there's no data in the office
 		memset(G_io_apdu_buffer, 0, IO_APDU_BUFFER_SIZE);
-		io_exchange_with_code(SW_OK, 0);
+		// send a single 0 byte to differentiate from app not running
+		io_exchange_with_code(SW_OK, 1);
 		ui_idle();
 		break;
 
