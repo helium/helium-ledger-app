@@ -24,16 +24,6 @@
 #include "helium.h"
 #include "ux.h"
 
-// You may notice that this file includes blake2b.h despite doing no hashing.
-// This is because the Sia app uses the Plan 9 convention for header files:
-// header files may not #include other header files. This file needs ux.h, but
-// ux.h depends on helium.h, which depends on blake2b.h; so all three must be
-// included before we can include ux.h. Feel free to use the more conventional
-// #ifndef guards in your own app.
-
-// These are global variables declared in ux.h. They can't be defined there
-// because multiple files include ux.h; they need to be defined in exactly one
-// place. See ux.h for their descriptions.
 commandContext global;
 ux_state_t ux;
 
