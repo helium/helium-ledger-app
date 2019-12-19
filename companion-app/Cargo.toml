@@ -1,0 +1,18 @@
+[package]
+name = "helium-ledger-app"
+version = "0.1.0"
+authors = ["Louis Thiery <louis@helium.com>"]
+edition = "2018"
+
+[dependencies]
+byteorder = "1.3.2"
+structopt = "0.3.2"
+helium-api = { git = "https://github.com/helium/helium-api-rs"}
+helium-proto = { git = "https://github.com/helium/proto" }
+prettytable-rs = "0.6"
+ledger = "0.2.5"
+bs58 = {version = "0.3.0", features=["check"]}
+rust_decimal = "1.0.3"
+prost = "0.5"
+sha2 = "0.8.0"
+qr2term = "0.1"

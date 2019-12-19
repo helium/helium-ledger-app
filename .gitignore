@@ -1,0 +1,8 @@
+*.o
+*.d
+bolos/dep/*
+bolos/obj/*
+debug/*
+*.hex
+*.bin
+bolos/bin/*
