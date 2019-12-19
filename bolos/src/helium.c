@@ -17,7 +17,7 @@ uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n){
 	// insert decimal if we are dealing with >1 HNT
 	if(len > 8){
 		uint32_t i = len - 1;
-		// shift out all the values smaller than 10^8
+		// shift out all the values larger than 10^8
 		while( i >= (len-8) ) {
 			if(dst[i]!='0' || nonzero){
 				dst[i+1] = dst[i];
@@ -29,9 +29,10 @@ uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n){
 		// add the decimal if there are non-zeros smaller than 10^8
 		if(nonzero){
 			dst[ i+1 ] = '.';
+			written++;
 		}
-		written++;
-		written+= (len-8);
+
+		written += (len-9);
 	} 
 	// prepend zeros and add decimal to <1 HNT
 	else {
@@ -56,6 +57,7 @@ uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n){
 	dst[written+1] ='\0';
 	return written;
 }
+
 
 void derive_helium_keypair(uint32_t index, cx_ecfp_private_key_t *privateKey, cx_ecfp_public_key_t *publicKey) {
 	uint8_t keySeed[32];
