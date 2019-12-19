@@ -1,4 +1,4 @@
-# ledger-app-helium
+# helium-ledger-app
 
 This is the official Helium wallet app for the Ledger Nano S.
 
