@@ -1,8 +1,9 @@
-*.o
-*.d
-bolos/dep/*
-bolos/obj/*
-debug/*
-*.hex
 *.bin
-bolos/bin/*
+*.d
+*.hex
+*.o
+bin/
+debug/
+dep/
+obj/
+target/
