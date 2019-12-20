@@ -61,7 +61,7 @@ fn run(cli: Cli) -> Result {
             println!("Creating transaction for:");
             println!("      {:0.*} HNT", 8, amount.get_decimal());
             println!("        =");
-            println!("       {:} Bones", amount.to_bones());
+            println!("      {:} Bones", amount.to_bones());
 
             match ledger_api::pay(address, amount)? {
                 PayResponse::Txn(txn) => print_txn(&txn),
