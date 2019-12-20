@@ -61,12 +61,12 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     let account = client.get_account(&keypair.to_b58()?)?;
     let nonce: u64 = account.nonce + 1;
 
-    // if account.balance < amount.to_bones() {
-    //     return Ok(PayResponse::InsufficientBalance(
-    //         account.balance,
-    //         amount.to_bones(),
-    //     ));
-    // }
+    if account.balance < amount.to_bones() {
+        return Ok(PayResponse::InsufficientBalance(
+            account.balance,
+            amount.to_bones(),
+        ));
+    }
 
     // serlialize payee
     let payee_bin = PubKeyBin::from_b58(payee)?;
