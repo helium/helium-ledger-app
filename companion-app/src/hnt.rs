@@ -39,7 +39,7 @@ impl Hnt {
 
     pub fn from_bones(bones: u64) -> Self {
         if let Some(mut data) =  Decimal::from_u64(bones) {
-            data.set_scale(8);
+            data.set_scale(8).unwrap();
             return Hnt { data }
         }
         panic!("Bones value could not be parsed into Decimal")
