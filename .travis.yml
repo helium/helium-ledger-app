@@ -17,7 +17,7 @@ DEPLOY_TO_GITHUB: &DEPLOY_TO_GITHUB
     - name="helium-ledger-app-$TRAVIS_TAG-$TARGET"
     - mkdir $name
     - cp companion-app/target/$TARGET/release/helium-ledger-app $name/
-    - cp README.md LICENSE $name/
+    - cp LICENSE $name/
     - tar czvf $name.tar.gz $name
   deploy:
     provider: releases
