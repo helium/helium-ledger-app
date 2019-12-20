@@ -17,6 +17,8 @@ impl FromStr for Hnt {
         let data = Decimal::from_str(s)
             .or_else(|_| Decimal::from_scientific(s))
             .unwrap();
+
+
         if data.scale() > 8 {
             Err(HntFromStrError { data })
         } else {
@@ -33,6 +35,14 @@ impl Hnt {
             }
         }
         panic!("Hnt has been constructed with invalid data")
+    }
+
+    pub fn from_bones(bones: u64) -> Self {
+        if let Some(mut data) =  Decimal::from_u64(bones) {
+            data.set_scale(8);
+            return Hnt { data }
+        }
+        panic!("Bones value could not be parsed into Decimal")
     }
 
     pub fn get_decimal(&self) -> Decimal {
@@ -70,5 +80,11 @@ impl fmt::Display for HntFromStrError {
 impl error::Error for HntFromStrError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         None
+    }
+}
+
+impl ToString for Hnt {
+    fn to_string(&self) -> String {
+        self.data.to_string()
     }
 }

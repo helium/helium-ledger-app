@@ -7,7 +7,7 @@ use std::io;
 pub struct PubKeyBin(pub(crate) [u8; 33]);
 
 impl PubKeyBin {
-    pub fn from_vec(data: &[u8]) -> Self {
+    pub fn copy_from_slice(data: &[u8]) -> Self {
         let mut result = PubKeyBin::default();
         result.0.copy_from_slice(&data);
         result
@@ -49,5 +49,11 @@ impl B58 for PubKeyBin {
         let mut pubkey_bin = PubKeyBin::default();
         pubkey_bin.0.copy_from_slice(&data[1..]);
         Ok(pubkey_bin)
+    }
+}
+
+impl ToString for PubKeyBin {
+    fn to_string(&self) -> String {
+        self.to_b58().unwrap()
     }
 }

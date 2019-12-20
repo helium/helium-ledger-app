@@ -1,7 +1,7 @@
 use helium_api::Client;
 use ledger::*;
 
-use crate::{hnt::Hnt, pubkeybin::PubKeyBin, pubkeybin::B58, Result};
+use crate::{hnt::Hnt, pubkeybin::PubKeyBin, pubkeybin::B58, Result, payment_txn::PaymentTxn};
 use byteorder::{LittleEndian as LE, WriteBytesExt};
 use helium_proto::txn::{TxnPaymentV1, Wrapper};
 use prost::Message;
@@ -41,11 +41,11 @@ fn exchange_get_pubkey(ledger: &LedgerApp, display: PubkeyDisplay) -> Result<Pub
 
     let public_key_result = read_from_ledger(ledger, get_public_key)?;
     // TODO: verify validity before returning by checking the sha256 checksum
-    Ok(PubKeyBin::from_vec(&public_key_result.data[1..34]))
+    Ok(PubKeyBin::copy_from_slice(&public_key_result.data[1..34]))
 }
 
 pub enum PayResponse {
-    Txn(TxnPaymentV1),
+    Txn(PaymentTxn),
     InsufficientBalance(u64, u64), // provides balance and send request
     UserDeniedTransaction,
 }
@@ -61,12 +61,12 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     let account = client.get_account(&keypair.to_b58()?)?;
     let nonce: u64 = account.nonce + 1;
 
-    if account.balance < amount.to_bones() {
-        return Ok(PayResponse::InsufficientBalance(
-            account.balance,
-            amount.to_bones(),
-        ));
-    }
+    // if account.balance < amount.to_bones() {
+    //     return Ok(PayResponse::InsufficientBalance(
+    //         account.balance,
+    //         amount.to_bones(),
+    //     ));
+    // }
 
     // serlialize payee
     let payee_bin = PubKeyBin::from_b58(payee)?;
@@ -95,7 +95,7 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     let txn = TxnPaymentV1::decode(exchange_pay_tx_result.data.clone())?;
 
     client.submit_txn(Wrapper::Payment(txn.clone()))?;
-    Ok(PayResponse::Txn(txn))
+    Ok(PayResponse::Txn(txn.into()))
 }
 
 impl error::Error for Error {

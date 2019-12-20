@@ -4,6 +4,7 @@ extern crate prettytable;
 mod hnt;
 mod ledger_api;
 mod pubkeybin;
+mod payment_txn;
 
 use hnt::Hnt;
 use ledger_api::*;
@@ -23,7 +24,7 @@ enum Cli {
         qr_code: bool,
     },
     /// Pay a number of bones to a given address. Note that amount
-    /// is parsed HNT by default and that 1 HNT is 100_000_000 bones
+    /// is parsed  as HNT (1 HNT = 100_000_000 Bones)
     Pay {
         /// Address of the payee
         address: String,
@@ -111,33 +112,16 @@ fn print_balance(pubkey: &PubKeyBin) -> Result {
     Ok(())
 }
 
-use helium_proto::txn::TxnPaymentV1;
-use prost::Message;
-use sha2::{Digest, Sha256};
+use payment_txn::PaymentTxn;
 
-pub fn print_txn(txn: &TxnPaymentV1) {
-    let mut txn_copy = txn.clone();
-    // clear the signature so we can compute the hash
-    txn_copy.signature = Vec::new();
-
-    let mut hasher = Sha256::new();
-    // write input message
-    let mut buf = Vec::new();
-
-    txn_copy.encode(&mut buf).unwrap();
-    hasher.input(buf.as_slice());
-    let result = hasher.result();
-
-    let mut data = [0u8; 33];
-    data[1..].copy_from_slice(&result);
-
+pub fn print_txn(txn: &PaymentTxn) {
     let mut table = Table::new();
-    table.add_row(row!["Payee", "Amount", "Nonce", "Txn Hash"]);
+    table.add_row(row!["Payee", "Amount HNT", "Nonce", "Hash"]);
     table.add_row(row![
-        PubKeyBin::from_vec(&txn.payee).to_b58().unwrap(),
+        txn.payee,
         txn.amount,
         txn.nonce,
-        bs58::encode(data.as_ref()).with_check().into_string()
+        txn.hash
     ]);
     table.printstd();
 }
