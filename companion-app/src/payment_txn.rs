@@ -3,22 +3,6 @@ use crate::pubkeybin::PubKeyBin;
 use helium_proto::txn::TxnPaymentV1;
 use prost::Message;
 use sha2::{Digest, Sha256};
-// #[derive(Clone, PartialEq, ::prost::Message)]
-// pub struct TxnPaymentV1 {
-//     #[prost(bytes, tag="1")]
-//     pub payer: std::vec::Vec<u8>,
-//     #[prost(bytes, tag="2")]
-//     pub payee: std::vec::Vec<u8>,
-//     #[prost(uint64, tag="3")]
-//     pub amount: u64,
-//     #[prost(uint64, tag="4")]
-//     pub fee: u64,
-//     #[prost(uint64, tag="5")]
-//     pub nonce: u64,
-//     #[prost(bytes, tag="6")]
-//     pub signature: std::vec::Vec<u8>,
-// }
-
 
 pub struct PaymentTxn {
     pub payer: PubKeyBin,
