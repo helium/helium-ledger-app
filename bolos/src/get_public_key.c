@@ -24,7 +24,7 @@ static const bagl_element_t ui_getPublicKey[] = {
 // is that, since public keys and addresses have different lengths, checking
 // for the end of the string is slightly more complicated.
 static const bagl_element_t* ui_prepro_getPublicKey(const bagl_element_t *element) {
-	int fullSize =  51;
+	int fullSize =  ctx->fullStr_len;
 	if ((element->component.userid == 1 && ctx->displayIndex == 0) ||
 	    (element->component.userid == 2 && ctx->displayIndex == fullSize-12)) {
 		return NULL;
@@ -35,7 +35,7 @@ static const bagl_element_t* ui_prepro_getPublicKey(const bagl_element_t *elemen
 // Define the button handler for the comparison screen. Again, this is nearly
 // identical to the signHash comparison button handler.
 static unsigned int ui_getPublicKey_button(unsigned int button_mask, unsigned int button_mask_counter) {
-	int fullSize = 51;
+	int fullSize = ctx->fullStr_len;
 	switch (button_mask) {
 	case BUTTON_LEFT:
 	case BUTTON_EVT_FAST | BUTTON_LEFT: // SEEK LEFT
@@ -67,6 +67,7 @@ static unsigned int ui_getPublicKey_button(unsigned int button_mask, unsigned in
 // reads the command parameters, prepares and displays the approval screen,
 // and 
 void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
+	size_t output_len;
 	// Sanity-check the command parameters.
 	if ((p1 != P1_PUBKEY_DISPLAY_ON) && (p1 != P1_PUBKEY_DISPLAY_OFF)) {
 		THROW(SW_INVALID_PARAM);
@@ -89,21 +90,26 @@ void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t
 	os_memmove(&G_io_apdu_buffer[adpu_tx], hash_buffer, SIZE_OF_SHA_CHECKSUM);
 	adpu_tx += SIZE_OF_SHA_CHECKSUM;
 
-	// Flush the APDU buffer, sending the response.
-	io_exchange_with_code(SW_OK, adpu_tx);
 
 	if (p1 == P1_PUBKEY_DISPLAY_ON) {
-		size_t output_len;
-		btchip_encode_base58(G_io_apdu_buffer, adpu_tx, ctx->fullStr, &output_len);
-		ctx->fullStr[output_len] = '\0';
-		
-		os_memmove(ctx->partialStr, ctx->fullStr, 12);
-		ctx->partialStr[12] = '\0';
-		ctx->displayIndex = 0;
+		// for some reason this needs to run twice to get the display to work
+		// otherwise, first time running this command, key gets displayed blank
+		for(uint8_t i=0; i<2; i++){
+			btchip_encode_base58(G_io_apdu_buffer, adpu_tx, ctx->fullStr, &output_len);
+			ctx->fullStr[51] = '\0';
+			ctx->fullStr_len = output_len;
+			os_memmove(ctx->partialStr, ctx->fullStr, 12);
+			ctx->partialStr[12] = '\0';
+			ctx->displayIndex = 0;
 
-		// Display the comparison screen.
-		UX_DISPLAY(ui_getPublicKey, ui_prepro_getPublicKey);
+			// Display the comparison screen.
+			UX_DISPLAY(ui_getPublicKey, ui_prepro_getPublicKey);
+		}
+
 		// Sets the IO_ASYNC_REPLY, which allows the screen to load
 		*flags |= IO_ASYNCH_REPLY;
 	}
+
+	// Flush the APDU buffer, sending the response.
+	io_exchange_with_code(SW_OK, adpu_tx);
 }
