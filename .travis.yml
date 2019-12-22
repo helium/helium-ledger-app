@@ -12,7 +12,7 @@ DEPLOY_TO_GITHUB: &DEPLOY_TO_GITHUB
     - git config --local user.email "hello@helium.com"
     - name="helium-ledger-app-$TRAVIS_TAG-$TARGET"
     - mkdir $name
-    - cp companion-app/target/$TARGET/release/helium-ledger-app $name/
+    - cp companion-app/target/$TARGET/release/helium-ledger-app$EXE $name/
     - cp LICENSE $name/
     - tar czvf $name.tar.gz $name
   deploy:
@@ -49,7 +49,7 @@ matrix:
     <<: *DEPLOY_TO_GITHUB
 
   - name: Windows Binary
-    env: TARGET=x86_64-pc-windows-gnu
+    env: TARGET=x86_64-pc-windows-gnu EXE=.exe
     rust: stable
     before_script: rustup target add $TARGET
     script: (cd companion-app && cargo build --release --target $TARGET --locked)
