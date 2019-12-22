@@ -55,7 +55,7 @@ static const bagl_element_t ui_displayFee[] = {
 	UI_ICON_RIGHT(0x02, BAGL_GLYPH_ICON_RIGHT),
 	UI_TEXT(0x00, 0, 12, 128, "Data Credit Fee"),
 	// The visible portion of fee
-	UI_TEXT(0x00, 0, 26, 128, global.getPublicKeyContext.partialStr),
+	UI_TEXT(0x00, 0, 26, 128, global.calcTxnHashContext.partialStr),
 };
 
 static const bagl_element_t* ui_prepro_displayFee(const bagl_element_t *element) {
@@ -102,7 +102,7 @@ static const bagl_element_t ui_displayRecipient[] = {
 	UI_ICON_RIGHT(0x02, BAGL_GLYPH_ICON_RIGHT),
 	UI_TEXT(0x00, 0, 12, 128, "Recipient Address"),
 	// The visible portion of the recipient
-	UI_TEXT(0x00, 0, 26, 128, global.getPublicKeyContext.partialStr),
+	UI_TEXT(0x00, 0, 26, 128, global.calcTxnHashContext.partialStr),
 };
 
 static const bagl_element_t* ui_prepro_displayRecipient(const bagl_element_t *element) {
@@ -163,7 +163,7 @@ static const bagl_element_t ui_displayAmount[] = {
 	UI_ICON_RIGHT(0x02, BAGL_GLYPH_ICON_RIGHT),
 	UI_TEXT(0x00, 0, 12, 128, "Amount HNT"),
 	// The visible portion of the amount
-	UI_TEXT(0x00, 0, 26, 128, global.getPublicKeyContext.partialStr),
+	UI_TEXT(0x00, 0, 26, 128, global.calcTxnHashContext.partialStr),
 };
 
 static const bagl_element_t* ui_prepro_displayAmount(const bagl_element_t *element) {

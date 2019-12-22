@@ -135,8 +135,6 @@ static handler_fn_t* lookupHandler(uint8_t ins) {
 
 static void helium_main(void) {
 
-	STACK_CANARY = 0xDEADBEEF;
-
 	volatile unsigned int rx = 0;
 	volatile unsigned int tx = 0;
 	volatile unsigned int flags = 0;

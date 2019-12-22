@@ -1,9 +1,11 @@
-# helium-ledger-app
+# BOLOS Application
 
-This is the official Helium wallet app for the Ledger Nano S.
+This is the official Helium wallet app for the Ledger Nano S. It is built for
+the Blockain Open Ledger Operating System.
 
 When installed on a Nano S, the app allows you to view your Helium address,
-check your balance, and submit transactions.
+check your balance, and submit transactions while using the companion app, also
+included in this repository.
 
 No binaries are provided at this time. To build and install the Helium app on
 your Ledger Nano S, follow Ledger's [setup instructions](https://ledger.readthedocs.io/en/latest/userspace/getting_started.html).

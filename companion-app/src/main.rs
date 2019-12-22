@@ -14,7 +14,7 @@ use std::process;
 use structopt::StructOpt;
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-/// Create and manage Helium wallets
+/// Interact with Ledger Nano S for hardware wallet management
 #[derive(Debug, StructOpt)]
 enum Cli {
     /// Get wallet information
@@ -93,7 +93,7 @@ fn print_balance(pubkey: &PubKeyBin) -> Result {
     table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
     table.set_titles(row![
         "Address",
-        "Balance",
+        "Balance HNT",
         "Data Credits",
         "Security Tokens"
     ]);
@@ -101,7 +101,7 @@ fn print_balance(pubkey: &PubKeyBin) -> Result {
     match result {
         Ok(account) => table.add_row(row![
             address,
-            account.balance,
+            Hnt::from_bones(account.balance),
             account.dc_balance,
             account.security_balance
         ]),

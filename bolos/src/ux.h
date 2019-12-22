@@ -4,15 +4,16 @@
 
 typedef struct {
 	uint8_t displayIndex;
-	uint8_t fullStr[51]; // variable length
+	uint8_t fullStr[55]; // variable length
 	// partialStr contains 12 characters of a longer string. This allows text
 	// to be scrolled.
 	uint8_t partialStr[13];
+	uint8_t fullStr_len;
 } getPublicKeyContext_t;
 
 typedef struct {
 	uint8_t displayIndex;
-	uint8_t fullStr[51]; // variable length
+	uint8_t fullStr[55]; // variable length
 	// partialStr contains 12 characters of a longer string. This allows text
 	// to be scrolled.
 	uint8_t partialStr[13];
