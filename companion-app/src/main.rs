@@ -14,7 +14,7 @@ use std::process;
 use structopt::StructOpt;
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-/// Create and manage Helium wallets
+/// Interact with Ledger Nano S for hardware wallet management
 #[derive(Debug, StructOpt)]
 enum Cli {
     /// Get wallet information
