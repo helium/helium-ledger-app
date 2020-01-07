@@ -10,7 +10,7 @@ structopt = "0.3.2"
 helium-api = { git = "https://github.com/helium/helium-api-rs"}
 helium-proto = { git = "https://github.com/helium/proto" }
 prettytable-rs = "0.6"
-ledger = "0.2.5"
+ledger = { git = "https://github.com/helium/ledger-rs" }
 bs58 = {version = "0.3.0", features=["check"]}
 rust_decimal = "1.0.3"
 prost = "0.5"
