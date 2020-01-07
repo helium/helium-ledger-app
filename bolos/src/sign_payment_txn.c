@@ -202,23 +202,27 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 		break;
 
 	case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT: // PROCEED
-		// display recipient address on screen
-		os_memmove(address_with_check, ctx->payee, 34);
 
-		cx_sha256_init(&hash);
-		cx_hash(&hash.header, CX_LAST, address_with_check, 34, hash_buffer, 32);
-		cx_sha256_init(&hash);
-		cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
-		os_memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
-		size_t output_len;
-		btchip_encode_base58(address_with_check, 38, ctx->fullStr, &output_len);
-		ctx->fullStr[output_len] = '\0';
-		ctx->fullStr_len = output_len;
-		os_memmove(ctx->partialStr, ctx->fullStr, 12);
-		ctx->partialStr[12] = '\0';
-		ctx->displayIndex = 0;
+		for(uint8_t i=0; i<2; i++){
+			// display recipient address on screen
+			os_memmove(address_with_check, ctx->payee, 34);
 
-		UX_DISPLAY(ui_displayRecipient, ui_prepro_displayRecipient);
+			cx_sha256_init(&hash);
+			cx_hash(&hash.header, CX_LAST, address_with_check, 34, hash_buffer, 32);
+			cx_sha256_init(&hash);
+			cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
+			os_memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
+			size_t output_len;
+			btchip_encode_base58(address_with_check, 38, ctx->fullStr, &output_len);
+			ctx->fullStr[output_len] = '\0';
+			ctx->fullStr_len = output_len;
+			os_memmove(ctx->partialStr, ctx->fullStr, 12);
+			ctx->partialStr[12] = '\0';
+			ctx->displayIndex = 0;
+
+			UX_DISPLAY(ui_displayRecipient, ui_prepro_displayRecipient);
+		}
+
 		break;
 	}
 	return 0;
