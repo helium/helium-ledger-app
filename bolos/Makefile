@@ -26,7 +26,7 @@ include $(BOLOS_SDK)/Makefile.defines
 
 APPNAME    = Helium
 ICONNAME   = nanos_app_helium.gif
-APPVERSION = 0.1.0
+APPVERSION = 1.0.0
 
 # The --path argument here restricts which BIP32 paths the app is allowed to derive.
 APP_LOAD_PARAMS = --appFlags 0x40 --path "44'/904'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
@@ -36,10 +36,10 @@ SDK_SOURCE_PATH = lib_stusb lib_stusb_impl
 all: default
 
 load: all
-	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
+	sudo python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
 delete:
-	python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
+	sudo python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 
 ############
 # Platform #
