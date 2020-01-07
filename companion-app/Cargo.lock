@@ -546,7 +546,7 @@ dependencies = [
 
 [[package]]
 name = "helium-ledger-app"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "bs58",
  "byteorder",
