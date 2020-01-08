@@ -8,17 +8,18 @@ before_cache:
 
 DEPLOY_TO_GITHUB: &DEPLOY_TO_GITHUB
   before_deploy:
+    - sudo apt install zip
     - git config --local user.name "Helium CI"
     - git config --local user.email "hello@helium.com"
     - name="helium-ledger-app-$TRAVIS_TAG-$TARGET"
     - mkdir $name
     - cp companion-app/target/$TARGET/release/helium-ledger-app$EXE $name/
     - cp LICENSE $name/
-    - tar czvf $name.tar.gz $name
+    - zip -r $name.zip $name
   deploy:
     provider: releases
     api_key: $GITHUB_TOKEN
-    file: helium-ledger-app-$TRAVIS_TAG-$TARGET.tar.gz
+    file: helium-ledger-app-$TRAVIS_TAG-$TARGET.zip
     skip_cleanup: true
     on:
       branch: master
