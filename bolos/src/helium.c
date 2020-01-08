@@ -8,6 +8,10 @@
 #include "pb_encode.h"
 #include "transactions/txn.pb.h"
 
+
+// currently only support single wallet at index = 0
+#define SLOT_INDEX 0
+
 uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n){
 	uint32_t len = bin2dec(dst, n);
 	// this will be used to drop useless 0s
@@ -124,7 +128,7 @@ uint32_t create_helium_transaction(){
 		pb_encode_varint(&ostream, ctx->nonce);
 	}
 
-	sign_tx(signature, 0, G_io_apdu_buffer, ostream.bytes_written);
+	sign_tx(signature, SLOT_INDEX, G_io_apdu_buffer, ostream.bytes_written);
 
 	ostream = pb_ostream_from_buffer(G_io_apdu_buffer, sizeof(G_io_apdu_buffer));
 
@@ -253,6 +257,6 @@ int btchip_encode_base58(const unsigned char *in, size_t length,
 void __attribute__ ((noinline)) get_pubkey_bytes(uint8_t * out){
 	cx_ecfp_public_key_t publicKey;
 
-	derive_helium_keypair(0, NULL, &publicKey);
+	derive_helium_keypair(SLOT_INDEX, NULL, &publicKey);
 	extract_pubkey_bytes(out, &publicKey);
 }
