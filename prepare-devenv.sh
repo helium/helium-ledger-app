@@ -53,7 +53,7 @@ if [ ! -d dev-env ]; then
     rm blue-secure-sdk.tar.gz
     mv blue-secure-sdk* dev-env/SDK/blue-secure-sdk
 
-    wget https://github.com/LedgerHQ/nanos-secure-sdk/archive/nanos-1553.tar.gz -O nanos-secure-sdk.tar.gz
+    wget https://github.com/LedgerHQ/nanos-secure-sdk/archive/nanos-160.tar.gz -O nanos-secure-sdk.tar.gz
     tar xf nanos-secure-sdk.tar.gz
     rm nanos-secure-sdk.tar.gz
     mv nanos-secure-sdk* dev-env/SDK/nanos-secure-sdk
