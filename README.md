@@ -12,7 +12,8 @@ If you don't want to setup a global environnment, you can also setup one just fo
 install prerequisite and switch to a Nano X dev-env:
 
 ```bash
-sudo apt install python3-venv
+sudo apt install python3-venv python3-dev libudev-dev libusb-1.0-0-dev
+
 # (x or s, depending on your device)
 source prepare-devenv.sh x 
 ```
