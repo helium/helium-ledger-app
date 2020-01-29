@@ -8,3 +8,4 @@ src/glyphs.h
 .idea
 .vscode
 gitignore
+.vagrant
