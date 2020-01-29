@@ -1,8 +1,8 @@
-# Ledger boilerplate app
+# Ledger Solana app
 
 ## Overview
-This app is a boilerplate for a Nano S/X app.
-It does very little, and just expose a minimal API (get_app_config, get_address). 
+This app is for a Nano S/X Ledger Wallet.
+It currently does very little, and just exposes a minimal API (`get_app_config`, `get_address`). 
 
 ## Building and installing
 To build and install the app on your Ledger Nano S you must set up the Ledger Nano S build environments. Please follow the Getting Started instructions at [here](https://ledger.readthedocs.io/en/latest/userspace/getting_started.html).
@@ -44,4 +44,4 @@ python test_example.py --account_number 12345
 ```
 
 ## Documentation
-This follows the specification available in the [`api.asc`](https://github.com/LedgerHQ/ledger-app-boilerplate/blob/master/doc/api.asc).
+This follows the specification available in the [`api.asc`](https://github.com/solana-labs/ledger-app-solana/blob/master/doc/api.asc).

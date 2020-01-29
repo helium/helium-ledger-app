@@ -24,7 +24,7 @@ account = '{:08x}'.format(int(args.account_number))
 apduMessage = "E0020100" + '{:02x}'.format(len(account) + 1) + account
 apdu = bytearray.fromhex(apduMessage)
 
-print("~~ Ledger Boilerplate ~~")
+print("~~ Ledger Solana ~~")
 print("Request Address")
 
 dongle = getDongle(True)

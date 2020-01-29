@@ -114,8 +114,8 @@ UX_STEP_NOCB(
     ux_idle_flow_1_step, 
     pnn, 
     {
-      &C_boilerplate_logo,
-      "Boilerplate",
+      &C_solana_logo,
+      "Application",
       "is ready",
     });
 UX_STEP_VALID(
