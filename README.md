@@ -9,10 +9,12 @@ It currently does very little, and just exposes a minimal API (`get_app_config`,
 
 Install Vagrant and VirtualBox.
 
-Download the recommended BOLOS SDK, GCC, and Clang and put them into directories
-next to the one this README is in and with names that match what is in `Vagrantfile`.
-Alternatively, use the included `prepare-devenv.sh` script, but at the time of this
-writing, it downloads a version of GCC that is missing the `gcc` executable.
+Clone this git repo recursively, such that it includes the BOLOS SDK in a submodule:
+
+```bash
+$ git clone --recursive git@github.com:solana-labs/ledger-app-solana.git
+cd ledger-app-solana
+```
 
 ## Creating the development environment
 
@@ -26,12 +28,6 @@ To enter the VM:
 
 ```bash
 $ vagrant ssh
-```
-
-Go to the app directory:
-
-```bash
-$ cd /vagrant
 ```
 
 ## Alternative Setup, For those not using Vagrant

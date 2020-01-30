@@ -1,0 +1,3 @@
+[submodule "nanos-secure-sdk"]
+	path = nanos-secure-sdk
+	url = https://github.com/LedgerHQ/nanos-secure-sdk.git
