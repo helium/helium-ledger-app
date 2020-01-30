@@ -76,11 +76,18 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
     apt-get install -y gcc-multilib g++-multilib python3-pip python-pip
+
     wget -q -O - https://raw.githubusercontent.com/LedgerHQ/udev-rules/master/add_udev_rules.sh | sudo bash
+    sed -e 's/$/, OWNER="vagrant"/' -i /etc/udev/rules.d/20-hw1.rules
     udevadm trigger
     udevadm control --reload-rules
+
     apt-get install -y libudev-dev libusb-1.0-0-dev
     python3 -m pip install Pillow
     pip install ledgerblue
+
+    BASHRC=/home/vagrant/.bashrc
+    grep -qF -- BOLOS_SDK $BASHRC || echo "export BOLOS_SDK=/bolos-sdk" >> $BASHRC
+    grep -qF -- BOLOS_ENV $BASHRC || echo "export BOLOS_ENV=/bolos-env" >> $BASHRC
   SHELL
 end
