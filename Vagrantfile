@@ -43,8 +43,8 @@ Vagrant.configure("2") do |config|
   # the path on the host to the actual folder. The second argument is
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
-  #config.vm.synced_folder "../gcc-arm-none-eabi-5_3-2016q1", "/bolos-env/gcc-arm-none-eabi-5_3-2016q1"
-  #config.vm.synced_folder "../clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04", "/bolos-env/clang-arm-fropi"
+  config.vm.synced_folder "../gcc-arm-none-eabi-5_3-2016q1", "/bolos-env/gcc-arm-none-eabi-5_3-2016q1"
+  config.vm.synced_folder "../clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04", "/bolos-env/clang-arm-fropi"
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
@@ -87,17 +87,17 @@ Vagrant.configure("2") do |config|
 
     BASHRC=/home/vagrant/.bashrc
     grep -qF -- BOLOS_SDK $BASHRC || echo "export BOLOS_SDK=/vagrant/nanos-secure-sdk" >> $BASHRC
-    grep -qF -- BOLOS_ENV $BASHRC || echo "export BOLOS_ENV=/vagrant/bolos-env" >> $BASHRC
+    grep -qF -- BOLOS_ENV $BASHRC || echo "export BOLOS_ENV=/bolos-env" >> $BASHRC
 
-    if [ ! -d "bolos-env" ]
-    then
-        mkdir bolos-env
-        wget -q https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_3-2016q1/gccarmnoneeabi532016q120160330linuxtar.bz2
-        tar xzf gccarmnoneeabi532016q120160330linuxtar.bz2 -C bolos-env
+    #if [ ! -d "bolos-env" ]
+    #then
+    #    mkdir bolos-env
+    #    wget -q https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_3-2016q1/gccarmnoneeabi532016q120160330linuxtar.bz2
+    #    tar xzf gccarmnoneeabi532016q120160330linuxtar.bz2 -C bolos-env
 
-        wget -q http://releases.llvm.org/7.0.0/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
-        tar xzf clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz -C bolos-env
-    fi
+    #    wget -q http://releases.llvm.org/7.0.0/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+    #    tar xzf clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz -C bolos-env
+    #fi
   SHELL
 
   # cd to /vagrant when "vagrant ssh"
