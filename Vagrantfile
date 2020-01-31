@@ -38,7 +38,7 @@ Vagrant.configure("2") do |config|
   # Bridged networks make the machine appear as another physical device on
   # your network.
   # config.vm.network "public_network"
-  
+
   # Share an additional folder to the guest VM. The first argument is
   # the path on the host to the actual folder. The second argument is
   # the path on the guest to mount the folder. And the optional third
@@ -84,6 +84,7 @@ Vagrant.configure("2") do |config|
     apt-get install -y libudev-dev libusb-1.0-0-dev
     python3 -m pip install ledgerblue
     pip install ledgerblue
+    python3 -m pip install base58==1.0.3
 
     BASHRC=/home/vagrant/.bashrc
     grep -qF -- BOLOS_SDK $BASHRC || echo "export BOLOS_SDK=/vagrant/nanos-secure-sdk" >> $BASHRC
