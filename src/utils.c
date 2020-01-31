@@ -5,8 +5,6 @@
 #include "utils.h"
 #include "menu.h"
 
-#define ACCOUNT_ADDRESS_PREFIX 1
-
 static const char BASE_58_ALPHABET[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
                                         'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q',
                                         'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
@@ -57,24 +55,11 @@ static unsigned char encodeBase58(unsigned char WIDE *in, unsigned char length,
     return length;
 }
 
-void getAddressStringFromBinary(uint8_t *publicKey, char *address) {
-    uint8_t buffer[36];
-    uint8_t hashAddress[32];
-
-    os_memmove(buffer, publicKey, 32);
-    cx_hash_sha256(buffer, 32, hashAddress, 32);
-    cx_hash_sha256(hashAddress, 32, hashAddress, 32);
-    os_memmove(buffer + 32, hashAddress, 4);
-
-    snprintf(address, sizeof(address), "lol");
-    address[encodeBase58(buffer, 36, (unsigned char*)address + 3, 51) + 3] = '\0';
-}
-
-void getPublicKey(uint32_t accountNumber, uint8_t *publicKeyArray) {
+void getPublicKey(uint32_t *bip32, uint8_t *publicKeyArray, uint8_t bip32Len) {
     cx_ecfp_private_key_t privateKey;
     cx_ecfp_public_key_t publicKey;
 
-    getPrivateKey(accountNumber, &privateKey);
+    getPrivateKey(bip32, &privateKey, bip32Len);
     cx_ecfp_generate_pair(CX_CURVE_Ed25519, &publicKey, &privateKey, 1);
     os_memset(&privateKey, 0, sizeof(privateKey));
 
@@ -100,14 +85,10 @@ static const uint32_t derivePath[BIP32_PATH] = {
   0 | HARDENED_OFFSET
 };
 
-void getPrivateKey(uint32_t accountNumber, cx_ecfp_private_key_t *privateKey) {
+void getPrivateKey(uint32_t *bip32, cx_ecfp_private_key_t *privateKey, uint8_t bip32Len) {
     uint8_t privateKeyData[32];
-    uint32_t bip32Path[BIP32_PATH];
 
-    os_memmove(bip32Path, derivePath, sizeof(derivePath));
-    bip32Path[2] = accountNumber | HARDENED_OFFSET;
-    PRINTF("BIP32: %.*H\n", BIP32_PATH*4, bip32Path);
-    os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32Path, BIP32_PATH, privateKeyData, NULL, NULL, 0);
+    os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32, bip32Len, privateKeyData, NULL, NULL, 0);
     cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, privateKey);
     os_memset(privateKeyData, 0, sizeof(privateKeyData));
 }

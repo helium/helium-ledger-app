@@ -10,7 +10,7 @@
 #define P1_FIRST 0x00
 #define P1_MORE 0x80
 
-#define FULL_ADDRESS_LENGTH 54
+#define FULL_PUBKEY_LENGTH 32
 #define BIP32_PATH 5
 
 extern ux_state_t ux;

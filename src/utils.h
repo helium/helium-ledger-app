@@ -16,13 +16,11 @@ typedef enum rlpTxType {
 
 unsigned int ui_prepro(const bagl_element_t *element);
 
-void getAddressStringFromBinary(uint8_t *publicKey, char *address);
-
-void getPublicKey(uint32_t accountNumber, uint8_t *publicKeyArray);
+void getPublicKey(uint32_t *bip32, uint8_t *publicKeyArray, uint8_t bip32Len);
 
 uint32_t readUint32BE(uint8_t *buffer);
 
-void getPrivateKey(uint32_t accountNumber, cx_ecfp_private_key_t *privateKey);
+void getPrivateKey(uint32_t *bip32, cx_ecfp_private_key_t *privateKey, uint8_t bip32Len);
 
 void sendResponse(uint8_t tx, bool approve);
 

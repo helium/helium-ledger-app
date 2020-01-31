@@ -3,7 +3,7 @@
 ## Overview
 
 This app is for a Nano S/X Ledger Wallet.
-It currently does very little, and just exposes a minimal API (`get_app_config`, `get_address`). 
+It currently does very little, and just exposes a minimal API (`get_app_config`, `get_pubkey`). 
 
 ## Prerequisites
 
@@ -42,7 +42,7 @@ install prerequisite and switch to a Nano X dev-env:
 sudo apt install python3-venv python3-dev libudev-dev libusb-1.0-0-dev
 
 # (x or s, depending on your device)
-source prepare-devenv.sh x 
+source prepare-devenv.sh x
 ```
 
 ## Building and installing
@@ -76,4 +76,3 @@ python test_example.py --account_number 12345
 This follows the specification available in the [`api.asc`](https://github.com/solana-labs/ledger-app-solana/blob/master/doc/api.asc).
 In this project we'll create a Linux virtual machine capable of cross-compiling the
 Ledger Wallet boilerplate application and then loading it onto Ledger Nano S.
-
