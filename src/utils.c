@@ -55,11 +55,11 @@ static unsigned char encodeBase58(unsigned char WIDE *in, unsigned char length,
     return length;
 }
 
-void getPublicKey(uint32_t *bip32, uint8_t *publicKeyArray, uint8_t bip32Len) {
+void getPublicKey(uint32_t *derivationPath, uint8_t *publicKeyArray, uint8_t pathLength) {
     cx_ecfp_private_key_t privateKey;
     cx_ecfp_public_key_t publicKey;
 
-    getPrivateKey(bip32, &privateKey, bip32Len);
+    getPrivateKey(derivationPath, &privateKey, pathLength);
     cx_ecfp_generate_pair(CX_CURVE_Ed25519, &publicKey, &privateKey, 1);
     os_memset(&privateKey, 0, sizeof(privateKey));
 
@@ -85,10 +85,10 @@ static const uint32_t derivePath[BIP32_PATH] = {
   0 | HARDENED_OFFSET
 };
 
-void getPrivateKey(uint32_t *bip32, cx_ecfp_private_key_t *privateKey, uint8_t bip32Len) {
+void getPrivateKey(uint32_t *derivationPath, cx_ecfp_private_key_t *privateKey, uint8_t pathLength) {
     uint8_t privateKeyData[32];
 
-    os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32, bip32Len, privateKeyData, NULL, NULL, 0);
+    os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, derivationPath, pathLength, privateKeyData, NULL, NULL, 0);
     cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, privateKey);
     os_memset(privateKeyData, 0, sizeof(privateKeyData));
 }

@@ -5,21 +5,21 @@
 
 static uint8_t publicKey[FULL_PUBKEY_LENGTH];
 
-static int read_bip32(const uint8_t *dataBuffer, size_t size, uint32_t *bip32) {
-    size_t bip32Len = dataBuffer[0];
+static int read_derivation_path(const uint8_t *dataBuffer, size_t size, uint32_t *derivationPath) {
+    size_t len = dataBuffer[0];
     dataBuffer += 1;
-    if (bip32Len < 0x01 || bip32Len > BIP32_PATH) {
+    if (len < 0x01 || len > BIP32_PATH) {
         THROW(0x6a80);
     }
-    if (1 + 4 * bip32Len > size) {
+    if (1 + 4 * len > size) {
       THROW(0x6a8);
     }
 
-    for (unsigned int i = 0; i < bip32Len; i++) {
-        bip32[i] = (dataBuffer[0] << 24u) | (dataBuffer[1] << 16u) | (dataBuffer[2] << 8u) | (dataBuffer[3]);
+    for (unsigned int i = 0; i < len; i++) {
+        derivationPath[i] = (dataBuffer[0] << 24u) | (dataBuffer[1] << 16u) | (dataBuffer[2] << 8u) | (dataBuffer[3]);
         dataBuffer += 4;
     }
-    return bip32Len;
+    return len;
 }
 
 static uint8_t set_result_get_pubkey() {
@@ -65,10 +65,10 @@ void handleGetPubkey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataL
     UNUSED(dataLength);
     UNUSED(p2);
 
-    uint32_t bip32[BIP32_PATH];
-    int bip32Len = read_bip32(dataBuffer, dataLength, bip32);
+    uint32_t derivationPath[BIP32_PATH];
+    int pathLength = read_derivation_path(dataBuffer, dataLength, derivationPath);
 
-    getPublicKey(bip32, publicKey, bip32Len);
+    getPublicKey(derivationPath, publicKey, pathLength);
 
     if (p1 == P1_NON_CONFIRM) {
         *tx = set_result_get_pubkey();
