@@ -82,7 +82,7 @@ Vagrant.configure("2") do |config|
     udevadm control --reload-rules
 
     apt-get install -y libudev-dev libusb-1.0-0-dev
-    python3 -m pip install Pillow
+    python3 -m pip install ledgerblue
     pip install ledgerblue
 
     BASHRC=/home/vagrant/.bashrc
@@ -92,11 +92,12 @@ Vagrant.configure("2") do |config|
     if [ ! -d "/bolos-env" ]
     then
         mkdir /bolos-env
-        wget -q https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_3-2016q1/gccarmnoneeabi532016q120160330linuxtar.bz2
+        wget --progress=bar:force https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_3-2016q1/gccarmnoneeabi532016q120160330linuxtar.bz2
         tar xf gccarmnoneeabi532016q120160330linuxtar.bz2 -C /bolos-env
 
-        wget -q http://releases.llvm.org/7.0.0/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+        wget --progress=bar:force http://releases.llvm.org/7.0.0/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
         tar xf clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz -C /bolos-env
+        mv /bolos-env/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04 /bolos-env/clang-arm-fropi
     fi
   SHELL
 
