@@ -36,10 +36,10 @@ SDK_SOURCE_PATH = lib_stusb lib_stusb_impl
 all: default
 
 load: all
-	sudo python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
+	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
 delete:
-	sudo python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
+	python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 
 ############
 # Platform #
