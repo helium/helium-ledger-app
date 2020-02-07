@@ -12,24 +12,22 @@ args = parser.parse_args()
 if args.account_number == None:
 	args.account_number = "12345"
 
-derivationPath = "8000002C800001F5"
-account = '{:08x}'.format(int(args.account_number) | 0x80000000)
+derivation_path = [44, 501, int(args.account_number)]
+derivation_path_hex = '{:02x}'.format(len(derivation_path)) + "".join('{:02x}'.format(x | 0x80000000) for x in derivation_path)
 
 # Create APDU message.
 # CLA 0xE0
 # INS 0x02  GET_PUBKEY
-# P1 0x01   USER CONFIRMATION REQUIRED (0x00 otherwise)
+# P1 0x00   NO USER CONFIRMATION REQUIRED (0x01 otherwise)
 # P2 0x00   UNUSED
-# Ask for confirmation
-# txt = "E0020100" + '{:02x}'.format(len(donglePath) + 1) + '{:02x}'.format( int(len(donglePath) / 4 / 2)) + donglePath
-# No confirmation
-apduMessage = "E0020000" + '{:02x}'.format(len(derivationPath + account)/2 + 1) + '{:02x}'.format(len(derivationPath + account)/8) + derivationPath + account
-apdu = bytearray.fromhex(apduMessage)
+payload_hex = derivation_path_hex
+adpu_hex = "E0020000" + '{:02x}'.format(len(payload_hex) / 2) + payload_hex
+adpu_bytes = bytearray.fromhex(adpu_hex)
 
 print("~~ Ledger Solana ~~")
 print("Request Pubkey")
 
 dongle = getDongle(True)
-result = dongle.exchange(apdu)[0:32]
+result = dongle.exchange(adpu_bytes)[0:32]
 
 print("Pubkey received: " + base58.b58encode(bytes(result)))

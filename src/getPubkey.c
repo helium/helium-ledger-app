@@ -5,7 +5,7 @@
 
 static uint8_t publicKey[FULL_PUBKEY_LENGTH];
 
-static int read_derivation_path(const uint8_t *dataBuffer, size_t size, uint32_t *derivationPath) {
+int read_derivation_path(const uint8_t *dataBuffer, size_t size, uint32_t *derivationPath) {
     size_t len = dataBuffer[0];
     dataBuffer += 1;
     if (len < 0x01 || len > BIP32_PATH) {
@@ -62,7 +62,6 @@ UX_FLOW(ux_display_public_flow,
 );
 
 void handleGetPubkey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
-    UNUSED(dataLength);
     UNUSED(p2);
 
     uint32_t derivationPath[BIP32_PATH];

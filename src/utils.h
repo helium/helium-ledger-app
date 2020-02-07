@@ -51,3 +51,16 @@ void sendResponse(uint8_t tx, bool approve);
     }
 
 #endif
+
+#ifdef TEST
+#include <stdio.h>
+#define THROW(code) do { printf("error: %d", code); } while (0)
+#define PRINTF(msg, arg) printf(msg, arg)
+#define PIC(code) code
+//#define TARGET_NANOS 1
+#define TARGET_BLUE 1
+#define MEMCLEAR(dest) memset(&dest, 0, sizeof(dest));
+#else
+#define MEMCLEAR(dest) do { os_memset(&dest, 0, sizeof(dest)); } while (0)
+#include "bolos_target.h"
+#endif // TEST
