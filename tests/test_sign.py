@@ -36,4 +36,4 @@ def sign_message(message):
     print("Signature received: " + base58.b58encode(bytes(result)))
 
 sign_message("deadbeef")
-sign_message("deadbabe")
+sign_message("5ca1ab1e")
