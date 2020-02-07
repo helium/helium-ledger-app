@@ -4,8 +4,8 @@
 #include "cx.h"
 #include "utils.h"
 
-static char messageHash[FULL_HASH_LENGTH];
-static unsigned char signature[FULL_SIGNATURE_LENGTH];
+static char messageHash[BASE58_HASH_LENGTH];
+static unsigned char signature[SIGNATURE_LENGTH];
 
 void derive_private_key(cx_ecfp_private_key_t *privateKey, uint32_t *derivationPath, uint8_t derivationPathLength) {
     uint8_t privateKeyData[32];
@@ -55,6 +55,7 @@ UX_FLOW(ux_display_message,
 void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
     UNUSED(p2);
     uint32_t derivationPath[BIP32_PATH];
+    uint8_t messageHashBytes[HASH_LENGTH];
 
     int derivationPathLength = read_derivation_path(dataBuffer, dataLength, derivationPath);
     dataBuffer += 1 + derivationPathLength * 4;
@@ -67,8 +68,12 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
     dataBuffer += 1;
     uint8_t *message = dataBuffer;
 
-    cx_hash_sha256(dataBuffer, dataLength, (unsigned char *)messageHash, FULL_HASH_LENGTH);
-    cx_eddsa_sign(&privateKey, CX_LAST, CX_SHA512, message, messageLength, NULL, 0, signature, FULL_SIGNATURE_LENGTH, NULL);
+    cx_hash_sha256(dataBuffer, dataLength, messageHashBytes, HASH_LENGTH);
+
+    int len = encodeBase58(messageHashBytes, HASH_LENGTH, (unsigned char *) messageHash, BASE58_HASH_LENGTH);
+    messageHash[len] = '\0';
+
+    cx_eddsa_sign(&privateKey, CX_LAST, CX_SHA512, message, messageLength, NULL, 0, signature, SIGNATURE_LENGTH, NULL);
 
     if (p1 == P1_NON_CONFIRM) {
         *tx = set_result_sign_message();

@@ -25,7 +25,7 @@ def sign_message(message):
     # P2 0x00   UNUSED
     message_hex = '{:02x}'.format(len(message) / 2) + message
     payload_hex = derivation_path_hex + message_hex
-    apdu_hex = "E0030000" + '{:02x}'.format(len(payload_hex) / 2) + payload_hex
+    apdu_hex = "E0030100" + '{:02x}'.format(len(payload_hex) / 2) + payload_hex
     apdu_bytes = bytearray.fromhex(apdu_hex)
 
     print("~~ Ledger Solana ~~")

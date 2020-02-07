@@ -3,7 +3,7 @@
 #include "ux.h"
 #include "utils.h"
 
-static uint8_t publicKey[FULL_PUBKEY_LENGTH];
+static uint8_t publicKey[BASE58_PUBKEY_LENGTH];
 
 int read_derivation_path(const uint8_t *dataBuffer, size_t size, uint32_t *derivationPath) {
     size_t len = dataBuffer[0];

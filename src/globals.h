@@ -11,9 +11,10 @@
 #define P1_MORE 0x80
 
 #define MAX_MESSAGE_LENGTH 1500  // MTU Size
-#define FULL_SIGNATURE_LENGTH 64
-#define FULL_HASH_LENGTH 32
-#define FULL_PUBKEY_LENGTH 32
+#define SIGNATURE_LENGTH 64
+#define HASH_LENGTH 32
+#define BASE58_HASH_LENGTH 45
+#define BASE58_PUBKEY_LENGTH 32
 #define BIP32_PATH 5
 
 extern ux_state_t ux;
