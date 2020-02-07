@@ -16,6 +16,9 @@ typedef enum rlpTxType {
 
 unsigned int ui_prepro(const bagl_element_t *element);
 
+unsigned char encodeBase58(unsigned char WIDE *in, unsigned char length,
+                           unsigned char *out, unsigned char maxoutlen);
+
 void getPublicKey(uint32_t *derivationPath, uint8_t *publicKeyArray, uint8_t pathLength);
 
 uint32_t readUint32BE(uint8_t *buffer);
@@ -51,3 +54,16 @@ void sendResponse(uint8_t tx, bool approve);
     }
 
 #endif
+
+#ifdef TEST
+#include <stdio.h>
+#define THROW(code) do { printf("error: %d", code); } while (0)
+#define PRINTF(msg, arg) printf(msg, arg)
+#define PIC(code) code
+//#define TARGET_NANOS 1
+#define TARGET_BLUE 1
+#define MEMCLEAR(dest) memset(&dest, 0, sizeof(dest));
+#else
+#define MEMCLEAR(dest) do { os_memset(&dest, 0, sizeof(dest)); } while (0)
+#include "bolos_target.h"
+#endif // TEST

@@ -11,7 +11,7 @@ static const char BASE_58_ALPHABET[] = {'1', '2', '3', '4', '5', '6', '7', '8', 
                                         'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
                                         'w', 'x', 'y', 'z'};
 
-static unsigned char encodeBase58(unsigned char WIDE *in, unsigned char length,
+unsigned char encodeBase58(unsigned char WIDE *in, unsigned char length,
                            unsigned char *out, unsigned char maxoutlen) {
     unsigned char tmp[164];
     unsigned char buffer[164];
@@ -74,16 +74,6 @@ void getPublicKey(uint32_t *derivationPath, uint8_t *publicKeyArray, uint8_t pat
 uint32_t readUint32BE(uint8_t *buffer) {
   return (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | (buffer[3]);
 }
-
-static const uint32_t HARDENED_OFFSET = 0x80000000;
-
-static const uint32_t derivePath[BIP32_PATH] = {
-  44 | HARDENED_OFFSET,
-  501 | HARDENED_OFFSET,
-  0 | HARDENED_OFFSET,
-  0 | HARDENED_OFFSET,
-  0 | HARDENED_OFFSET
-};
 
 void getPrivateKey(uint32_t *derivationPath, cx_ecfp_private_key_t *privateKey, uint8_t pathLength) {
     uint8_t privateKeyData[32];
