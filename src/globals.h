@@ -14,7 +14,7 @@
 #define SIGNATURE_LENGTH 64
 #define HASH_LENGTH 32
 #define BASE58_HASH_LENGTH 45
-#define BASE58_PUBKEY_LENGTH 32
+#define PUBKEY_LENGTH 32
 #define BIP32_PATH 5
 
 extern ux_state_t ux;
