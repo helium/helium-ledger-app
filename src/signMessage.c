@@ -76,8 +76,11 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
     cx_eddsa_sign(&privateKey, CX_LAST, CX_SHA512, message, messageLength, NULL, 0, signature, SIGNATURE_LENGTH, NULL);
 
     if (p1 == P1_NON_CONFIRM) {
-        *tx = set_result_sign_message();
-        THROW(0x9000);
+        // Uncomment this to allow blind signing.
+        //*tx = set_result_sign_message();
+        //THROW(0x9000);
+
+        sendResponse(0, false);
     } else {
         ux_flow_init(0, ux_display_message, NULL);
         *flags |= IO_ASYNCH_REPLY;
