@@ -32,7 +32,7 @@ unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 #define OFFSET_P1 2
 #define OFFSET_P2 3
 #define OFFSET_LC 4
-#define OFFSET_CDATA 5
+#define OFFSET_CDATA 6
 
 void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
     unsigned short sw = 0;
@@ -42,6 +42,8 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
             if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
             THROW(0x6E00);
             }
+
+            int dataLength = (G_io_apdu_buffer[OFFSET_LC] << 8) + G_io_apdu_buffer[OFFSET_LC + 1];
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
 
@@ -56,11 +58,11 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
                     break;
 
                 case INS_GET_PUBKEY:
-                    handleGetPubkey(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], G_io_apdu_buffer + OFFSET_CDATA, G_io_apdu_buffer[OFFSET_LC], flags, tx);
+                    handleGetPubkey(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], G_io_apdu_buffer + OFFSET_CDATA, dataLength, flags, tx);
                     break;
 
                 case INS_SIGN_MESSAGE:
-                    handleSignMessage(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], G_io_apdu_buffer + OFFSET_CDATA, G_io_apdu_buffer[OFFSET_LC], flags, tx);
+                    handleSignMessage(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], G_io_apdu_buffer + OFFSET_CDATA, dataLength, flags, tx);
                     break;
 
                 default:

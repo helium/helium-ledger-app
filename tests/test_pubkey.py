@@ -13,7 +13,7 @@ if args.account_number == None:
 	args.account_number = "12345"
 
 derivation_path = [44, 501, int(args.account_number)]
-derivation_path_hex = '{:02x}'.format(len(derivation_path)) + "".join('{:02x}'.format(x | 0x80000000) for x in derivation_path)
+derivation_path_hex = '{:04x}'.format(len(derivation_path)) + "".join('{:02x}'.format(x | 0x80000000) for x in derivation_path)
 
 # Create APDU message.
 # CLA 0xE0
