@@ -1,0 +1,5 @@
+#ifndef PARSE_MESSAGE_H
+#define PARSE_MESSAGE_H
+
+
+#endif // PARSE_MESSAGE_H
