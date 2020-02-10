@@ -10,7 +10,7 @@ parser.add_argument('--account_number', help="BIP32 account to retrieve. e.g. \"
 args = parser.parse_args()
 
 if args.account_number == None:
-	args.account_number = "12345"
+    args.account_number = "12345"
 
 derivation_path = [44, 501, int(args.account_number)]
 derivation_path_hex = '{:02x}'.format(len(derivation_path)) + "".join('{:02x}'.format(x | 0x80000000) for x in derivation_path)
