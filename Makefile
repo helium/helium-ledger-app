@@ -136,6 +136,20 @@ SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
 SDK_SOURCE_PATH  += lib_ux
 endif
 
+TEST_SRCS := $(wildcard src/*Test.c)
+TEST_OKS = $(patsubst src/%.c,obj/%.ok,$(TEST_SRCS))
+
+test: $(TEST_OKS)
+
+# Note: this executes on the host, not via QEMU
+obj/%Test.ok: obj/%Test
+	@echo "Testing $<..."
+	@$< && touch $@
+
+obj/%Test: src/%Test.c src/%.c
+	@mkdir -p $(@D)
+	$(CC) $< -DUNIT_TEST -o $@
+
 load: all
 	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
