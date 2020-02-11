@@ -64,7 +64,7 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
     cx_ecfp_private_key_t privateKey;
     derive_private_key(&privateKey, derivationPath, derivationPathLength);
 
-    int messageLength = (dataBuffer[0] << 8) + dataBuffer[1];
+    int messageLength = U2BE(dataBuffer, 0);
     dataBuffer += 2;
     uint8_t *message = dataBuffer;
 

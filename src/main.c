@@ -43,7 +43,7 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
             THROW(0x6E00);
             }
 
-            int dataLength = (G_io_apdu_buffer[OFFSET_LC] << 8) + G_io_apdu_buffer[OFFSET_LC + 1];
+            int dataLength = U2BE(G_io_apdu_buffer, OFFSET_LC);
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
 
