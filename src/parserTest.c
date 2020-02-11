@@ -1,6 +1,6 @@
 #ifdef UNIT_TEST
 
-#include "parseMessage.c"
+#include "parser.c"
 #include <stdio.h>
 #include <assert.h>
 
