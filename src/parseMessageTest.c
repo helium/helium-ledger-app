@@ -6,7 +6,7 @@
 
 void test_parse_u8() {
    uint8_t message[] = {1, 2};
-   MessageParser parser = {message, sizeof(message)};
+   Parser parser = {message, sizeof(message)};
    uint8_t value;
    assert(parse_u8(&parser, &value) == 0);
    assert(parser.buffer_length == 1);
@@ -16,14 +16,14 @@ void test_parse_u8() {
 
 void test_parse_u8_too_short() {
    uint8_t message[] = {};
-   MessageParser parser = {message, sizeof(message)};
+   Parser parser = {message, sizeof(message)};
    uint8_t value;
    assert(parse_u8(&parser, &value) == 1);
 }
 
 void test_parse_length() {
    uint8_t message[] = {1, 2};
-   MessageParser parser = {message, sizeof(message)};
+   Parser parser = {message, sizeof(message)};
    size_t value;
    assert(parse_length(&parser, &value) == 0);
    assert(parser.buffer_length == 1);
@@ -33,7 +33,7 @@ void test_parse_length() {
 
 void test_parse_length_two_bytes() {
    uint8_t message[] = {128, 1};
-   MessageParser parser = {message, sizeof(message)};
+   Parser parser = {message, sizeof(message)};
    size_t value;
    assert(parse_length(&parser, &value) == 0);
    assert(parser.buffer_length == 0);
@@ -43,7 +43,7 @@ void test_parse_length_two_bytes() {
 
 void test_parse_message_header() {
    uint8_t message[] = {1, 2, 3};
-   MessageParser parser = {message, sizeof(message)};
+   Parser parser = {message, sizeof(message)};
    MessageHeader header;
    assert(parse_message_header(&parser, &header) == 0);
    assert(parser.buffer_length == 0);
@@ -51,42 +51,44 @@ void test_parse_message_header() {
 }
 
 void test_parse_pubkeys() {
-   uint8_t message[33] = {1};
-   MessageParser parser = {message, sizeof(message)};
+   uint8_t message[PUBKEY_SIZE + 1] = {1, 42};
+   Parser parser = {message, sizeof(message)};
    Pubkey* pubkeys;
    size_t pubkeys_length;
    assert(parse_pubkeys(&parser, &pubkeys, &pubkeys_length) == 0);
    assert(parser.buffer_length == 0);
-   assert(parser.buffer == message + 33);
+   assert(parser.buffer == message + PUBKEY_SIZE + 1);
+   assert(pubkeys->data[0] == 42);
 }
 
 void test_parse_pubkeys_too_short() {
    uint8_t message[] = {1};
-   MessageParser parser = {message, sizeof(message)};
+   Parser parser = {message, sizeof(message)};
    Pubkey* pubkeys;
    size_t pubkeys_length;
    assert(parse_pubkeys(&parser, &pubkeys, &pubkeys_length) == 1);
 }
 
 void test_parse_blockhash() {
-   uint8_t message[32];
-   MessageParser parser = {message, sizeof(message)};
+   uint8_t message[BLOCKHASH_SIZE] = {42};
+   Parser parser = {message, sizeof(message)};
    Blockhash* blockhash;
    assert(parse_blockhash(&parser, &blockhash) == 0);
    assert(parser.buffer_length == 0);
-   assert(parser.buffer == message + 32);
+   assert(parser.buffer == message + BLOCKHASH_SIZE);
+   assert(blockhash->data[0] == 42);
 }
 
 void test_parse_blockhash_too_short() {
    uint8_t message[31]; // <--- Too short!
-   MessageParser parser = {message, sizeof(message)};
+   Parser parser = {message, sizeof(message)};
    Blockhash* blockhash;
    assert(parse_blockhash(&parser, &blockhash) == 1);
 }
 
 void test_parse_data() {
    uint8_t message[] = {1, 2};
-   MessageParser parser = {message, sizeof(message)};
+   Parser parser = {message, sizeof(message)};
    uint8_t* data;
    size_t data_length;
    assert(parse_data(&parser, &data, &data_length) == 0);
@@ -97,7 +99,7 @@ void test_parse_data() {
 
 void test_parse_data_too_short() {
    uint8_t message[] = {1}; // <--- Too short!
-   MessageParser parser = {message, sizeof(message)};
+   Parser parser = {message, sizeof(message)};
    uint8_t* data;
    size_t data_length;
    assert(parse_data(&parser, &data, &data_length) == 1);
@@ -105,7 +107,7 @@ void test_parse_data_too_short() {
 
 void test_parse_instruction() {
    uint8_t message[] = {0, 2, 33, 34, 1, 36};
-   MessageParser parser = {message, sizeof(message)};
+   Parser parser = {message, sizeof(message)};
    Instruction instruction;
    assert(parse_instruction(&parser, &instruction) == 0);
    assert(parser.buffer_length == 0);
