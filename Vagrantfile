@@ -81,7 +81,7 @@ Vagrant.configure("2") do |config|
     udevadm trigger
     udevadm control --reload-rules
 
-    apt-get install -y libudev-dev libusb-1.0-0-dev
+    apt-get install -y libudev-dev libusb-1.0-0-dev pkg-config
     python3 -m pip install ledgerblue
     pip install ledgerblue
     python3 -m pip install base58==1.0.3
