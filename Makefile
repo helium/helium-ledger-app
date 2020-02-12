@@ -146,9 +146,11 @@ obj/%Test.ok: obj/%Test
 	@echo "Testing $<..."
 	@$< && touch $@
 
-obj/%Test: src/%Test.c src/%.c
+obj/%Test: src/%.c src/%Test.c
 	@mkdir -p $(@D)
-	$(CC) $< -DUNIT_TEST -o $@
+	$(CC) $(filter-out $<,$^) -DUNIT_TEST -o $@
+
+obj/systemInstructionTest: src/parser.c
 
 load: all
 	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)

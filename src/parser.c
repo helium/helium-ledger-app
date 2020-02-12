@@ -18,6 +18,20 @@ static int parse_u8(Parser* parser, uint8_t* value) {
     return 0;
 }
 
+int parse_u32(Parser* parser, uint32_t* value) {
+    BAIL_IF(check_buffer_length(parser, 4));
+    *value = *(uint32_t *)parser->buffer;
+    advance(parser, 4);
+    return 0;
+}
+
+int parse_u64(Parser* parser, uint64_t* value) {
+    BAIL_IF(check_buffer_length(parser, 8));
+    *value = *(uint64_t *)parser->buffer;
+    advance(parser, 8);
+    return 0;
+}
+
 int parse_length(Parser* parser, size_t* value) {
     uint8_t value_u8;
     BAIL_IF(parse_u8(parser, &value_u8));

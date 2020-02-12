@@ -33,6 +33,10 @@ typedef struct MessageHeader {
     uint8_t num_readonly_unsigned_accounts;
 } MessageHeader;
 
+int parse_u32(Parser* parser, uint32_t* value);
+
+int parse_u64(Parser* parser, uint64_t* value);
+
 int parse_length(Parser* parser, size_t* value);
 
 int parse_message_header(Parser* parser, MessageHeader* header);
