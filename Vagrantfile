@@ -102,6 +102,10 @@ Vagrant.configure("2") do |config|
     fi
   SHELL
 
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    curl https://sh.rustup.rs -sSf | sh -s -- -y
+  SHELL
+
   # cd to /vagrant when "vagrant ssh"
   config.ssh.extra_args = ["-t", "cd /vagrant; bash --login"]
 end
