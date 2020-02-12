@@ -7,7 +7,7 @@ mod tests {
     use solana_sdk::{
         pubkey::Pubkey, signature::Signature, system_instruction, transaction::Transaction,
     };
-    use std::{collections::HashSet, str::FromStr};
+    use std::collections::HashSet;
 
     #[test]
     #[serial]
@@ -120,6 +120,6 @@ mod tests {
             .sign_raw_data(&derivation_path, &data)
             .expect("send apdu");
         let signature = Signature::new(&result);
-        assert_eq!(signature, Signature::from_str("4hTVyB3wwrsKH91FpzCxzE5hHFNub2sFEcj1M6kL1u5pDc8wMdX4vdt4qjdDvKBUvmurUp9eskcmhARZnbxU7D6v").unwrap());
+        assert!(signature.verify(&from.as_ref(), &data));
     }
 }
