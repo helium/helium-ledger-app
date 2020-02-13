@@ -17,6 +17,7 @@ debug_CFLAGS = -g
 release_CFLAGS = -O2
 
 $o/%.o: %.c
+	@echo "==> Compile $<"
 	@mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) $< -o $@
 
@@ -25,10 +26,12 @@ $o/%.o: %.c
 #
 # Note: this executes on the host, not via QEMU
 $o/%_test.ok: $o/%_test
-	@echo "Testing $<..."
-	@$< && touch $@
+	@echo "==> Run test $<"
+	@$<
+	@touch $@
 
 $o/%_test: %_test.o $o/libsol.a
+	@echo "==> Link test $@"
 	$(CC) $(CFLAGS) -o $@ $^
 
 #
@@ -37,11 +40,13 @@ $o/%_test: %_test.o $o/libsol.a
 libsol_source_files = $(filter-out %_test.c,$(wildcard *.c))
 libsol_object_files = $(patsubst %.c,$o/%.o,$(libsol_source_files))
 $o/libsol.a: $(libsol_object_files)
-	ar rvs $@ $^
+	@echo "==> Create static library $@"
+	@ar rcs $@ $^
 
 #
 # clean
 #
 .PHONY: clean
 clean:
+	@echo "==> Clean build directory"
 	rm -rf target
