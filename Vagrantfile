@@ -87,7 +87,6 @@ Vagrant.configure("2") do |config|
     python3 -m pip install base58==1.0.3
 
     BASHRC=/home/vagrant/.bashrc
-    grep -qF -- BOLOS_SDK $BASHRC || echo "export BOLOS_SDK=/vagrant/nanos-secure-sdk" >> $BASHRC
     grep -qF -- BOLOS_ENV $BASHRC || echo "export BOLOS_ENV=/bolos-env" >> $BASHRC
 
     if [ ! -d "/bolos-env" ]

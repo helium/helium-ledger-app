@@ -9,3 +9,4 @@ src/glyphs.h
 .vscode
 gitignore
 .vagrant
+libsol/target

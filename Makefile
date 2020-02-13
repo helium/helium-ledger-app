@@ -15,9 +15,7 @@
 #  limitations under the License.
 #*******************************************************************************
 
-ifeq ($(BOLOS_SDK),)
-$(error Environment variable BOLOS_SDK is not set)
-endif
+BOLOS_SDK = nanos-secure-sdk
 include $(BOLOS_SDK)/Makefile.defines
 
 APP_LOAD_PARAMS= --curve ed25519 --path "44'/501'" --appFlags 0x240 $(COMMON_LOAD_PARAMS)
@@ -129,28 +127,13 @@ include $(BOLOS_SDK)/Makefile.glyphs
 
 ### variables processed by the common makefile.rules of the SDK to grab source files and include dirs
 APP_SOURCE_PATH  += src
+APP_SOURCE_FILES += $(filter-out %_test.c,$(wildcard libsol/*.c))
 SDK_SOURCE_PATH  += lib_stusb lib_stusb_impl lib_u2f
 
 ifeq ($(TARGET_NAME),TARGET_NANOX)
 SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
 SDK_SOURCE_PATH  += lib_ux
 endif
-
-TEST_SRCS := $(wildcard src/*Test.c)
-TEST_OKS = $(patsubst src/%.c,obj/%.ok,$(TEST_SRCS))
-
-test: $(TEST_OKS)
-
-# Note: this executes on the host, not via QEMU
-obj/%Test.ok: obj/%Test
-	@echo "Testing $<..."
-	@$< && touch $@
-
-obj/%Test: src/%.c src/%Test.c
-	@mkdir -p $(@D)
-	$(CC) $(filter-out $<,$^) -DUNIT_TEST -o $@
-
-obj/systemInstructionTest: src/parser.c
 
 load: all
 	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)

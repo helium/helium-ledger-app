@@ -18,17 +18,28 @@ static int parse_u8(Parser* parser, uint8_t* value) {
     return 0;
 }
 
+static int parse_u16(Parser* parser, uint16_t* value) {
+    uint8_t lower, upper;
+    BAIL_IF(parse_u8(parser, &lower));
+    BAIL_IF(parse_u8(parser, &upper));
+    *value = lower + (upper << 8);
+    return 0;
+}
+
 int parse_u32(Parser* parser, uint32_t* value) {
-    BAIL_IF(check_buffer_length(parser, 4));
-    *value = *(uint32_t *)parser->buffer;
-    advance(parser, 4);
+    uint16_t lower, upper;
+    BAIL_IF(parse_u16(parser, &lower));
+    BAIL_IF(parse_u16(parser, &upper));
+    *value = lower + (upper << 16);
     return 0;
 }
 
 int parse_u64(Parser* parser, uint64_t* value) {
     BAIL_IF(check_buffer_length(parser, 8));
-    *value = *(uint64_t *)parser->buffer;
-    advance(parser, 8);
+    uint32_t lower, upper;
+    BAIL_IF(parse_u32(parser, &lower));
+    BAIL_IF(parse_u32(parser, &upper));
+    *value = lower + ((uint64_t)upper << 32);
     return 0;
 }
 
