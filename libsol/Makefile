@@ -30,7 +30,7 @@ $o/%_test.ok: $o/%_test
 	@$<
 	@touch $@
 
-$o/%_test: %_test.o $o/libsol.a
+$o/%_test: $o/%_test.o $o/libsol.a
 	@echo "==> Link test $@"
 	$(CC) $(CFLAGS) -o $@ $^
 
@@ -41,7 +41,7 @@ libsol_source_files = $(filter-out %_test.c,$(wildcard *.c))
 libsol_object_files = $(patsubst %.c,$o/%.o,$(libsol_source_files))
 $o/libsol.a: $(libsol_object_files)
 	@echo "==> Create static library $@"
-	@ar rcs $@ $^
+	ar rcs $@ $^
 
 #
 # clean
