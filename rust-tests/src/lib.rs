@@ -4,9 +4,7 @@ mod tests {
     use solana_remote_wallet::remote_wallet::{
         initialize_wallet_manager, DerivationPath, RemoteWallet,
     };
-    use solana_sdk::{
-        pubkey::Pubkey, signature::Signature, system_instruction, transaction::Transaction,
-    };
+    use solana_sdk::{message::Message, pubkey::Pubkey, system_instruction};
     use std::collections::HashSet;
 
     #[test]
@@ -96,30 +94,27 @@ mod tests {
 
         let from = ledger.get_pubkey(&derivation_path).expect("get pubkey");
         let instruction = system_instruction::transfer(&from, &ledger_base_pubkey, 42);
-        let transaction = Transaction::new_unsigned_instructions(vec![instruction]);
-        let message_data = transaction.message_data();
+        let message = Message::new(vec![instruction]).serialize();
         let signature = ledger
-            .sign_transaction(&derivation_path, transaction)
+            .sign_message(&derivation_path, &message)
             .expect("sign transaction");
-        assert!(signature.verify(&from.as_ref(), &message_data));
+        assert!(signature.verify(&from.as_ref(), &message));
 
         // Test large transaction
         let recipients: Vec<(Pubkey, u64)> = (0..4).map(|_| (Pubkey::new_rand(), 42)).collect();
         let instructions = system_instruction::transfer_many(&from, &recipients);
-        let transaction = Transaction::new_unsigned_instructions(instructions);
-        let message_data = transaction.message_data();
+        let message = Message::new(instructions).serialize();
         let signature = ledger
-            .sign_transaction(&derivation_path, transaction)
+            .sign_message(&derivation_path, &message)
             .expect("sign transaction");
-        assert!(signature.verify(&from.as_ref(), &message_data));
+        assert!(signature.verify(&from.as_ref(), &message));
 
         // Test hex string message
         let data = hex::decode("5ca1ab1e").expect("decode hex");
 
-        let result = ledger
-            .sign_raw_data(&derivation_path, &data)
+        let signature = ledger
+            .sign_message(&derivation_path, &data)
             .expect("send apdu");
-        let signature = Signature::new(&result);
         assert!(signature.verify(&from.as_ref(), &data));
     }
 }
