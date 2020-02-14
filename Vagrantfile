@@ -51,14 +51,6 @@ Vagrant.configure("2") do |config|
   # Example for VirtualBox:
   #
   config.vm.provider "virtualbox" do |vb|
-      # Enable USB
-      vb.customize ["modifyvm", :id, "--usb", "on"]
-      vb.customize ["usbfilter", "add", "0",
-          "--target", :id,
-          "--name", "Ledger Nano S",
-          "--manufacturer", "Ledger",
-          "--product", "Nano S"]
-
   #   # Display the VirtualBox GUI when booting the machine
   #   vb.gui = true
   #
@@ -74,17 +66,7 @@ Vagrant.configure("2") do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
-    apt-get install -y gcc-multilib g++-multilib python3-pip python-pip
-
-    wget -q -O - https://raw.githubusercontent.com/LedgerHQ/udev-rules/master/add_udev_rules.sh | sudo bash
-    sed -e 's/$/, OWNER="vagrant"/' -i /etc/udev/rules.d/20-hw1.rules
-    udevadm trigger
-    udevadm control --reload-rules
-
-    apt-get install -y libudev-dev libusb-1.0-0-dev pkg-config
-    python3 -m pip install ledgerblue
-    pip install ledgerblue
-    python3 -m pip install base58==1.0.3
+    apt-get install -y gcc-multilib g++-multilib python3-pip
 
     BASHRC=/home/vagrant/.bashrc
     grep -qF -- BOLOS_ENV $BASHRC || echo "export BOLOS_ENV=/bolos-env" >> $BASHRC
@@ -99,10 +81,9 @@ Vagrant.configure("2") do |config|
         tar xf clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz -C /bolos-env
         mv /bolos-env/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04 /bolos-env/clang-arm-fropi
     fi
-  SHELL
 
-  config.vm.provision "shell", privileged: false, inline: <<-SHELL
-    curl https://sh.rustup.rs -sSf | sh -s -- -y
+    apt-get install -y libudev-dev libusb-1.0-0-dev pkg-config
+    python3 -m pip install ledgerblue
   SHELL
 
   # cd to /vagrant when "vagrant ssh"

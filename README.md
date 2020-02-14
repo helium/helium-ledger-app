@@ -47,10 +47,10 @@ source prepare-devenv.sh x
 
 ## Building and installing
 
-Compile and load the app onto the device:
+Compile:
 
 ```bash
-make load
+make
 ```
 
 Refresh the repo (required after Makefile edits):
@@ -58,10 +58,18 @@ Refresh the repo (required after Makefile edits):
 make clean
 ```
 
-Remove the app from the device:
+To load the app onto the device, from the *host* machine:
+
 ```bash
-make delete
+make -f host.mk
 ```
+
+Remove the app from the device:
+
+```bash
+make -f host.mk delete
+```
+
 
 ## Example of Ledger wallet functionality
 
