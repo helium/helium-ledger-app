@@ -67,6 +67,39 @@ mod tests {
     /// This test requires interactive approval of message signing on the ledger.
     #[test]
     #[serial]
+    fn ledger_sign_garbage_test() {
+        let wallet_manager = initialize_wallet_manager();
+
+        // Update device list
+        wallet_manager.update_devices().expect("No Ledger found, make sure you have a unlocked Ledger connected with the Ledger Wallet Solana running");
+        assert!(wallet_manager.list_devices().len() > 0);
+
+        // Fetch the base pubkey of a connected ledger device
+        let ledger_base_pubkey = wallet_manager
+            .list_devices()
+            .iter()
+            .filter(|d| d.manufacturer == "ledger".to_string())
+            .nth(0)
+            .map(|d| d.pubkey.clone())
+            .expect("No ledger device detected");
+
+        let ledger = wallet_manager
+            .get_ledger(&ledger_base_pubkey)
+            .expect("get device");
+
+        let derivation_path = DerivationPath {
+            account: 12345,
+            change: None,
+        };
+
+        // Test invalid message
+        let data = hex::decode("deadbeef").expect("decode hex");
+        ledger.sign_message(&derivation_path, &data).unwrap_err();
+    }
+
+    /// This test requires interactive approval of message signing on the ledger.
+    #[test]
+    #[serial]
     fn ledger_sign_transaction_test() {
         let wallet_manager = initialize_wallet_manager();
 
@@ -108,13 +141,5 @@ mod tests {
             .sign_message(&derivation_path, &message)
             .expect("sign transaction");
         assert!(signature.verify(&from.as_ref(), &message));
-
-        // Test hex string message
-        let data = hex::decode("5ca1ab1e").expect("decode hex");
-
-        let signature = ledger
-            .sign_message(&derivation_path, &data)
-            .expect("send apdu");
-        assert!(signature.verify(&from.as_ref(), &data));
     }
 }

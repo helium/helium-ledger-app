@@ -1,27 +1,8 @@
 #include "parser.h"
+#include "system_instruction.h"
 #include <string.h>
 
 #define BAIL_IF(x) {int err = x; if (err) return err;}
-
-enum SystemInstructionKind {
-    CreateAccount,
-    Assign,
-    Transfer,
-    CreateAccountWithSeed,
-    AdvanceNonceAccount,
-    WithdrawNonceAccount,
-    InitializeNonceAccount,
-    AuthorizeNonceAccount,
-    Allocate,
-    AllocateWithSeed,
-    AssignWithSeed
-};
-
-typedef struct SystemTransferInfo {
-    Pubkey* from;
-    Pubkey* to;
-    uint64_t lamports;
-} SystemTransferInfo;
 
 static int parse_system_instruction_kind(Parser* parser, enum SystemInstructionKind* kind) {
     return parse_u32(parser, (uint32_t *) kind);
@@ -59,7 +40,7 @@ int parse_system_transfer_instructions(Parser* parser, MessageHeader* header, Sy
     Pubkey system_program_id = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     BAIL_IF(memcmp(program_id, &system_program_id, PUBKEY_SIZE));
 
-    BAIL_IF(parse_system_transfer_instruction(&instruction, header->pubkeys, header->pubkeys_length, info));
+    BAIL_IF(parse_system_transfer_instruction(&instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, info));
 
     return 0;
 }

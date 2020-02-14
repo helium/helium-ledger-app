@@ -47,6 +47,7 @@ void test_parse_pubkeys_header() {
    assert(parse_pubkeys_header(&parser, &header) == 0);
    assert(parser.buffer_length == 0);
    assert(parser.buffer == message + 4);
+   assert(header.pubkeys_length == 4);
 }
 
 void test_parse_pubkeys() {

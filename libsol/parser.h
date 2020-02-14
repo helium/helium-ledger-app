@@ -36,7 +36,6 @@ typedef struct PubkeysHeader {
 
 typedef struct MessageHeader {
     PubkeysHeader pubkeys_header;
-    size_t pubkeys_length;
     Pubkey* pubkeys;
     Blockhash* blockhash;
     size_t instructions_length;

@@ -3,9 +3,14 @@
 #include "ux.h"
 #include "cx.h"
 #include "utils.h"
+#include "parser.h"
+#include "system_instruction.h"
 
 static char messageHash[BASE58_HASH_LENGTH];
 static unsigned char signature[SIGNATURE_LENGTH];
+
+#define MESSAGE_TRANSFER_SIZE 32
+static char messageTransfer[MESSAGE_TRANSFER_SIZE];
 
 void derive_private_key(cx_ecfp_private_key_t *privateKey, uint32_t *derivationPath, uint8_t derivationPathLength) {
     uint8_t privateKeyData[32];
@@ -29,6 +34,13 @@ UX_STEP_NOCB(
       .title = "Message Hash",
       .text = messageHash,
     });
+UX_STEP_NOCB(
+    ux_transfer_message_flow_0_step,
+    bnnn_paging,
+    {
+      .title = "Transfer (SOL, lam)",
+      .text = messageTransfer,
+    });
 UX_STEP_VALID(
     ux_display_message_flow_1_step,
     pb,
@@ -38,7 +50,7 @@ UX_STEP_VALID(
       "Approve",
     });
 UX_STEP_VALID(
-    ux_diplay_message_flow_2_step,
+    ux_display_message_flow_2_step,
     pb,
     sendResponse(0, false),
     {
@@ -49,7 +61,13 @@ UX_STEP_VALID(
 UX_FLOW(ux_display_message,
   &ux_display_message_flow_0_step,
   &ux_display_message_flow_1_step,
-  &ux_diplay_message_flow_2_step
+  &ux_display_message_flow_2_step
+);
+
+UX_FLOW(ux_transfer_message,
+  &ux_transfer_message_flow_0_step,
+  &ux_display_message_flow_1_step,
+  &ux_display_message_flow_2_step
 );
 
 void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
@@ -68,6 +86,17 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
     dataBuffer += 2;
     uint8_t *message = dataBuffer;
 
+    Parser parser = {message, messageLength};
+    MessageHeader header;
+    if (parse_message_header(&parser, &header)) {
+        // This is not a valid Solana message
+        sendResponse(0, false);
+        return;
+    }
+
+    SystemTransferInfo info;
+    int system_transfer_err = parse_system_transfer_instructions(&parser, &header, &info);
+
     cx_hash_sha256(dataBuffer, dataLength, messageHashBytes, HASH_LENGTH);
 
     int len = encodeBase58(messageHashBytes, HASH_LENGTH, (unsigned char *) messageHash, BASE58_HASH_LENGTH);
@@ -82,7 +111,14 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
 
         sendResponse(0, false);
     } else {
-        ux_flow_init(0, ux_display_message, NULL);
+        if (system_transfer_err == 0) {
+	    uint32_t sol = info.lamports / 1000000000;
+	    uint32_t lamports = info.lamports % 1000000000;
+            snprintf(messageTransfer, MESSAGE_TRANSFER_SIZE, "%u, %u", sol, lamports);
+            ux_flow_init(0, ux_transfer_message, NULL);
+        } else {
+            ux_flow_init(0, ux_display_message, NULL);
+        }
         *flags |= IO_ASYNCH_REPLY;
     }
 }
