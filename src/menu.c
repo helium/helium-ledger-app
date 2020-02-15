@@ -118,14 +118,14 @@ UX_STEP_NOCB(
       "Application",
       "is ready",
     });
-UX_STEP_VALID(
-    ux_idle_flow_2_step,
-    pb,
-    ux_menulist_init(0, settings_submenu_getter, settings_submenu_selector),
-    {
-      &C_icon_coggle,
-      "Settings",
-    });
+//UX_STEP_VALID(
+//    ux_idle_flow_2_step,
+//    pb,
+//    ux_menulist_init(0, settings_submenu_getter, settings_submenu_selector),
+//    {
+//      &C_icon_coggle,
+//      "Settings",
+//    });
 UX_STEP_NOCB(
     ux_idle_flow_3_step, 
     bn, 
@@ -143,7 +143,7 @@ UX_STEP_VALID(
     });
 UX_FLOW(ux_idle_flow,
   &ux_idle_flow_1_step,
-  &ux_idle_flow_2_step,
+  //&ux_idle_flow_2_step,
   &ux_idle_flow_3_step,
   &ux_idle_flow_4_step,
   FLOW_LOOP
