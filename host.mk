@@ -1,9 +1,7 @@
 BOLOS_SDK = nanos-secure-sdk
+BOLOS_ENV = bogus
 include $(BOLOS_SDK)/Makefile.defines
-
-APP_LOAD_PARAMS= --curve ed25519 --path "44'/501'" --appFlags 0x240 $(COMMON_LOAD_PARAMS)
-
-all: load
+include config.min
 
 load:
 	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)

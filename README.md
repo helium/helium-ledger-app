@@ -61,7 +61,7 @@ make clean
 To load the app onto the device, from the *host* machine:
 
 ```bash
-make -f host.mk
+make -f host.mk load
 ```
 
 Remove the app from the device:

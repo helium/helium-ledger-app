@@ -17,14 +17,7 @@
 
 BOLOS_SDK = nanos-secure-sdk
 include $(BOLOS_SDK)/Makefile.defines
-
-APP_LOAD_PARAMS= --curve ed25519 --path "44'/501'" --appFlags 0x240 $(COMMON_LOAD_PARAMS)
-
-APPVERSION_M=0
-APPVERSION_N=0
-APPVERSION_P=0
-APPVERSION=$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)
-APPNAME = "Solana"
+include config.min
 
 DEFINES += $(DEFINES_LIB)
 
