@@ -1,5 +1,5 @@
 [package]
-name = "rust-tests"
+name = "ledger-app-solana-tests"
 version = "0.1.0"
 description = "Ledger-app integration tests using Solana tools"
 authors = ["Solana Maintainers <maintainers@solana.com>"]

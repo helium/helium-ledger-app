@@ -9,7 +9,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn ledger_pubkey_test() {
+    fn test_ledger_pubkey() {
         let wallet_manager = initialize_wallet_manager();
 
         // Update device list
@@ -67,7 +67,7 @@ mod tests {
     /// This test requires interactive approval of message signing on the ledger.
     #[test]
     #[serial]
-    fn ledger_sign_garbage_test() {
+    fn test_ledger_sign_garbage() {
         let wallet_manager = initialize_wallet_manager();
 
         // Update device list
@@ -100,7 +100,7 @@ mod tests {
     /// This test requires interactive approval of message signing on the ledger.
     #[test]
     #[serial]
-    fn ledger_sign_transaction_test() {
+    fn test_ledger_sign_transaction() {
         let wallet_manager = initialize_wallet_manager();
 
         // Update device list

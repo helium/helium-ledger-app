@@ -716,6 +716,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ledger-app-solana-tests"
+version = "0.1.0"
+dependencies = [
+ "hex 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serial_test 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serial_test_derive 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "solana-remote-wallet 0.24.0 (git+https://github.com/solana-labs/solana?rev=b358ff66e12533bbef95f0b5e0cbb32fa03f6e13)",
+ "solana-sdk 0.24.0 (git+https://github.com/solana-labs/solana?rev=b358ff66e12533bbef95f0b5e0cbb32fa03f6e13)",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1237,17 +1248,6 @@ dependencies = [
  "untrusted 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "web-sys 0.3.35 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "rust-tests"
-version = "0.1.0"
-dependencies = [
- "hex 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "serial_test 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "serial_test_derive 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "solana-remote-wallet 0.24.0 (git+https://github.com/solana-labs/solana?rev=b358ff66e12533bbef95f0b5e0cbb32fa03f6e13)",
- "solana-sdk 0.24.0 (git+https://github.com/solana-labs/solana?rev=b358ff66e12533bbef95f0b5e0cbb32fa03f6e13)",
 ]
 
 [[package]]
