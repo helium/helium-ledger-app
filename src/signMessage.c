@@ -4,6 +4,7 @@
 #include "cx.h"
 #include "utils.h"
 #include "parser.h"
+#include "printer.h"
 #include "system_instruction.h"
 
 static char messageHash[BASE58_HASH_LENGTH];
@@ -14,6 +15,8 @@ static char recipientPubkey[BASE58_PUBKEY_LENGTH];
 
 #define MESSAGE_TRANSFER_SIZE 32
 static char messageTransfer[MESSAGE_TRANSFER_SIZE];
+
+#define SUMMARY_LENGTH 7
 
 void derive_private_key(cx_ecfp_private_key_t *privateKey, uint32_t *derivationPath, uint8_t derivationPathLength) {
     uint8_t privateKeyData[32];
@@ -41,7 +44,7 @@ UX_STEP_NOCB(
     ux_transfer_message_flow_0_step,
     bnnn_paging,
     {
-      .title = "Transfer (SOL, lam)",
+      .title = "Transfer",
       .text = messageTransfer,
     });
 UX_STEP_NOCB(
@@ -130,8 +133,10 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
     int len = encodeBase58(messageHashBytes, HASH_LENGTH, (uint8_t*) messageHash, BASE58_HASH_LENGTH);
     messageHash[len] = '\0';
 
-    len = encodeBase58((uint8_t*) &header.pubkeys[0], PUBKEY_LENGTH, (uint8_t*) feePayer, BASE58_PUBKEY_LENGTH);
-   feePayer[len] = '\0';
+    char pubkeyBuffer[BASE58_PUBKEY_LENGTH];
+    len = encodeBase58((uint8_t*) &header.pubkeys[0], PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
+   pubkeyBuffer[len] = '\0';
+   print_summary(pubkeyBuffer, feePayer, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
     cx_eddsa_sign(&privateKey, CX_LAST, CX_SHA512, message, messageLength, NULL, 0, signature, SIGNATURE_LENGTH, NULL);
 
@@ -143,15 +148,15 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
         sendResponse(0, false);
     } else {
         if (system_transfer_err == 0) {
-	    uint32_t sol = info.lamports / 1000000000;
-	    uint32_t lamports = info.lamports % 1000000000;
-            snprintf(messageTransfer, MESSAGE_TRANSFER_SIZE, "%u, %u", sol, lamports);
+            print_amount(info.lamports, "SOL", messageTransfer); // MESSAGE_TRANSFER_SIZE
 
-            len = encodeBase58((uint8_t*) info.from, PUBKEY_LENGTH, (uint8_t*) senderPubkey, BASE58_PUBKEY_LENGTH);
-            senderPubkey[len] = '\0';
+            len = encodeBase58((uint8_t*) info.from, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
+            pubkeyBuffer[len] = '\0';
+            print_summary(pubkeyBuffer, senderPubkey, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
-            len = encodeBase58((uint8_t*) info.to, PUBKEY_LENGTH, (uint8_t*) recipientPubkey, BASE58_PUBKEY_LENGTH);
-            recipientPubkey[len] = '\0';
+            len = encodeBase58((uint8_t*) info.to, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
+            pubkeyBuffer[len] = '\0';
+            print_summary(pubkeyBuffer, recipientPubkey, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
             if (memcmp(&header.pubkeys[0], info.to, PUBKEY_SIZE) == 0) {
                 snprintf(feePayer, BASE58_PUBKEY_LENGTH, "recipient");

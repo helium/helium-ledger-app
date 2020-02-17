@@ -21,14 +21,6 @@ include config.min
 
 DEFINES += $(DEFINES_LIB)
 
-
-ifeq ($(TARGET_NAME),TARGET_NANOX)
-	ICONNAME=icons/nanox_app_solana.gif
-else
-	ICONNAME=icons/nanos_app_solana.gif
-endif
-
-
 ################
 # Default rule #
 ################

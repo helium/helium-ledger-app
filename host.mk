@@ -3,6 +3,12 @@ BOLOS_ENV = bogus
 include $(BOLOS_SDK)/Makefile.defines
 include config.min
 
+ifeq ($(TARGET_NAME),TARGET_NANOX)
+	ICONNAME=icons/nanox_app_solana.gif
+else
+	ICONNAME=icons/nanos_app_solana.gif
+endif
+
 load:
 	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
