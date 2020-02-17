@@ -1,3 +1,7 @@
+
+#pragma once
+
+#include "ux.h"
 // Each command has some state associated with it that sticks around for the
 // life of the command. A separate context_t struct should be defined for each
 // command.
@@ -62,3 +66,4 @@ void ui_idle(void);
 // io_exchange with the IO_RETURN_AFTER_TX flag. tx is the current offset
 // within G_io_apdu_buffer (before the code is appended).
 void io_exchange_with_code(uint16_t code, uint16_t tx);
+

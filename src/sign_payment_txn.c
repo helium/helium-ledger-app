@@ -1,9 +1,13 @@
+#include "bolos_target.h"
+
+#if defined(TARGET_NANOS) && !defined(HAVE_UX_FLOW)
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <os.h>
 #include <os_io_seproxyhal.h>
 #include "helium.h"
-#include "ux.h"
+#include "helium_ux.h"
 
 static calcTxnHashContext_t *ctx = &global.calcTxnHashContext;
 
@@ -250,3 +254,5 @@ void handle_sign_payment_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16
 	UX_DISPLAY(ui_displayAmount, ui_prepro_displayAmount);
 	*flags |= IO_ASYNCH_REPLY;
 }
+
+#endif

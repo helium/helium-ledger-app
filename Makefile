@@ -25,13 +25,24 @@ include $(BOLOS_SDK)/Makefile.defines
 #########
 
 APPNAME    = Helium
-ICONNAME   = nanos_app_helium.gif
+
+ifeq ($(TARGET_NAME),TARGET_NANOX)
+	ICONNAME   = nanox_app_helium.gif
+else
+	ICONNAME   = nanos_app_helium.gif
+endif
+
 APPVERSION = 1.0.0
 
 # The --path argument here restricts which BIP32 paths the app is allowed to derive.
 APP_LOAD_PARAMS = --appFlags 0x40 --path "44'/904'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
 APP_SOURCE_PATH = src
 SDK_SOURCE_PATH = lib_stusb lib_stusb_impl
+
+ifeq ($(TARGET_NAME),TARGET_NANOX)
+	SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
+	SDK_SOURCE_PATH  += lib_ux
+endif
 
 all: default
 
@@ -45,10 +56,41 @@ delete:
 # Platform #
 ############
 
-DEFINES += OS_IO_SEPROXYHAL IO_SEPROXYHAL_BUFFER_SIZE_B=128
+
+DEFINES += OS_IO_SEPROXYHAL
 DEFINES += HAVE_BAGL HAVE_SPRINTF
 DEFINES += HAVE_IO_USB HAVE_L4_USBLIB IO_USB_MAX_ENDPOINTS=7 IO_HID_EP_LENGTH=64 HAVE_USB_APDU
 DEFINES += APPVERSION=\"$(APPVERSION)\"
+DEFINES   +=  LEDGER_MAJOR_VERSION=$(APPVERSION_M) LEDGER_MINOR_VERSION=$(APPVERSION_N) LEDGER_PATCH_VERSION=$(APPVERSION_P)
+
+
+ifeq ($(TARGET_NAME),TARGET_NANOX)
+DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=300
+DEFINES       += HAVE_BLE BLE_COMMAND_TIMEOUT_MS=2000
+DEFINES       += HAVE_BLE_APDU # basic ledger apdu transport over BLE
+
+DEFINES       += HAVE_BAGL BAGL_WIDTH=128 BAGL_HEIGHT=64
+DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_REGULAR_11PX
+DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_EXTRABOLD_11PX
+DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_LIGHT_16PX
+DEFINES       += HAVE_UX_FLOW
+else
+	DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=128
+	DEFINES	      += HAVE_UX_LEGACY
+endif
+
+# Enabling debug PRINTF
+DEBUG = 0
+ifdef DEBUG
+	ifeq ($(TARGET_NAME),TARGET_NANOX)
+		DEFINES   += HAVE_PRINTF PRINTF=mcu_usb_printf
+	else
+		DEFINES   += HAVE_PRINTF PRINTF=screen_printf
+	endif
+else
+	DEFINES   += PRINTF\(...\)=
+endif
+
 
 ##############
 #  Compiler  #
