@@ -135,8 +135,8 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
 
     char pubkeyBuffer[BASE58_PUBKEY_LENGTH];
     len = encodeBase58((uint8_t*) &header.pubkeys[0], PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
-   pubkeyBuffer[len] = '\0';
-   print_summary(pubkeyBuffer, feePayer, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    pubkeyBuffer[len] = '\0';
+    print_summary(pubkeyBuffer, feePayer, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
     cx_eddsa_sign(&privateKey, CX_LAST, CX_SHA512, message, messageLength, NULL, 0, signature, SIGNATURE_LENGTH, NULL);
 
