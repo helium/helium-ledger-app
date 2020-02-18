@@ -255,15 +255,21 @@ __attribute__((section(".boot"))) int main(void) {
 		BEGIN_TRY {
 			TRY {
 				io_seproxyhal_init();
+
+#ifdef TARGET_NANOX
+				// grab the current plane mode setting
+				G_io_app.plane_mode = os_setting_get(OS_SETTING_PLANEMODE, NULL, 0);
+#endif // TARGET_NANOX
+
 				USB_power(0);
 				USB_power(1);
 
+				ui_idle();
 #ifdef HAVE_BLE
-				 BLE_power(0, NULL);
-				 BLE_power(1, "Nano X");
+				BLE_power(0, NULL);
+				BLE_power(1, "Nano X");
 #endif // HAVE_BLE
 
-				ui_idle();
 				helium_main();
 			}
 			CATCH(EXCEPTION_IO_RESET) {
