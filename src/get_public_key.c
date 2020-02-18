@@ -1,12 +1,17 @@
+#include "bolos_target.h"
+
+#if defined(TARGET_NANOS) && !defined(HAVE_UX_FLOW)
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <os.h>
 #include <os_io_seproxyhal.h>
 #include "helium.h"
-#include "ux.h"
+#include "helium_ux.h"
 
 // Get a pointer to getPublicKey's state variables.
 static getPublicKeyContext_t *ctx = &global.getPublicKeyContext;
+
 
 // Define the comparison screen. This is where the user will compare the
 // public key (or address) on their device to the one shown on the computer.
@@ -113,3 +118,5 @@ void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t
 	// Flush the APDU buffer, sending the response.
 	io_exchange_with_code(SW_OK, adpu_tx);
 }
+
+#endif

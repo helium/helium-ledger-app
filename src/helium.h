@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 // exception codes
 #define SW_DEVELOPER_ERR 0x6B00
 #define SW_INVALID_PARAM 0x6B01

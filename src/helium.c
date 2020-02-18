@@ -86,7 +86,7 @@ void derive_helium_keypair(uint32_t index, cx_ecfp_private_key_t *privateKey, cx
 #include "pb.h"
 #include "transactions/txn.pb.h"
 #include <os_io_seproxyhal.h>
-#include "ux.h"
+#include "helium_ux.h"
 
 
 void sign_tx(uint8_t *dst, uint32_t index, const uint8_t *tx, uint16_t length) {
