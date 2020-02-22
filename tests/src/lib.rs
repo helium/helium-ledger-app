@@ -1,15 +1,15 @@
 #[cfg(test)]
 mod tests {
     use serial_test_derive::serial;
+    use solana_remote_wallet::ledger::LedgerWallet;
     use solana_remote_wallet::remote_wallet::{
         initialize_wallet_manager, DerivationPath, RemoteWallet,
     };
     use solana_sdk::{message::Message, pubkey::Pubkey, system_instruction};
     use std::collections::HashSet;
+    use std::sync::Arc;
 
-    #[test]
-    #[serial]
-    fn test_ledger_pubkey() {
+    fn get_ledger() -> (Arc<LedgerWallet>, Pubkey) {
         let wallet_manager = initialize_wallet_manager();
 
         // Update device list
@@ -28,6 +28,14 @@ mod tests {
         let ledger = wallet_manager
             .get_ledger(&ledger_base_pubkey)
             .expect("get device");
+
+        (ledger, ledger_base_pubkey)
+    }
+
+    #[test]
+    #[serial]
+    fn test_ledger_pubkey() {
+        let (ledger, ledger_base_pubkey) = get_ledger();
 
         let mut pubkey_set = HashSet::new();
         pubkey_set.insert(ledger_base_pubkey);
@@ -68,24 +76,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_ledger_sign_garbage() {
-        let wallet_manager = initialize_wallet_manager();
-
-        // Update device list
-        wallet_manager.update_devices().expect("No Ledger found, make sure you have a unlocked Ledger connected with the Ledger Wallet Solana running");
-        assert!(wallet_manager.list_devices().len() > 0);
-
-        // Fetch the base pubkey of a connected ledger device
-        let ledger_base_pubkey = wallet_manager
-            .list_devices()
-            .iter()
-            .filter(|d| d.manufacturer == "ledger".to_string())
-            .nth(0)
-            .map(|d| d.pubkey.clone())
-            .expect("No ledger device detected");
-
-        let ledger = wallet_manager
-            .get_ledger(&ledger_base_pubkey)
-            .expect("get device");
+        let (ledger, _ledger_base_pubkey) = get_ledger();
 
         let derivation_path = DerivationPath {
             account: 12345,
@@ -101,24 +92,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_ledger_sign_transaction() {
-        let wallet_manager = initialize_wallet_manager();
-
-        // Update device list
-        wallet_manager.update_devices().expect("No Ledger found, make sure you have a unlocked Ledger connected with the Ledger Wallet Solana running");
-        assert!(wallet_manager.list_devices().len() > 0);
-
-        // Fetch the base pubkey of a connected ledger device
-        let ledger_base_pubkey = wallet_manager
-            .list_devices()
-            .iter()
-            .filter(|d| d.manufacturer == "ledger".to_string())
-            .nth(0)
-            .map(|d| d.pubkey.clone())
-            .expect("No ledger device detected");
-
-        let ledger = wallet_manager
-            .get_ledger(&ledger_base_pubkey)
-            .expect("get device");
+        let (ledger, ledger_base_pubkey) = get_ledger();
 
         let derivation_path = DerivationPath {
             account: 12345,
