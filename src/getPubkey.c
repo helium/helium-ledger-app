@@ -69,8 +69,7 @@ void handleGetPubkey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataL
     int pathLength = read_derivation_path(dataBuffer, dataLength, derivationPath);
 
     getPublicKey(derivationPath, publicKey, pathLength);
-    int len = encodeBase58(publicKey, PUBKEY_LENGTH, (unsigned char *) publicKeyStr, BASE58_HASH_LENGTH);
-    publicKeyStr[len] = '\0';
+    encodeBase58(publicKey, PUBKEY_LENGTH, (unsigned char *) publicKeyStr, BASE58_HASH_LENGTH);
 
     if (p1 == P1_NON_CONFIRM) {
         *tx = set_result_get_pubkey();

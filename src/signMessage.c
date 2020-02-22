@@ -142,12 +142,10 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
     cx_hash_sha256(dataBuffer, dataLength, messageHashBytes, HASH_LENGTH);
 
     strcpy(G_instructionTitle, "Message Hash");
-    int len = encodeBase58(messageHashBytes, HASH_LENGTH, (uint8_t*) G_instructionText, BASE58_HASH_LENGTH);
-    G_instructionText[len] = '\0';
+    encodeBase58(messageHashBytes, HASH_LENGTH, (uint8_t*) G_instructionText, BASE58_HASH_LENGTH);
 
     char pubkeyBuffer[BASE58_PUBKEY_LENGTH];
-    len = encodeBase58((uint8_t*) &header.pubkeys[0], PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
-    pubkeyBuffer[len] = '\0';
+    encodeBase58((uint8_t*) &header.pubkeys[0], PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
     print_summary(pubkeyBuffer, G_feePayerText, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
     if (p1 == P1_NON_CONFIRM) {
@@ -162,13 +160,11 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
             print_amount(info.lamports, "SOL", G_instructionText);
 
             strcpy(G_senderTitle, "Sender");
-            len = encodeBase58((uint8_t*) info.from, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
-            pubkeyBuffer[len] = '\0';
+            encodeBase58((uint8_t*) info.from, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
             print_summary(pubkeyBuffer, G_senderText, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
             strcpy(G_recipientTitle, "Recipient");
-            len = encodeBase58((uint8_t*) info.to, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
-            pubkeyBuffer[len] = '\0';
+            encodeBase58((uint8_t*) info.to, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
             print_summary(pubkeyBuffer, G_recipientText, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
             if (memcmp(&header.pubkeys[0], info.to, PUBKEY_SIZE) == 0) {

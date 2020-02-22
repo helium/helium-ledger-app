@@ -48,10 +48,11 @@ unsigned char encodeBase58(unsigned char WIDE *in, unsigned char length,
         buffer[--j] = BASE_58_ALPHABET[0];
     }
     length = 2 * length - j;
-    if (maxoutlen < length) {
+    if (maxoutlen < length + 1) {
         THROW(EXCEPTION_OVERFLOW);
     }
     os_memmove(out, (buffer + j), length);
+    out[length] = '\0';
     return length;
 }
 
