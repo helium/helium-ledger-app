@@ -10,7 +10,7 @@ mod tests {
     use std::sync::Arc;
 
     fn get_ledger() -> (Arc<LedgerWallet>, Pubkey) {
-        let wallet_manager = initialize_wallet_manager();
+        let wallet_manager = initialize_wallet_manager().expect("Couldn't start wallet manager");
 
         // Update device list
         wallet_manager.update_devices().expect("No Ledger found, make sure you have a unlocked Ledger connected with the Ledger Wallet Solana running");
@@ -108,12 +108,34 @@ mod tests {
         assert!(signature.verify(&from.as_ref(), &message));
 
         // Test large transaction
-        let recipients: Vec<(Pubkey, u64)> = (0..4).map(|_| (Pubkey::new_rand(), 42)).collect();
+        let recipients: Vec<(Pubkey, u64)> = (0..10).map(|_| (Pubkey::new_rand(), 42)).collect();
         let instructions = system_instruction::transfer_many(&from, &recipients);
         let message = Message::new(instructions).serialize();
         let signature = ledger
             .sign_message(&derivation_path, &message)
             .expect("sign transaction");
         assert!(signature.verify(&from.as_ref(), &message));
+    }
+
+    #[test]
+    #[serial]
+    #[ignore]
+    fn test_ledger_sign_transaction_too_big() {
+        // TODO: Debug. This test is ignored because the client chokes on it,
+        // presumably because of the EXCEPTION_OVERFLOW that's thrown by the app.
+
+        // Test too big of a transaction
+        let (ledger, _ledger_base_pubkey) = get_ledger();
+
+        let derivation_path = DerivationPath {
+            account: 12345,
+            change: None,
+        };
+
+        let from = ledger.get_pubkey(&derivation_path).expect("get pubkey");
+        let recipients: Vec<(Pubkey, u64)> = (0..100).map(|_| (Pubkey::new_rand(), 42)).collect();
+        let instructions = system_instruction::transfer_many(&from, &recipients);
+        let message = Message::new(instructions).serialize();
+        ledger.sign_message(&derivation_path, &message).unwrap_err();
     }
 }
