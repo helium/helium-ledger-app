@@ -11,13 +11,12 @@
 #define TITLE_SIZE 32
 #define SUMMARY_LENGTH 7
 
-static char G_feePayerText[BASE58_PUBKEY_LENGTH];
-static char G_senderTitle[TITLE_SIZE];
-static char G_senderText[BASE58_PUBKEY_LENGTH];
-static char G_recipientTitle[TITLE_SIZE];
-static char G_recipientText[BASE58_PUBKEY_LENGTH];
-static char G_instructionTitle[TITLE_SIZE];
-static char G_instructionText[BASE58_HASH_LENGTH];
+typedef struct field_t {
+    char title[TITLE_SIZE];
+    char text[BASE58_PUBKEY_LENGTH];
+} field_t;
+
+static field_t G_fields[4];
 
 static uint8_t G_message[MAX_MESSAGE_LENGTH];
 static int G_messageLength;
@@ -47,29 +46,29 @@ UX_STEP_NOCB(
     ux_instruction_step,
     bnnn_paging,
     {
-      .title = G_instructionTitle,
-      .text = G_instructionText,
+      .title = G_fields[0].title,
+      .text = G_fields[0].text,
     });
 UX_STEP_NOCB(
     ux_sender_step,
     bnnn_paging,
     {
-      .title = G_senderTitle,
-      .text = G_senderText,
+      .title = G_fields[1].title,
+      .text = G_fields[1].text,
     });
 UX_STEP_NOCB(
     ux_recipient_step,
     bnnn_paging,
     {
-      .title = G_recipientTitle,
-      .text = G_recipientText,
+      .title = G_fields[2].title,
+      .text = G_fields[2].text,
     });
 UX_STEP_NOCB(
     ux_fee_payer_step,
     bnnn_paging,
     {
       .title = "Fee paid by",
-      .text = G_feePayerText,
+      .text = G_fields[3].text,
     });
 UX_STEP_VALID(
     ux_approve_step,
@@ -88,7 +87,7 @@ UX_STEP_VALID(
       "Reject",
     });
 
-UX_FLOW(ux_hash,
+UX_FLOW(ux_3_fields,
   &ux_instruction_step,
   &ux_sender_step,
   &ux_fee_payer_step,
@@ -96,7 +95,7 @@ UX_FLOW(ux_hash,
   &ux_reject_step
 );
 
-UX_FLOW(ux_transfer,
+UX_FLOW(ux_4_fields,
   &ux_instruction_step,
   &ux_sender_step,
   &ux_recipient_step,
@@ -105,14 +104,65 @@ UX_FLOW(ux_transfer,
   &ux_reject_step
 );
 
-UX_FLOW(ux_delegate,
-  &ux_instruction_step, // Stake account
-  &ux_sender_step, // Authorized staker
-  &ux_recipient_step, // Vote account
-  &ux_fee_payer_step,
-  &ux_approve_step,
-  &ux_reject_step
-);
+static int process_message_body(uint8_t* message_body, int message_body_length, MessageHeader* header, field_t* fields) {
+    Parser parser = {message_body, message_body_length};
+    char pubkeyBuffer[BASE58_PUBKEY_LENGTH];
+
+    // Check if these are system instructions
+    SystemTransferInfo transfer_info;
+    if (parse_system_transfer_instructions(&parser, header, &transfer_info) == 0) {
+        strcpy(fields[0].title, "Transfer");
+        print_amount(transfer_info.lamports, "SOL", fields[0].text);
+
+        strcpy(fields[1].title, "Sender");
+        encodeBase58((uint8_t*) transfer_info.from, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
+        print_summary(pubkeyBuffer, fields[1].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+        strcpy(fields[2].title, "Recipient");
+        encodeBase58((uint8_t*) transfer_info.to, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
+        print_summary(pubkeyBuffer, fields[2].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+        if (memcmp(&header->pubkeys[0], transfer_info.to, PUBKEY_SIZE) == 0) {
+            snprintf(fields[3].text, BASE58_PUBKEY_LENGTH, "recipient");
+        }
+
+        if (memcmp(&header->pubkeys[0], transfer_info.from, PUBKEY_SIZE) == 0) {
+            snprintf(fields[3].text, BASE58_PUBKEY_LENGTH, "sender");
+        }
+
+        ux_flow_init(0, ux_4_fields, NULL);
+        return 0;
+    }
+
+    // Reset the parser
+    parser.buffer = message_body;
+    parser.buffer_length = message_body_length;
+
+    // Check if these are staking instructions
+    DelegateStakeInfo delegate_info;
+    if (parse_delegate_stake_instructions(&parser, header, &delegate_info) == 0) {
+        strcpy(fields[0].title, "Delegate from");
+        encodeBase58((uint8_t*) delegate_info.stake_pubkey, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
+        print_summary(pubkeyBuffer, fields[0].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+        strcpy(fields[1].title, "Authorized by");
+        encodeBase58((uint8_t*) delegate_info.authorized_pubkey, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
+        print_summary(pubkeyBuffer, fields[1].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+        strcpy(fields[2].title, "Vote account");
+        encodeBase58((uint8_t*) delegate_info.vote_pubkey, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
+        print_summary(pubkeyBuffer, fields[2].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+        if (memcmp(&header->pubkeys[0], delegate_info.authorized_pubkey, PUBKEY_SIZE) == 0) {
+            snprintf(fields[3].text, BASE58_PUBKEY_LENGTH, "authorizer");
+        }
+
+        ux_flow_init(0, ux_4_fields, NULL);
+        return 0;
+    }
+
+    return 1;
+}
 
 void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
     if ((p2 & P2_EXTEND) == 0) {
@@ -145,25 +195,6 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
         sendResponse(0, false);
         return;
     }
-    uint8_t* message_body = parser.buffer;
-    int message_body_length = parser.buffer_length;
-
-    // Check if these are system instructions
-    SystemTransferInfo transfer_info;
-    int system_transfer_err = parse_system_transfer_instructions(&parser, &header, &transfer_info);
-
-    // Reset the parser
-    parser.buffer = message_body;
-    parser.buffer_length = message_body_length;
-
-    // Check if these are staking instructions
-    DelegateStakeInfo delegate_info;
-    int delegate_stake_err = parse_delegate_stake_instructions(&parser, &header, &delegate_info);
-
-    // Set fee payer text
-    char pubkeyBuffer[BASE58_PUBKEY_LENGTH];
-    encodeBase58((uint8_t*) &header.pubkeys[0], PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkeyBuffer, G_feePayerText, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
     if (p1 == P1_NON_CONFIRM) {
         // Uncomment this to allow blind signing.
@@ -171,58 +202,24 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
         //THROW(0x9000);
 
         sendResponse(0, false);
-    } else {
-        if (system_transfer_err == 0) {
-            strcpy(G_instructionTitle, "Transfer");
-            print_amount(transfer_info.lamports, "SOL", G_instructionText);
-
-            strcpy(G_senderTitle, "Sender");
-            encodeBase58((uint8_t*) transfer_info.from, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
-            print_summary(pubkeyBuffer, G_senderText, SUMMARY_LENGTH, SUMMARY_LENGTH);
-
-            strcpy(G_recipientTitle, "Recipient");
-            encodeBase58((uint8_t*) transfer_info.to, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
-            print_summary(pubkeyBuffer, G_recipientText, SUMMARY_LENGTH, SUMMARY_LENGTH);
-
-            if (memcmp(&header.pubkeys[0], transfer_info.to, PUBKEY_SIZE) == 0) {
-                snprintf(G_feePayerText, BASE58_PUBKEY_LENGTH, "recipient");
-            }
-
-            if (memcmp(&header.pubkeys[0], transfer_info.from, PUBKEY_SIZE) == 0) {
-                snprintf(G_feePayerText, BASE58_PUBKEY_LENGTH, "sender");
-            }
-
-            ux_flow_init(0, ux_transfer, NULL);
-        } else if (delegate_stake_err == 0) {
-            strcpy(G_instructionTitle, "Delegate from");
-            encodeBase58((uint8_t*) delegate_info.stake_pubkey, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
-            print_summary(pubkeyBuffer, G_instructionText, SUMMARY_LENGTH, SUMMARY_LENGTH);
-
-            strcpy(G_senderTitle, "Authorized by");
-            encodeBase58((uint8_t*) delegate_info.authorized_pubkey, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
-            print_summary(pubkeyBuffer, G_senderText, SUMMARY_LENGTH, SUMMARY_LENGTH);
-
-            strcpy(G_recipientTitle, "Vote account");
-            encodeBase58((uint8_t*) delegate_info.vote_pubkey, PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
-            print_summary(pubkeyBuffer, G_recipientText, SUMMARY_LENGTH, SUMMARY_LENGTH);
-
-            if (memcmp(&header.pubkeys[0], delegate_info.authorized_pubkey, PUBKEY_SIZE) == 0) {
-                snprintf(G_feePayerText, BASE58_PUBKEY_LENGTH, "authorizer");
-            }
-
-            ux_flow_init(0, ux_delegate, NULL);
-        } else {
-            strcpy(G_instructionTitle, "Unrecognized");
-            strcpy(G_instructionText, "format");
-
-            uint8_t messageHashBytes[HASH_LENGTH];
-            cx_hash_sha256(dataBuffer, dataLength, messageHashBytes, HASH_LENGTH);
-
-            strcpy(G_senderTitle, "Message Hash");
-            encodeBase58(messageHashBytes, HASH_LENGTH, (uint8_t*) G_senderText, BASE58_HASH_LENGTH);
-
-            ux_flow_init(0, ux_hash, NULL);
-        }
-        *flags |= IO_ASYNCH_REPLY;
     }
+
+    // Set fee payer text
+    char pubkeyBuffer[BASE58_PUBKEY_LENGTH];
+    encodeBase58((uint8_t*) &header.pubkeys[0], PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkeyBuffer, G_fields[3].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+    if (process_message_body(parser.buffer, parser.buffer_length, &header, G_fields)) {
+        strcpy(G_fields[0].title, "Unrecognized");
+        strcpy(G_fields[0].text, "format");
+
+        uint8_t messageHashBytes[HASH_LENGTH];
+        cx_hash_sha256(dataBuffer, dataLength, messageHashBytes, HASH_LENGTH);
+
+        strcpy(G_fields[1].title, "Message Hash");
+        encodeBase58(messageHashBytes, HASH_LENGTH, (uint8_t*) G_fields[1].text, BASE58_HASH_LENGTH);
+
+        ux_flow_init(0, ux_3_fields, NULL);
+    }
+    *flags |= IO_ASYNCH_REPLY;
 }
