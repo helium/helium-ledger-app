@@ -13,7 +13,7 @@ CFLAGS += -Werror -Wall -Wextra -pedantic -Wshadow -Wcast-qual -Wcast-align -Wno
 CFLAGS += -fPIC
 CFLAGS += $($(mode)_CFLAGS)
 
-debug_CFLAGS = -g
+debug_CFLAGS = -g -fsanitize=address -fsanitize=undefined
 release_CFLAGS = -O2
 
 $o/%.o: %.c
