@@ -18,3 +18,4 @@ serial_test_derive = "0.3.1"
 #solana-sdk = { path = "../../solana/sdk" }
 solana-remote-wallet = { git = "https://github.com/solana-labs/solana", rev = "dc02f2ea8b310643bdfd2095572a398a4f9d728e" }
 solana-sdk = { git = "https://github.com/solana-labs/solana", rev = "dc02f2ea8b310643bdfd2095572a398a4f9d728e" }
+solana-stake-program = { git = "https://github.com/solana-labs/solana", rev = "dc02f2ea8b310643bdfd2095572a398a4f9d728e" }

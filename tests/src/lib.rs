@@ -6,6 +6,7 @@ mod tests {
         initialize_wallet_manager, DerivationPath, RemoteWallet,
     };
     use solana_sdk::{message::Message, pubkey::Pubkey, system_instruction};
+    use solana_stake_program::stake_instruction;
     use std::collections::HashSet;
     use std::sync::Arc;
 
@@ -88,7 +89,7 @@ mod tests {
         ledger.sign_message(&derivation_path, &data).unwrap_err();
     }
 
-    /// This test requires interactive approval of message signing on the ledger.
+    // This test requires interactive approval of message signing on the ledger.
     #[test]
     #[serial]
     fn test_ledger_sign_transaction() {
@@ -137,5 +138,28 @@ mod tests {
         let instructions = system_instruction::transfer_many(&from, &recipients);
         let message = Message::new(instructions).serialize();
         ledger.sign_message(&derivation_path, &message).unwrap_err();
+    }
+
+    /// This test requires interactive approval of message signing on the ledger.
+    #[test]
+    #[serial]
+    fn test_ledger_delegate_stake() {
+        let (ledger, ledger_base_pubkey) = get_ledger();
+
+        let derivation_path = DerivationPath {
+            account: 12345,
+            change: None,
+        };
+
+        let authorized_pubkey = ledger.get_pubkey(&derivation_path).expect("get pubkey");
+        let stake_pubkey = ledger_base_pubkey;
+        let vote_pubkey = Pubkey::default();
+        let instruction =
+            stake_instruction::delegate_stake(&stake_pubkey, &authorized_pubkey, &vote_pubkey);
+        let message = Message::new(vec![instruction]).serialize();
+        let signature = ledger
+            .sign_message(&derivation_path, &message)
+            .expect("sign transaction");
+        assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
     }
 }
