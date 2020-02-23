@@ -1,5 +1,6 @@
 #include <string.h>
 #include "printer.h"
+#include "os_error.h"
 
 // max amount is max uint64 scaled down: "9223372036.854775807"
 #define AMOUNT_MAX_SIZE 22
@@ -63,5 +64,55 @@ int print_summary(const char *in, char *out, uint8_t left_length, uint8_t right_
         memcpy(out, in, in_length);
     }
 
+    return 0;
+}
+
+static const char BASE58_ALPHABET[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
+                                        'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q',
+                                        'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
+                                        'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                                        'w', 'x', 'y', 'z'};
+
+int encode_base58(uint8_t *in, uint8_t length, uint8_t *out, uint8_t maxoutlen) {
+    uint8_t tmp[164];
+    uint8_t buffer[164];
+    uint8_t j;
+    uint8_t start_at;
+    uint8_t zero_count = 0;
+    if (length > sizeof(tmp)) {
+        return INVALID_PARAMETER;
+    }
+    memmove(tmp, in, length);
+    while ((zero_count < length) && (tmp[zero_count] == 0)) {
+        ++zero_count;
+    }
+    j = 2 * length;
+    start_at = zero_count;
+    while (start_at < length) {
+        uint16_t remainder = 0;
+        uint8_t div_loop;
+        for (div_loop = start_at; div_loop < length; div_loop++) {
+            uint16_t digit256 = (uint16_t)(tmp[div_loop] & 0xff);
+            uint16_t tmp_div = remainder * 256 + digit256;
+            tmp[div_loop] = (uint8_t)(tmp_div / 58);
+            remainder = (tmp_div % 58);
+        }
+        if (tmp[start_at] == 0) {
+            ++start_at;
+        }
+        buffer[--j] = (uint8_t)BASE58_ALPHABET[remainder];
+    }
+    while ((j < (2 * length)) && (buffer[j] == BASE58_ALPHABET[0])) {
+        ++j;
+    }
+    while (zero_count-- > 0) {
+        buffer[--j] = BASE58_ALPHABET[0];
+    }
+    length = 2 * length - j;
+    if (maxoutlen < length + 1) {
+        return EXCEPTION_OVERFLOW;
+    }
+    memmove(out, (buffer + j), length);
+    out[length] = '\0';
     return 0;
 }

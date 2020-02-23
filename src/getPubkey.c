@@ -2,6 +2,7 @@
 #include "os.h"
 #include "ux.h"
 #include "utils.h"
+#include "printer.h"
 
 static uint8_t publicKey[PUBKEY_LENGTH];
 static char publicKeyStr[BASE58_HASH_LENGTH];
@@ -69,7 +70,7 @@ void handleGetPubkey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataL
     int pathLength = read_derivation_path(dataBuffer, dataLength, derivationPath);
 
     getPublicKey(derivationPath, publicKey, pathLength);
-    encodeBase58(publicKey, PUBKEY_LENGTH, (unsigned char *) publicKeyStr, BASE58_HASH_LENGTH);
+    encode_base58(publicKey, PUBKEY_LENGTH, (unsigned char *) publicKeyStr, BASE58_HASH_LENGTH);
 
     if (p1 == P1_NON_CONFIRM) {
         *tx = set_result_get_pubkey();

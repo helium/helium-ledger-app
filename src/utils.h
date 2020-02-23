@@ -16,9 +16,6 @@ typedef enum rlpTxType {
 
 unsigned int ui_prepro(const bagl_element_t *element);
 
-unsigned char encodeBase58(unsigned char WIDE *in, unsigned char length,
-                           unsigned char *out, unsigned char maxoutlen);
-
 void getPublicKey(uint32_t *derivationPath, uint8_t *publicKeyArray, uint8_t pathLength);
 
 uint32_t readUint32BE(uint8_t *buffer);
