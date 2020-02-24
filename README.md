@@ -73,16 +73,9 @@ make -f host.mk delete
 
 ## Example of Ledger wallet functionality
 
-Non-interactive public key query:
-
 ```bash
-python test_pubkey.py --account_number 12345
-```
-
-Interactive message signing:
-
-```bash
-python test_sign.py --account_number 12345
+cd tests
+cargo test
 ```
 
 ## Documentation
