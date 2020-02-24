@@ -115,7 +115,7 @@ include $(BOLOS_SDK)/Makefile.glyphs
 APP_SOURCE_PATH  += src
 SOURCE_FILES += $(filter-out %_test.c,$(wildcard libsol/*.c))
 SDK_SOURCE_PATH  += lib_stusb lib_stusb_impl lib_u2f
-CFLAGS += -Ilibsol
+CFLAGS += -Ilibsol/include
 
 ifeq ($(TARGET_NAME),TARGET_NANOX)
 SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl

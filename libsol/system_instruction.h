@@ -1,6 +1,6 @@
 #pragma once
 
-#include "parser.h"
+#include "sol/parser.h"
 
 enum SystemInstructionKind {
     CreateAccount,
@@ -23,3 +23,5 @@ typedef struct SystemTransferInfo {
 } SystemTransferInfo;
 
 int parse_system_transfer_instructions(Parser* parser, MessageHeader* header, SystemTransferInfo* info);
+
+int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used);

@@ -11,6 +11,7 @@ all: $(test_oks) $(test_exes) $o/libsol.a
 
 CFLAGS += -Werror -Wall -Wextra -pedantic -Wshadow -Wcast-qual -Wcast-align -Wno-unused-parameter
 CFLAGS += -fPIC
+CFLAGS += -Iinclude
 CFLAGS += $($(mode)_CFLAGS)
 
 debug_CFLAGS = -g -fsanitize=address -fsanitize=undefined

@@ -1,5 +1,5 @@
 #include <string.h>
-#include "printer.h"
+#include "sol/printer.h"
 #include "os_error.h"
 
 // max amount is max uint64 scaled down: "9223372036.854775807"
@@ -74,8 +74,8 @@ static const char BASE58_ALPHABET[] = {'1', '2', '3', '4', '5', '6', '7', '8', '
                                         'w', 'x', 'y', 'z'};
 
 int encode_base58(uint8_t *in, uint8_t length, uint8_t *out, uint8_t maxoutlen) {
-    uint8_t tmp[164];
-    uint8_t buffer[164];
+    uint8_t tmp[64];
+    uint8_t buffer[64];
     uint8_t j;
     uint8_t start_at;
     uint8_t zero_count = 0;

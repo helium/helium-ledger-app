@@ -1,4 +1,5 @@
-#include "parser.h"
+#include "sol/parser.h"
+#include "sol/printer.h"
 #include "system_instruction.h"
 #include <string.h>
 
@@ -44,3 +45,29 @@ int parse_system_transfer_instructions(Parser* parser, MessageHeader* header, Sy
 
     return 0;
 }
+
+int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
+    strcpy(fields[0].title, "Transfer");
+    print_amount(info->lamports, "SOL", fields[0].text);
+
+    char pubkey_buffer[BASE58_PUBKEY_LENGTH];
+    strcpy(fields[1].title, "Sender");
+    encode_base58((uint8_t*) info->from, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[1].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+    strcpy(fields[2].title, "Recipient");
+    encode_base58((uint8_t*) info->to, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[2].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+    if (memcmp(&header->pubkeys[0], info->to, PUBKEY_SIZE) == 0) {
+        strcpy(fields[3].text, "recipient");
+    }
+
+    if (memcmp(&header->pubkeys[0], info->from, PUBKEY_SIZE) == 0) {
+        strcpy(fields[3].text, "sender");
+    }
+
+    *fields_used = 4;
+    return 0;
+}
+

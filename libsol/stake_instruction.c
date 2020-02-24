@@ -1,4 +1,5 @@
-#include "parser.h"
+#include "sol/parser.h"
+#include "sol/printer.h"
 #include "stake_instruction.h"
 #include <string.h>
 
@@ -67,5 +68,27 @@ int parse_delegate_stake_instructions(Parser* parser, MessageHeader* header, Del
 
     BAIL_IF(parse_delegate_stake_instruction(&instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, info));
 
+    return 0;
+}
+
+int print_delegate_stake_info(DelegateStakeInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
+    char pubkey_buffer[BASE58_PUBKEY_LENGTH];
+    strcpy(fields[0].title, "Delegate from");
+    encode_base58((uint8_t*) info->stake_pubkey, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[0].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+    strcpy(fields[1].title, "Authorized by");
+    encode_base58((uint8_t*) info->authorized_pubkey, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[1].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+    strcpy(fields[2].title, "Vote account");
+    encode_base58((uint8_t*) info->vote_pubkey, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[2].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+    if (memcmp(&header->pubkeys[0], info->authorized_pubkey, PUBKEY_SIZE) == 0) {
+        strcpy(fields[3].text, "authorizer");
+    }
+
+    *fields_used = 4;
     return 0;
 }
