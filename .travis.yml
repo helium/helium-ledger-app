@@ -1,0 +1,21 @@
+language: c
+dist: bionic
+
+env:
+  global:
+    - BOLOS_ENV=$TRAVIS_BUILD_DIR/bolos-env
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y gcc-multilib g++-multilib python3-pip
+  - sudo apt-get install -y libudev-dev libusb-1.0-0-dev pkg-config
+  - sudo mkdir -p $BOLOS_ENV
+  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_3-2016q1/gccarmnoneeabi532016q120160330linuxtar.bz2
+  - sudo tar xf gccarmnoneeabi532016q120160330linuxtar.bz2 -C $BOLOS_ENV
+  - wget http://releases.llvm.org/7.0.0/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+  - sudo tar xf clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz -C $BOLOS_ENV
+  - sudo mv -f $BOLOS_ENV/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04 $BOLOS_ENV/clang-arm-fropi
+  - sudo apt-get install python3-setuptools
+  - python3 -m pip install ledgerblue
+
+script: make
