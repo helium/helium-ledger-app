@@ -123,7 +123,7 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
     MessageHeader header;
     if (parse_message_header(&parser, &header)) {
         // This is not a valid Solana message
-        sendResponse(0, false);
+        THROW(0x6a80);
         return;
     }
 
