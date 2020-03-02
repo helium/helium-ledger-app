@@ -24,6 +24,7 @@ script:
 
 deploy:
   - provider: releases
+    skip_cleanup: true
     file:
        - solana-ledger-app.tar.gz
     api_key: $GITHUB_TOKEN
