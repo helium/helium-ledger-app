@@ -22,7 +22,7 @@ release:
 	export APP_LOAD_PARAMS_EVALUATED="$(shell printf '\\"%s\\" ' $(APP_LOAD_PARAMS))"; \
 	cat load-template.sh | envsubst > load.sh
 	chmod +x load.sh
-	tar -zcf solana-ledger-app-$(APPVERSION).tar.gz load.sh bin/app.hex
+	tar -zcf solana-ledger-app.tar.gz load.sh bin/app.hex
 	rm load.sh
 
 deps:

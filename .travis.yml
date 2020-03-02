@@ -18,4 +18,14 @@ before_install:
   - sudo apt-get install python3-setuptools
   - python3 -m pip install ledgerblue
 
-script: make
+script:
+  - make
+  - make -f host.mk release
+
+deploy:
+  - provider: releases
+    file:
+       - solana-ledger-app.tar.gz
+    api_key: $GITHUB_TOKEN
+    on:
+      tags: true
