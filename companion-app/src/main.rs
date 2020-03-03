@@ -4,12 +4,12 @@ mod ledger_api;
 mod payment_txn;
 mod pubkeybin;
 
+use helium_api::Hnt;
 use ledger_api::*;
 use pubkeybin::{PubKeyBin, B58};
 use qr2term::print_qr;
 use std::process;
 use structopt::StructOpt;
-use helium_api::Hnt;
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 /// Interact with Ledger Nano S for hardware wallet management

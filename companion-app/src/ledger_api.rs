@@ -1,4 +1,4 @@
-use helium_api::{Hnt, Client};
+use helium_api::{Client, Hnt};
 use ledger::*;
 
 use crate::{payment_txn::PaymentTxn, pubkeybin::PubKeyBin, pubkeybin::B58, Result};
