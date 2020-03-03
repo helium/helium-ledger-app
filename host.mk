@@ -19,11 +19,13 @@ delete:
 	python3 -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 
 release:
+	@echo "#!/usr/bin/env bash" > install.sh
+	@echo "mkdir -p bin && cat <<EOF >> bin/app.hex" >> install.sh
+	@cat bin/app.hex >> install.sh
+	@echo "EOF" >> install.sh
 	export APP_LOAD_PARAMS_EVALUATED="$(shell printf '\\"%s\\" ' $(APP_LOAD_PARAMS))"; \
-	cat load-template.sh | envsubst > load.sh
-	chmod +x load.sh
-	tar -zcf solana-ledger-app.tar.gz load.sh bin/app.hex
-	rm load.sh
+	cat install-template.sh | envsubst >> install.sh
+	chmod +x install.sh
 
 deps:
 	python3 -mpip install ledgerblue

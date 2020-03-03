@@ -26,7 +26,7 @@ deploy:
   - provider: releases
     skip_cleanup: true
     file:
-       - solana-ledger-app.tar.gz
+       - install.sh
     api_key:
        secure: PL336gAG73GcuxkvZDvRaBtKYyv4Oc7aOj8PlMkh4YrOcnjkTWhBsVZqx9u4vvFX8CIBWc4a9mVY3vHRk2w9ygUF9eo/Gwked7MN444SGLx1vcK+ojkiKv5FON2UQk3D9AnTQ6eLUYLQgGIOr0hN+UXVW36iZ8CGN84Ei2wzeyqRv24DeZel5spvY7Nt8X8KAhGGoenQlKAYxXc8UgTyOLlmVAwLEgMZYsuc8ju8q+JuwxJYFrZidWmXts6StfJ3nuB8j4OQnTvHWUs6gtFMk0phazmYWUOjeHyzORIOcyXT2KNSCux9F4sV0j0n+53lgeLID/SmLRtIwo8O6WSmmDeOwiqRFV0/DT1KdG4z2X/7y9VTIfmwQwy3xQjLnSczvlR3jXoNbDfd+R13srBFY13FXT+dAiGpp82nTWqwytkBeVjz/9pSWxiAFDF8B8cHCNIlRH+zTKr9VhUZNPSx9tPK3lftT+mUTJNt5a5Ksb5jy+/SX5HirtUgXTy3Ui8MrqpNiytz5wnb3mapIMsfy1ZBfjbYWXjrPZ5zVfuSVAWkPXRm3YSi4h5TZ8kaeag7LTl85D5im74vsQ442dnTGS71nOzkAcr8MXBO2nFOQw1jzBsXVrJFlLvHNwyN11VsBw210H9G4qibmVQPB5YZ2hleMN48/Bkj4MzHpTxFm94=
     on:
