@@ -1,17 +1,15 @@
 #[macro_use]
 extern crate prettytable;
-
-mod hnt;
 mod ledger_api;
-mod pubkeybin;
 mod payment_txn;
+mod pubkeybin;
 
-use hnt::Hnt;
 use ledger_api::*;
 use pubkeybin::{PubKeyBin, B58};
 use qr2term::print_qr;
 use std::process;
 use structopt::StructOpt;
+use helium_api::Hnt;
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 /// Interact with Ledger Nano S for hardware wallet management
@@ -85,7 +83,7 @@ use helium_api::Client;
 use prettytable::{format, Table};
 
 fn print_balance(pubkey: &PubKeyBin) -> Result {
-    let client = Client::new();
+    let client = Client::new_with_base_url("https://api.helium.wtf/v1/".to_string());
     let address = pubkey.to_b58()?;
     let result = client.get_account(&address);
 
@@ -103,7 +101,7 @@ fn print_balance(pubkey: &PubKeyBin) -> Result {
             address,
             Hnt::from_bones(account.balance),
             account.dc_balance,
-            account.security_balance
+            account.sec_balance
         ]),
         Err(err) => table.add_row(row![address, H3 -> err.to_string()]),
     };
@@ -117,11 +115,6 @@ use payment_txn::PaymentTxn;
 pub fn print_txn(txn: &PaymentTxn) {
     let mut table = Table::new();
     table.add_row(row!["Payee", "Amount HNT", "Nonce", "Hash"]);
-    table.add_row(row![
-        txn.payee,
-        txn.amount,
-        txn.nonce,
-        txn.hash
-    ]);
+    table.add_row(row![txn.payee, txn.amount, txn.nonce, txn.hash]);
     table.printstd();
 }

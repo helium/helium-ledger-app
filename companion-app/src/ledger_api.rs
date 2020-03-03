@@ -1,9 +1,9 @@
-use helium_api::Client;
+use helium_api::{Hnt, Client};
 use ledger::*;
 
-use crate::{hnt::Hnt, pubkeybin::PubKeyBin, pubkeybin::B58, Result, payment_txn::PaymentTxn};
+use crate::{payment_txn::PaymentTxn, pubkeybin::PubKeyBin, pubkeybin::B58, Result};
 use byteorder::{LittleEndian as LE, WriteBytesExt};
-use helium_proto::txn::{TxnPaymentV1, Wrapper};
+use helium_proto::{blockchain_txn::Txn, BlockchainTxnPaymentV1};
 use prost::Message;
 use std::error;
 use std::fmt;
@@ -52,7 +52,7 @@ pub enum PayResponse {
 
 pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     let ledger = LedgerApp::new()?;
-    let client = Client::new();
+    let client = Client::new_with_base_url("https://api.helium.wtf/v1/".to_string());
     let fee: u64 = 0;
     let mut data: Vec<u8> = Vec::new();
 
@@ -92,9 +92,10 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
         return Ok(PayResponse::UserDeniedTransaction);
     }
 
-    let txn = TxnPaymentV1::decode(exchange_pay_tx_result.data.clone())?;
+    let txn = BlockchainTxnPaymentV1::decode(exchange_pay_tx_result.data.clone().as_slice())?;
 
-    client.submit_txn(Wrapper::Payment(txn.clone()))?;
+    let hash = client.submit_txn(Txn::Payment(txn.clone()))?;
+    println!("Hash = {:?}", hash);
     Ok(PayResponse::Txn(txn.into()))
 }
 

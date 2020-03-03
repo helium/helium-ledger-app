@@ -1,6 +1,6 @@
-use crate::hnt::Hnt;
 use crate::pubkeybin::PubKeyBin;
-use helium_proto::txn::TxnPaymentV1;
+use helium_api::Hnt;
+use helium_proto::BlockchainTxnPaymentV1;
 use prost::Message;
 use sha2::{Digest, Sha256};
 
@@ -22,8 +22,8 @@ impl ToString for Hash {
     }
 }
 
-impl From<TxnPaymentV1> for PaymentTxn {
-    fn from(txn: TxnPaymentV1) -> Self {
+impl From<BlockchainTxnPaymentV1> for PaymentTxn {
+    fn from(txn: BlockchainTxnPaymentV1) -> Self {
         let payer = PubKeyBin::copy_from_slice(&txn.payer.as_slice());
         let payee = PubKeyBin::copy_from_slice(&txn.payee.as_slice());
         let mut signature: [u8; 64] = [0; 64];
