@@ -1,4 +1,4 @@
-# BOLOS Application
+# Helium Application for Ledger
 
 This is the official Helium wallet app for the Ledger Nano S. It is built for
 the Blockain Open Ledger Operating System.
