@@ -2,7 +2,7 @@
 
 This is the companion application to be run on a laptop or desktop running Linux, Mac, or Windows. It submits the parameters of your requests to the Ledger Nano S, which will then display the information for confirmation.
 
-It is important to use the Ledger Nano S is the source of truth when confirming transactions as it is much more secure than your laptop or desktop and a compromised version of this application could be running.
+It is important to use the Ledger Nano S as the source of truth when confirming transactions as it is much more secure than your laptop or desktop and a compromised version of this application could be running.
 
 # Features
 
