@@ -7,8 +7,18 @@ When installed on a Nano S, the app allows you to view your Helium address,
 check your balance, and submit transactions while using the companion app, also
 included in this repository.
 
-No binaries are provided at this time. To build and install the Helium app on
-your Ledger Nano S, follow Ledger's [setup instructions](https://ledger.readthedocs.io/en/latest/userspace/getting_started.html).
+## How to use Helium on Ledger
+1. Go to Ledger Live > Settings > Experimental Features > Enable Developer mode.
+2. Once enabled, go to Manager and search "Helium".
+3. Click Install.
+
+Helium App is signed by Ledger and is trusted. It is now installed on your ledger device!
+
+To interact with the app on Ledger, you will need to use the CLI. Head to Releases in this Github repo.
+
+1. Navigate to where you downloaded the release on your computer.
+2. Make sure your ledger is connected to your computer. Run `helium-ledger-app`
+
 
 ## Security Model
 
