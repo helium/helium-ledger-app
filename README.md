@@ -9,7 +9,8 @@ included in this repository.
 
 ## How to use Helium on Ledger
 1. Go to Ledger Live > Settings > Experimental Features > Enable Developer mode.
-2. Once enabled, go to Manager and search "Helium".
+2. Once enabled, go to Manager and search "Helium". 
+- Note: If you can't find "Helium", you may need to update your Ledger Live software version and/or the Nano S software
 3. Click Install.
 
 Helium App is signed by Ledger and is trusted. It is now installed on your ledger device!
