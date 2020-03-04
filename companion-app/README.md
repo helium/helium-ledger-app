@@ -36,7 +36,7 @@ You can optionally display a QR code by using the `helium-ledger-app balance --q
 helium-ledger-app pay <RECIPIENT> <AMOUNT>
 ```
 
-`<RECIPENT>` needs to be replaced with a base58 encoded Helium address and the intended `<AMOUNT>` should be given as an HNT value with or without decimals. Note that the actual type used on the blockchain is a unsigned 64-bit integer and that unit is a Bone. 1 HNT = 10e8 Bones = 100_000_000
+`<RECIPIENT>` needs to be replaced with a base58 encoded Helium address and the intended `<AMOUNT>` should be given as an HNT value with or without decimals. Note that the actual type used on the blockchain is a unsigned 64-bit integer and that unit is a Bone. 1 HNT = 10e8 Bones = 100_000_000
 
 After you press enter, the request will be submitted to the Ledger Nano S which will display these values for confirmation. Press both buttons on the Ledger Nano S at the same time to proceed through the screens and on the transaction confirmation screen, click on the right button.
 
