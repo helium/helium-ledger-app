@@ -38,10 +38,10 @@ a way that the user cannot tell the difference, but secretly act maliciously.
 Specifically, the computer can do the following:
 
 1. Lie to the user about which actions it is performing. *Example: the user
-   runs `./helium-wallet -l info` to display their public key to so that they
+   runs `./helium-ledger-app balance` to display their public key to so that they
    may receive payment; yet a hard-coded address is displayed
 2. Lie to the user about who the recipient is. *Example: the user
-   runs `./helium-wallet -l pay IntendedAddress amount`, yeet the program again
+   runs `./helium-ledger-app pay IntendedAddress amount`, yeet the program again
    uses a hard-coded address
 
 To combat these attacks, apps must make use of the embedded display on the
