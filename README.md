@@ -20,6 +20,14 @@ To interact with the app on Ledger, you will need to use the CLI. Head to Releas
 1. Navigate to where you downloaded the release on your computer.
 2. Make sure your ledger is connected to your computer. Run `helium-ledger-app`
 
+Note: MacOS users - you may need to give the CLI permissions to run the CLI command. 
+
+1. Go to System Preferences
+2. Security and Privacy
+3. Allow App downloaded from App Store and Identified Developers
+4. You may need to click the lock icon and give the CLI permissions
+5. Run the command in CLI again.
+
 
 ## Security Model
 
