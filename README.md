@@ -15,12 +15,16 @@ included in this repository.
 
 Helium App is signed by Ledger and is trusted. It is now installed on your ledger device!
 
-To interact with the app on Ledger, you will need to use the CLI. Head to Releases in this Github repo.
+To interact with the app on Ledger, you will need to use the CLI. Head to Releases in this Github repo and download the file for your operating system. 
 
-1. Navigate to where you downloaded the release on your computer.
-2. Make sure your ledger is connected to your computer. Run `helium-ledger-app`
+We'll use macOS for the remainder of this example -
 
-Note: MacOS users - you may need to give the CLI permissions to run the CLI command. 
+1. Download the release for macOS `helium-ledger-app-x.x.x-x86_64-apple-darwin.zip` and unzip the file
+2. Navigate to where you downloaded the release on your computer in terminal
+3. Make sure your ledger is connected to your computer, then type `./helium-ledger-app`
+
+## Common Issues
+Running commands in terminal does not work. MacOS users may need to update their security permissions.
 
 1. Go to System Preferences > Security & Privacy
 2. Allow App downloaded from App Store and Identified Developers
