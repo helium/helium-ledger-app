@@ -23,8 +23,9 @@ enum Cli {
         #[structopt(long = "qr")]
         qr_code: bool,
     },
-    /// Pay a number of bones to a given address. Note that amount
-    /// is parsed  as HNT (1 HNT = 100_000_000 Bones)
+    /// Pay HNT to a given address.
+    //  HNT input with up to 8 decimals are tolerated.
+    /// Note that 1 HNT = 100_000_000 Bones.
     Pay {
         /// Address of the payee
         address: String,
