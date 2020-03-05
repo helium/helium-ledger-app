@@ -22,11 +22,10 @@ To interact with the app on Ledger, you will need to use the CLI. Head to Releas
 
 Note: MacOS users - you may need to give the CLI permissions to run the CLI command. 
 
-1. Go to System Preferences
-2. Security and Privacy
-3. Allow App downloaded from App Store and Identified Developers
-4. You may need to click the lock icon and give the CLI permissions
-5. Run the command in CLI again.
+1. Go to System Preferences > Security & Privacy
+2. Allow App downloaded from App Store and Identified Developers
+3. You may need to click the lock icon and give the CLI permissions
+4. Run the command in CLI again
 
 If you see this error `error: hid error: Failed opening hid device`, close Ledger Live software and run a command again in the CLI.
 
