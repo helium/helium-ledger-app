@@ -9,9 +9,13 @@ included in this repository.
 
 ## How to use Helium on Ledger
 1. Go to Ledger Live > Settings > Experimental Features > Enable Developer mode.
+![devMode](/images/ledger_dev_mode.png)
+
 2. Once enabled, go to Manager and search "Helium". 
 - Note: If you can't find "Helium", you may need to update your Ledger Live software version and/or the Nano S software
+
 3. Click Install.
+![installed](/images/ledger_installed.png)
 
 Helium App is signed by Ledger and is trusted. It is now installed on your ledger device!
 
@@ -22,16 +26,46 @@ We'll use macOS for the remainder of this example -
 1. Download the release for macOS `helium-ledger-app-x.x.x-x86_64-apple-darwin.zip` and unzip the file
 2. Navigate to where you downloaded the release on your computer in terminal
 3. Make sure your ledger is connected to your computer, then type `./helium-ledger-app`
+![mac_cli](/images/cli_macos.png)
+
+4. type `./helium-ledger-app balance` to see your new Ledger address and balance
+![mac_cli2](/images/cli_macos_balance.png)
+
+### Receiving HNT
+1. On your Helium mobile app, tap `Send HNT` and paste your ledger address. Enter any amount to send. This example will send 1.01 HNT.
+2. You should see a pending transaction in the mobile app.
+
+![pendingHNT](/images/pending_hnt_app.jpg)
+
+3. Go back to `helium-ledger-app` and type `./helium-ledger-app balance`. The balance will update once the transaction has cleared.
+
+![updatedBalance](/images/cli_macos_updated_balance.png)
+
+### Sending HNT
+1. On the CLI, type `./helium-ledger-app pay <address> hnt <amount>` to pay in HNT. Press `return`.
+2. On the Ledger, follow the prompts and confirm the transaction.
+3. The CLI should show a confirmation of the transaction.
+![confirmPayment](/images/cli_macos_send.png)
 
 ## Common Issues
-Running commands in terminal does not work. MacOS users may need to update their security permissions.
+#### Can't download the zip file because it is untrusted.
+1. In the downloads bar of your browser, click the caret and select `Keep`. 
+![zipdownload](/images/macOS_Zip_warning2.png)
 
+
+#### Running commands in terminal does not work. MacOS users may need to update their security permissions.
 1. Go to System Preferences > Security & Privacy
 2. Allow App downloaded from App Store and Identified Developers
 3. You may need to click the lock icon and give the CLI permissions
 4. Run the command in CLI again
 
+#### Failed opening hid device
 If you see this error `error: hid error: Failed opening hid device`, close Ledger Live software and run a command again in the CLI.
+
+#### Unable to access memory outside buffer bounds
+If on Ledger Live you see this error, unplug the ledger from your computer and plug it in again.
+![ledgerError](/images/ledger_error.png)
+
 
 ## Security Model
 
