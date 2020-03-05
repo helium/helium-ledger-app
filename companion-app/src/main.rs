@@ -10,7 +10,6 @@ use pubkeybin::{PubKeyBin, B58};
 use qr2term::print_qr;
 use std::process;
 use structopt::StructOpt;
-
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[derive(StructOpt, Debug)]

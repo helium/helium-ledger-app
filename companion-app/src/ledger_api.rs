@@ -94,8 +94,7 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
 
     let txn = BlockchainTxnPaymentV1::decode(exchange_pay_tx_result.data.clone().as_slice())?;
 
-    let hash = client.submit_txn(Txn::Payment(txn.clone()))?;
-    println!("Hash = {:?}", hash);
+    let _hash = client.submit_txn(Txn::Payment(txn.clone()))?;
     Ok(PayResponse::Txn(txn.into()))
 }
 

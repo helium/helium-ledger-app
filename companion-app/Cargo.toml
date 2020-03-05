@@ -1,6 +1,6 @@
 [package]
 name = "helium-ledger-app"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Louis Thiery <louis@helium.com>"]
 edition = "2018"
 
@@ -13,6 +13,6 @@ prettytable-rs = "0.6"
 ledger = { git = "https://github.com/helium/ledger-rs" }
 bs58 = {version = "0.3.0", features=["check"]}
 rust_decimal = "1.0.3"
-prost = "0.5"
+prost = "0.6"
 sha2 = "0.8.0"
 qr2term = "0.1"

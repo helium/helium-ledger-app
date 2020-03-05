@@ -1,4 +1,4 @@
-# BOLOS Application
+# Helium Application for Ledger
 
 This is the official Helium wallet app for the Ledger Nano S. It is built for
 the Blockain Open Ledger Operating System.
@@ -7,8 +7,27 @@ When installed on a Nano S, the app allows you to view your Helium address,
 check your balance, and submit transactions while using the companion app, also
 included in this repository.
 
-No binaries are provided at this time. To build and install the Helium app on
-your Ledger Nano S, follow Ledger's [setup instructions](https://ledger.readthedocs.io/en/latest/userspace/getting_started.html).
+## How to use Helium on Ledger
+1. Go to Ledger Live > Settings > Experimental Features > Enable Developer mode.
+2. Once enabled, go to Manager and search "Helium". 
+- Note: If you can't find "Helium", you may need to update your Ledger Live software version and/or the Nano S software
+3. Click Install.
+
+Helium App is signed by Ledger and is trusted. It is now installed on your ledger device!
+
+To interact with the app on Ledger, you will need to use the CLI. Head to Releases in this Github repo.
+
+1. Navigate to where you downloaded the release on your computer.
+2. Make sure your ledger is connected to your computer. Run `helium-ledger-app`
+
+Note: MacOS users - you may need to give the CLI permissions to run the CLI command. 
+
+1. Go to System Preferences > Security & Privacy
+2. Allow App downloaded from App Store and Identified Developers
+3. You may need to click the lock icon and give the CLI permissions
+4. Run the command in CLI again
+
+If you see this error `error: hid error: Failed opening hid device`, close Ledger Live software and run a command again in the CLI.
 
 ## Security Model
 
@@ -28,10 +47,10 @@ a way that the user cannot tell the difference, but secretly act maliciously.
 Specifically, the computer can do the following:
 
 1. Lie to the user about which actions it is performing. *Example: the user
-   runs `./helium-wallet -l info` to display their public key to so that they
+   runs `./helium-ledger-app balance` to display their public key to so that they
    may receive payment; yet a hard-coded address is displayed
 2. Lie to the user about who the recipient is. *Example: the user
-   runs `./helium-wallet -l pay IntendedAddress amount`, yeet the program again
+   runs `./helium-ledger-app pay IntendedAddress amount`, yeet the program again
    uses a hard-coded address
 
 To combat these attacks, apps must make use of the embedded display on the
