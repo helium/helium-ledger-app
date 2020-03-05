@@ -10,7 +10,20 @@ use pubkeybin::{PubKeyBin, B58};
 use qr2term::print_qr;
 use std::process;
 use structopt::StructOpt;
+
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
+
+#[derive(StructOpt, Debug)]
+enum Units {
+    /// Pay using Bones as units (must be integer)
+    Bones {
+        bones: u64
+    },
+    /// Pay using HNT as units (up to 8 decimals are tolerated)
+    Hnt {
+        hnt: Hnt
+    }
+}
 
 /// Interact with Ledger Nano S for hardware wallet management
 #[derive(Debug, StructOpt)]
@@ -21,18 +34,17 @@ enum Cli {
         #[structopt(long = "qr")]
         qr_code: bool,
     },
-    /// Pay a number of bones to a given address. Note that amount
-    /// is parsed  as HNT (1 HNT = 100_000_000 Bones)
+    /// Pay a given address.
+    /// Use subcommand hnt or bones.
+    /// Note that 1 HNT = 100,000,000 Bones = 100M Bones.
     Pay {
         /// Address of the payee
         address: String,
-
-        /// Amount of HNT to transfer to payee
-        #[structopt(name = "amount")]
-        amount: Hnt,
-    },
+        /// Select HNT or Bones
+        #[structopt(subcommand)] 
+        units: Units,
+    }
 }
-
 fn main() {
     println!("Communicating with Ledger - follow prompts on screen");
 
@@ -55,7 +67,13 @@ fn run(cli: Cli) -> Result {
             }
             Ok(())
         }
-        Cli::Pay { address, amount } => {
+        Cli::Pay { address, units } => {
+
+            let amount = match units {
+                Units::Hnt { hnt }  => hnt,
+                Units::Bones { bones }  => Hnt::from_bones(bones),
+            };
+
             println!("Creating transaction for:");
             println!("      {:0.*} HNT", 8, amount.get_decimal());
             println!("        =");
