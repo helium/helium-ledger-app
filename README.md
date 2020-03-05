@@ -28,6 +28,7 @@ Note: MacOS users - you may need to give the CLI permissions to run the CLI comm
 4. You may need to click the lock icon and give the CLI permissions
 5. Run the command in CLI again.
 
+If you see this error `error: hid error: Failed opening hid device`, close Ledger Live software and run a command again in the CLI.
 
 ## Security Model
 
