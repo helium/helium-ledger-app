@@ -77,7 +77,7 @@ make -f host.mk delete
 
 ```bash
 cd tests
-cargo test
+cargo run
 ```
 
 ## Documentation
