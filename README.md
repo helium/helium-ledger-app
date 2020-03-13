@@ -19,6 +19,9 @@ included in this repository.
 
 Helium App is signed by Ledger and is trusted. It is now installed on your ledger device!
 
+Start the Helium app by selecting it on the Ledger screen. The "Waiting for commands..." prompt should be on the screen.
+execute commands.
+
 To interact with the app on Ledger, you will need to use the CLI. Head to Releases in this Github repo and download the file for your operating system. 
 
 We'll use macOS for the remainder of this example -
