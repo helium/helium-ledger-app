@@ -66,7 +66,7 @@ Vagrant.configure("2") do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
-    apt-get install -y gcc-multilib g++-multilib python3-pip
+    apt-get install -y clang-7 gcc-multilib g++-multilib python3-pip
 
     BASHRC=/home/vagrant/.bashrc
     grep -qF -- BOLOS_ENV $BASHRC || echo "export BOLOS_ENV=/bolos-env" >> $BASHRC
@@ -76,10 +76,6 @@ Vagrant.configure("2") do |config|
         mkdir /bolos-env
         wget --progress=bar:force https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_3-2016q1/gccarmnoneeabi532016q120160330linuxtar.bz2
         tar xf gccarmnoneeabi532016q120160330linuxtar.bz2 -C /bolos-env
-
-        wget --progress=bar:force http://releases.llvm.org/7.0.0/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
-        tar xf clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz -C /bolos-env
-        mv /bolos-env/clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04 /bolos-env/clang-arm-fropi
     fi
 
     apt-get install -y libudev-dev libusb-1.0-0-dev pkg-config
