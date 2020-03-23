@@ -1,4 +1,7 @@
-BOLOS_SDK = nanos-secure-sdk
+ifeq ($(BOLOS_SDK),)
+$(error BOLOS_SDK is not set)
+endif
+
 BOLOS_ENV = bogus
 include $(BOLOS_SDK)/Makefile.defines
 include config.min
