@@ -5,6 +5,11 @@
 
 #define BAIL_IF(x) {int err = x; if (err) return err;}
 
+const Pubkey system_program_id = {{
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+}};
+
 static int parse_system_instruction_kind(Parser* parser, enum SystemInstructionKind* kind) {
     return parse_u32(parser, (uint32_t *) kind);
 }
@@ -31,17 +36,8 @@ static int parse_system_transfer_instruction(Instruction* instruction, Pubkey* p
 
 // Returns 0 and populates SystemTransferInfo if provided a MessageHeader and a transfer
 // instruction, otherwise non-zero.
-int parse_system_transfer_instructions(Parser* parser, MessageHeader* header, SystemTransferInfo* info) {
-    BAIL_IF(header->instructions_length != 1);
-
-    Instruction instruction;
-    BAIL_IF(parse_instruction(parser, &instruction));
-
-    Pubkey* program_id = &header->pubkeys[instruction.program_id_index];
-    Pubkey system_program_id = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    BAIL_IF(memcmp(program_id, &system_program_id, PUBKEY_SIZE));
-
-    BAIL_IF(parse_system_transfer_instruction(&instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, info));
+int parse_system_transfer_instructions(Parser* parser, Instruction* instruction, MessageHeader* header, SystemTransferInfo* info) {
+    BAIL_IF(parse_system_transfer_instruction(instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, info));
 
     return 0;
 }

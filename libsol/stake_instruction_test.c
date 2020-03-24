@@ -8,8 +8,11 @@ void test_parse_delegate_stake_instructions() {
     MessageHeader header;
     assert(parse_message_header(&parser, &header) == 0);
 
+    Instruction instruction;
+    assert(parse_instruction(&parser, &instruction) == 0);
+
     DelegateStakeInfo info;
-    assert(parse_delegate_stake_instructions(&parser, &header, &info) == 0);
+    assert(parse_delegate_stake_instructions(&parser, &instruction, &header, &info) == 0);
     assert(parser.buffer_length == 0);
 }
 

@@ -10,9 +10,12 @@ void test_parse_system_transfer_instructions() {
     MessageHeader header;
     assert(parse_message_header(&parser, &header) == 0);
 
+    Instruction instruction;
+    assert(parse_instruction(&parser, &instruction) == 0);
+
     Pubkey* fee_payer_pubkey = &header.pubkeys[0];
     SystemTransferInfo info;
-    assert(parse_system_transfer_instructions(&parser, &header, &info) == 0);
+    assert(parse_system_transfer_instructions(&parser, &instruction, &header, &info) == 0);
     assert(parser.buffer_length == 0);
     assert(info.lamports == 42);
     assert(memcmp(fee_payer_pubkey, info.from, PUBKEY_SIZE) == 0);
@@ -24,9 +27,12 @@ void test_parse_system_transfer_instructions_with_payer() {
     MessageHeader header;
     assert(parse_message_header(&parser, &header) == 0);
 
+    Instruction instruction;
+    assert(parse_instruction(&parser, &instruction) == 0);
+
     Pubkey* fee_payer_pubkey = &header.pubkeys[0];
     SystemTransferInfo info;
-    assert(parse_system_transfer_instructions(&parser, &header, &info) == 0);
+    assert(parse_system_transfer_instructions(&parser, &instruction, &header, &info) == 0);
 
     // "to", not "from", is paying for this transaction.
     assert(memcmp(fee_payer_pubkey, info.to, PUBKEY_SIZE) == 0);
@@ -39,10 +45,13 @@ void test_process_system_transfer() {
     MessageHeader header;
     assert(parse_message_header(&parser, &header) == 0);
 
+    Instruction instruction;
+    assert(parse_instruction(&parser, &instruction) == 0);
+
     field_t fields[5];
     size_t fields_used;
     SystemTransferInfo info;
-    assert(parse_system_transfer_instructions(&parser, &header, &info) == 0);
+    assert(parse_system_transfer_instructions(&parser, &instruction, &header, &info) == 0);
     assert(print_system_transfer_info(&info, &header, fields, &fields_used) == 0);
     assert_string_equal(fields[0].text, "0.000000042 SOL");
 
