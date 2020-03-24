@@ -1,3 +1,4 @@
+#include "instruction.h"
 #include "parser.c"
 #include <stdio.h>
 #include <assert.h>
@@ -110,6 +111,8 @@ void test_parse_instruction() {
    Parser parser = {message, sizeof(message)};
    Instruction instruction;
    assert(parse_instruction(&parser, &instruction) == 0);
+   MessageHeader header = {{0, 0, 0, 35}, NULL, NULL, 1};
+   assert(instruction_validate(&instruction, &header) == 0);
    assert(parser.buffer_length == 0);
    assert(instruction.accounts[0] == 33);
    assert(instruction.data[0] == 36);

@@ -1,3 +1,4 @@
+#include "instruction.h"
 #include "system_instruction.c"
 #include <stdio.h>
 #include <assert.h>
@@ -12,6 +13,7 @@ void test_parse_system_transfer_instructions() {
 
     Instruction instruction;
     assert(parse_instruction(&parser, &instruction) == 0);
+    assert(instruction_validate(&instruction, &header) == 0);
 
     Pubkey* fee_payer_pubkey = &header.pubkeys[0];
     SystemTransferInfo info;
@@ -29,6 +31,7 @@ void test_parse_system_transfer_instructions_with_payer() {
 
     Instruction instruction;
     assert(parse_instruction(&parser, &instruction) == 0);
+    assert(instruction_validate(&instruction, &header) == 0);
 
     Pubkey* fee_payer_pubkey = &header.pubkeys[0];
     SystemTransferInfo info;
@@ -47,6 +50,7 @@ void test_process_system_transfer() {
 
     Instruction instruction;
     assert(parse_instruction(&parser, &instruction) == 0);
+    assert(instruction_validate(&instruction, &header) == 0);
 
     field_t fields[5];
     size_t fields_used;

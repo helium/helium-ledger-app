@@ -1,3 +1,4 @@
+#include "instruction.h"
 #include "sol/parser.h"
 #include "sol/printer.h"
 #include "sol/message.h"
@@ -13,6 +14,7 @@ int process_message_body(uint8_t* message_body, int message_body_length, Message
     Parser parser = {message_body, message_body_length};
     Instruction instruction;
     BAIL_IF(parse_instruction(&parser, &instruction));
+    BAIL_IF(instruction_validate(&instruction, header));
 
     const Pubkey* program_id = &header->pubkeys[instruction.program_id_index];
     if (memcmp(program_id, &system_program_id, PUBKEY_SIZE) == 0) {

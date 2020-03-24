@@ -1,3 +1,4 @@
+#include "instruction.h"
 #include "stake_instruction.c"
 #include <stdio.h>
 #include <assert.h>
@@ -10,6 +11,7 @@ void test_parse_delegate_stake_instructions() {
 
     Instruction instruction;
     assert(parse_instruction(&parser, &instruction) == 0);
+    assert(instruction_validate(&instruction, &header) == 0);
 
     DelegateStakeInfo info;
     assert(parse_delegate_stake_instructions(&parser, &instruction, &header, &info) == 0);
