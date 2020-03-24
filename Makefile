@@ -18,8 +18,15 @@
 ifeq ($(BOLOS_SDK),)
 $(error BOLOS_SDK is not set)
 endif
-include $(BOLOS_SDK)/Makefile.defines
+
+ifeq ($(TARGET_NAME),TARGET_NANOX)
+	ICONNAME=icons/nanox_app_solana.gif
+else
+	ICONNAME=icons/nanos_app_solana.gif
+endif
+
 include config.min
+include $(BOLOS_SDK)/Makefile.defines
 
 DEFINES += $(DEFINES_LIB)
 
