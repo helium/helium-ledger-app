@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sol/parser.h"
+#include "sol/printer.h"
 
 extern const Pubkey system_program_id;
 

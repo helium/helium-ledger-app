@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sol/parser.h"
+#include "sol/printer.h"
 
 extern const Pubkey stake_program_id;
 
