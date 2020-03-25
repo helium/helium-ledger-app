@@ -17,10 +17,16 @@ CFLAGS += $($(mode)_CFLAGS)
 debug_CFLAGS = -g -fsanitize=address -fsanitize=undefined
 release_CFLAGS = -O2
 
+libsol_source_files = $(filter-out %_test.c,$(wildcard *.c))
+libsol_object_files = $(patsubst %.c,$o/%.o,$(libsol_source_files))
+libsol_depend_files = $(patsubst %.c,$o/%.d,$(libsol_source_files))
+
+-include $(libsol_depend_files)
+
 $o/%.o: %.c
 	@echo "==> Compile $<"
 	@mkdir -p $(@D)
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -MMD -c $(CFLAGS) $< -o $@
 
 #
 # unit tests
@@ -38,8 +44,6 @@ $o/%_test: $o/%_test.o $o/libsol.a
 #
 # libsol
 #
-libsol_source_files = $(filter-out %_test.c,$(wildcard *.c))
-libsol_object_files = $(patsubst %.c,$o/%.o,$(libsol_source_files))
 $o/libsol.a: $(libsol_object_files)
 	@echo "==> Create static library $@"
 	ar rcs $@ $^
