@@ -17,13 +17,9 @@ static int parse_stake_instruction_kind(Parser* parser, enum StakeInstructionKin
     return parse_u32(parser, (uint32_t *) kind);
 }
 
+// Returns 0 and populates DelegateStakeInfo if provided a MessageHeader and a delegate
+// instruction, otherwise non-zero.
 static int parse_delegate_stake_instruction(Instruction* instruction, Pubkey* pubkeys, size_t pubkeys_length, DelegateStakeInfo* info) {
-    Parser parser = {instruction->data, instruction->data_length};
-
-    enum StakeInstructionKind kind;
-    BAIL_IF(parse_stake_instruction_kind(&parser, &kind));
-    BAIL_IF(kind != DelegateStake);
-
     BAIL_IF(instruction->accounts_length < 6);
     uint8_t accounts_index = 0;
     uint8_t pubkeys_index = instruction->accounts[accounts_index++];
@@ -56,15 +52,27 @@ static int parse_delegate_stake_instruction(Instruction* instruction, Pubkey* pu
     return 0;
 }
 
-// Returns 0 and populates DelegateStakeInfo if provided a MessageHeader and a delegate
-// instruction, otherwise non-zero.
-int parse_delegate_stake_instructions(Parser* parser, Instruction* instruction, MessageHeader* header, DelegateStakeInfo* info) {
-    BAIL_IF(parse_delegate_stake_instruction(instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, info));
+int parse_stake_instructions(Instruction* instruction, MessageHeader* header, StakeInfo* info) {
+    Parser parser = {instruction->data, instruction->data_length};
 
-    return 0;
+    BAIL_IF(parse_stake_instruction_kind(&parser, &info->kind));
+
+    switch (info->kind) {
+        case DelegateStake:
+            return parse_delegate_stake_instruction(instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, &info->delegate_stake);
+        case Initialize:
+        case Authorize:
+        case Split:
+        case Withdraw:
+        case Deactivate:
+        case SetLockup:
+            break;
+    }
+
+    return 1;
 }
 
-int print_delegate_stake_info(DelegateStakeInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
+static int print_delegate_stake_info(DelegateStakeInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
     char pubkey_buffer[BASE58_PUBKEY_LENGTH];
     strcpy(fields[0].title, "Delegate from");
     encode_base58((uint8_t*) info->stake_pubkey, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
@@ -84,4 +92,20 @@ int print_delegate_stake_info(DelegateStakeInfo* info, MessageHeader* header, fi
 
     *fields_used = 4;
     return 0;
+}
+
+int print_stake_info(StakeInfo* info, MessageHeader* header, field_t*  fields, size_t* fields_used) {
+    switch (info->kind) {
+        case DelegateStake:
+            return print_delegate_stake_info(&info->delegate_stake, header, fields, fields_used);
+        case Initialize:
+        case Authorize:
+        case Split:
+        case Withdraw:
+        case Deactivate:
+        case SetLockup:
+            break;
+    }
+
+    return 1;
 }

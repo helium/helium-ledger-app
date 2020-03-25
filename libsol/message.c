@@ -18,15 +18,15 @@ int process_message_body(uint8_t* message_body, int message_body_length, Message
 
     const Pubkey* program_id = &header->pubkeys[instruction.program_id_index];
     if (memcmp(program_id, &system_program_id, PUBKEY_SIZE) == 0) {
-        SystemTransferInfo transfer_info;
-        if (parse_system_transfer_instructions(&parser, &instruction, header, &transfer_info) == 0) {
-            return print_system_transfer_info(&transfer_info, header, fields, fields_used);
+        SystemInfo info;
+        if (parse_system_instructions(&instruction, header, &info) == 0) {
+            return print_system_info(&info, header, fields, fields_used);
         }
     }
     else if (memcmp(program_id, &stake_program_id, PUBKEY_SIZE) == 0) {
-        DelegateStakeInfo delegate_info;
-        if (parse_delegate_stake_instructions(&parser, &instruction, header, &delegate_info) == 0) {
-            return print_delegate_stake_info(&delegate_info, header, fields, fields_used);
+        StakeInfo info;
+        if (parse_stake_instructions(&instruction, header, &info) == 0) {
+            return print_stake_info(&info, header, fields, fields_used);
         }
     }
 

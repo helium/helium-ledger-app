@@ -14,13 +14,10 @@ static int parse_system_instruction_kind(Parser* parser, enum SystemInstructionK
     return parse_u32(parser, (uint32_t *) kind);
 }
 
-static int parse_system_transfer_instruction(Instruction* instruction, Pubkey* pubkeys, size_t pubkeys_length, SystemTransferInfo* info) {
-    Parser parser = {instruction->data, instruction->data_length};
-
-    enum SystemInstructionKind kind;
-    BAIL_IF(parse_system_instruction_kind(&parser, &kind));
-    BAIL_IF(kind != Transfer);
-    BAIL_IF(parse_u64(&parser, &info->lamports));
+// Returns 0 and populates SystemTransferInfo if provided a MessageHeader and a transfer
+// instruction, otherwise non-zero.
+static int parse_system_transfer_instruction(Parser* parser, Instruction* instruction, Pubkey* pubkeys, size_t pubkeys_length, SystemTransferInfo* info) {
+    BAIL_IF(parse_u64(parser, &info->lamports));
 
     BAIL_IF(instruction->accounts_length < 2);
     uint8_t from_index = instruction->accounts[0];
@@ -34,15 +31,31 @@ static int parse_system_transfer_instruction(Instruction* instruction, Pubkey* p
     return 0;
 }
 
-// Returns 0 and populates SystemTransferInfo if provided a MessageHeader and a transfer
-// instruction, otherwise non-zero.
-int parse_system_transfer_instructions(Parser* parser, Instruction* instruction, MessageHeader* header, SystemTransferInfo* info) {
-    BAIL_IF(parse_system_transfer_instruction(instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, info));
+int parse_system_instructions(Instruction* instruction, MessageHeader* header, SystemInfo* info) {
+    Parser parser = {instruction->data, instruction->data_length};
 
-    return 0;
+    BAIL_IF(parse_system_instruction_kind(&parser, &info->kind));
+
+    switch (info->kind) {
+        case Transfer:
+            return parse_system_transfer_instruction(&parser, instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, &info->transfer);
+        case CreateAccount:
+        case Assign:
+        case CreateAccountWithSeed:
+        case AdvanceNonceAccount:
+        case WithdrawNonceAccount:
+        case InitializeNonceAccount:
+        case AuthorizeNonceAccount:
+        case Allocate:
+        case AllocateWithSeed:
+        case AssignWithSeed:
+            break;
+    }
+
+    return 1;
 }
 
-int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
+static int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
     strcpy(fields[0].title, "Transfer");
     print_amount(info->lamports, "SOL", fields[0].text);
 
@@ -67,3 +80,22 @@ int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* header, 
     return 0;
 }
 
+int print_system_info(SystemInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
+    switch (info->kind) {
+        case Transfer:
+            return print_system_transfer_info(&info->transfer, header, fields, fields_used);
+        case CreateAccount:
+        case Assign:
+        case CreateAccountWithSeed:
+        case AdvanceNonceAccount:
+        case WithdrawNonceAccount:
+        case InitializeNonceAccount:
+        case AuthorizeNonceAccount:
+        case Allocate:
+        case AllocateWithSeed:
+        case AssignWithSeed:
+            break;
+    }
+
+    return 1;
+}

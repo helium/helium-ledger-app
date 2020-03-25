@@ -24,6 +24,12 @@ typedef struct SystemTransferInfo {
     uint64_t lamports;
 } SystemTransferInfo;
 
-int parse_system_transfer_instructions(Parser* parser, Instruction* instruction, MessageHeader* header, SystemTransferInfo* info);
+typedef struct SystemInfo {
+    enum SystemInstructionKind kind;
+    union {
+        SystemTransferInfo transfer;
+    };
+} SystemInfo;
 
-int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used);
+int parse_system_instructions(Instruction* instruction, MessageHeader* header, SystemInfo* info);
+int print_system_info(SystemInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used);
