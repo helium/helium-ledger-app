@@ -1,9 +1,9 @@
 #include "message.c"
 #include "sol/printer.h"
+#include "util.h"
 #include <assert.h>
 #include <stdio.h>
 
-#define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
 void test_process_message_body_ok() {
     Pubkey accounts[] = {
         {{171, 88, 202, 32, 185, 160, 182, 116, 130, 185, 73, 48, 13, 216, 170, 71, 172, 195, 165, 123, 87, 70, 130, 219, 5, 157, 240, 187, 26, 191, 158, 218}},

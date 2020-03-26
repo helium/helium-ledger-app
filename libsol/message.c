@@ -4,8 +4,7 @@
 #include "sol/message.h"
 #include "system_instruction.h"
 #include "stake_instruction.h"
-
-#define BAIL_IF(x) {int err = x; if (err) return err;}
+#include "util.h"
 
 int process_message_body(uint8_t* message_body, int message_body_length, MessageHeader* header, field_t* fields, size_t* fields_used) {
     BAIL_IF(header->instructions_length != 1);

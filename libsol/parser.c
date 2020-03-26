@@ -1,6 +1,5 @@
 #include "sol/parser.h"
-
-#define BAIL_IF(x) {int err = x; if (err) return err;}
+#include "util.h"
 
 static int check_buffer_length(Parser* parser, size_t num) {
     return parser->buffer_length < num ? 1 : 0;

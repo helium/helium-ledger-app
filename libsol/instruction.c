@@ -1,9 +1,8 @@
 #include "instruction.h"
 #include "stake_instruction.h"
 #include "system_instruction.h"
+#include "util.h"
 #include <string.h>
-
-#define BAIL_IF(x) {int err = x; if (err) return err;}
 
 enum ProgramId instruction_program_id(const Instruction* instruction, const MessageHeader* header) {
     const Pubkey* program_id = &header->pubkeys[instruction->program_id_index];

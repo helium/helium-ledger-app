@@ -1,9 +1,8 @@
 #include "sol/parser.h"
 #include "sol/printer.h"
 #include "system_instruction.h"
+#include "util.h"
 #include <string.h>
-
-#define BAIL_IF(x) {int err = x; if (err) return err;}
 
 const Pubkey system_program_id = {{
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

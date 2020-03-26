@@ -1,9 +1,8 @@
 #include "sol/parser.h"
 #include "sol/printer.h"
 #include "stake_instruction.h"
+#include "util.h"
 #include <string.h>
-
-#define BAIL_IF(x) {int err = x; if (err) return err;}
 
 // Stake11111111111111111111111111111111111111
 const Pubkey stake_program_id = {{
