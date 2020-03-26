@@ -13,7 +13,20 @@ const Pubkey stake_program_id = {{
 }};
 
 static int parse_stake_instruction_kind(Parser* parser, enum StakeInstructionKind* kind) {
-    return parse_u32(parser, (uint32_t *) kind);
+    uint32_t maybe_kind;
+    BAIL_IF(parse_u32(parser, &maybe_kind));
+    switch (maybe_kind) {
+        case Initialize:
+        case Authorize:
+        case DelegateStake:
+        case Split:
+        case Withdraw:
+        case Deactivate:
+        case SetLockup:
+            *kind = (enum StakeInstructionKind) maybe_kind;
+            return 0;
+    }
+    return 1;
 }
 
 // Returns 0 and populates DelegateStakeInfo if provided a MessageHeader and a delegate

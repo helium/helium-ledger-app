@@ -10,7 +10,24 @@ const Pubkey system_program_id = {{
 }};
 
 static int parse_system_instruction_kind(Parser* parser, enum SystemInstructionKind* kind) {
-    return parse_u32(parser, (uint32_t *) kind);
+    uint32_t maybe_kind;
+    BAIL_IF(parse_u32(parser, &maybe_kind));
+    switch (maybe_kind) {
+        case CreateAccount:
+        case Assign:
+        case Transfer:
+        case CreateAccountWithSeed:
+        case AdvanceNonceAccount:
+        case WithdrawNonceAccount:
+        case InitializeNonceAccount:
+        case AuthorizeNonceAccount:
+        case Allocate:
+        case AllocateWithSeed:
+        case AssignWithSeed:
+            *kind = (enum SystemInstructionKind) maybe_kind;
+            return 0;
+    }
+    return 1;
 }
 
 // Returns 0 and populates SystemTransferInfo if provided a MessageHeader and a transfer
