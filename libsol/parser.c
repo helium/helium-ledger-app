@@ -21,7 +21,7 @@ static int parse_u16(Parser* parser, uint16_t* value) {
     uint8_t lower, upper;
     BAIL_IF(parse_u8(parser, &lower));
     BAIL_IF(parse_u8(parser, &upper));
-    *value = lower + (upper << 8);
+    *value = lower + ((uint16_t)upper << 8);
     return 0;
 }
 
@@ -29,7 +29,7 @@ int parse_u32(Parser* parser, uint32_t* value) {
     uint16_t lower, upper;
     BAIL_IF(parse_u16(parser, &lower));
     BAIL_IF(parse_u16(parser, &upper));
-    *value = lower + (upper << 16);
+    *value = lower + ((uint32_t)upper << 16);
     return 0;
 }
 

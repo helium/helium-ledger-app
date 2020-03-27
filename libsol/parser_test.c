@@ -21,6 +21,42 @@ void test_parse_u8_too_short() {
    assert(parse_u8(&parser, &value) == 1);
 }
 
+void test_parse_u16() {
+   uint8_t message[] = {0, 0, 255, 255};
+   Parser parser = {message, sizeof(message)};
+   uint16_t value;
+   assert(parse_u16(&parser, &value) == 0);
+   assert(value == 0);
+   assert(parse_u16(&parser, &value) == 0);
+   assert(value == UINT16_MAX);
+   assert(parser_is_empty(&parser));
+}
+
+void test_parse_u32() {
+   uint8_t message[] = {0, 0, 0, 0, 255, 255, 255, 255};
+   Parser parser = {message, sizeof(message)};
+   uint32_t value;
+   assert(parse_u32(&parser, &value) == 0);
+   assert(value == 0);
+   assert(parse_u32(&parser, &value) == 0);
+   assert(value == UINT32_MAX);
+   assert(parser_is_empty(&parser));
+}
+
+void test_parse_u64() {
+   uint8_t message[] = {
+      0, 0, 0, 0, 0, 0, 0, 0,
+      255, 255, 255, 255, 255, 255, 255, 255
+   };
+   Parser parser = {message, sizeof(message)};
+   uint64_t value;
+   assert(parse_u64(&parser, &value) == 0);
+   assert(value == 0);
+   assert(parse_u64(&parser, &value) == 0);
+   assert(value == UINT64_MAX);
+   assert(parser_is_empty(&parser));
+}
+
 void test_parse_length() {
    uint8_t message[] = {1, 2};
    Parser parser = {message, sizeof(message)};
@@ -129,6 +165,9 @@ void test_parser_is_empty() {
 int main() {
     test_parse_u8();
     test_parse_u8_too_short();
+    test_parse_u16();
+    test_parse_u32();
+    test_parse_u64();
     test_parse_length();
     test_parse_length_two_bytes();
     test_parse_pubkeys_header();
