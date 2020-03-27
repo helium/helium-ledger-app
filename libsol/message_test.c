@@ -38,13 +38,15 @@ void test_process_message_body_too_many_ix_fail() {
 
 void test_process_message_body_too_short_ix_fail() {
     MessageHeader header = {{0, 0, 0, 0}, NULL, NULL, 1};
-    assert(process_message_body(NULL, 0, &header, NULL, NULL) == 1);
+    size_t fields_used = 0;
+    assert(process_message_body(NULL, 0, &header, NULL, &fields_used) == 1);
 }
 
 void test_process_message_body_bad_ix_account_index_fail() {
     MessageHeader header = {{0, 0, 0, 1}, NULL, NULL, 1};
     uint8_t msg_body[] = {1, 0, 0};
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header, NULL, NULL) == 1);
+    size_t fields_used = 0;
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header, NULL, &fields_used) == 1);
 }
 
 int main() {

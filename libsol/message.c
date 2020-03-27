@@ -5,6 +5,7 @@
 #include "system_instruction.h"
 #include "stake_instruction.h"
 #include "util.h"
+#include <string.h>
 
 int process_message_body(uint8_t* message_body, int message_body_length, MessageHeader* header, field_t* fields, size_t* fields_used) {
     BAIL_IF(header->instructions_length != 1);
@@ -14,23 +15,36 @@ int process_message_body(uint8_t* message_body, int message_body_length, Message
     BAIL_IF(parse_instruction(&parser, &instruction));
     BAIL_IF(instruction_validate(&instruction, header));
 
-    switch (instruction_program_id(&instruction, header)) {
+    InstructionInfo info;
+    memset(&info, 0, sizeof(InstructionInfo));
+    enum ProgramId program_id = instruction_program_id(&instruction, header);
+    switch (program_id) {
         case ProgramIdSystem:
         {
-            SystemInfo info;
-            if (parse_system_instructions(&instruction, header, &info) == 0) {
-                return print_system_info(&info, header, fields, fields_used);
+            if (parse_system_instructions(&instruction, header, &info.system) == 0) {
+                info.kind = program_id;
             }
             break;
         }
         case ProgramIdStake:
         {
-            StakeInfo info;
-            if (parse_stake_instructions(&instruction, header, &info) == 0) {
-                return print_stake_info(&info, header, fields, fields_used);
+            if (parse_stake_instructions(&instruction, header, &info.stake) == 0) {
+                info.kind = program_id;
             }
             break;
         }
+        case ProgramIdUnknown:
+            break;
+    }
+
+    // If we don't know about the instruction, bail
+    BAIL_IF(info.kind == ProgramIdUnknown);
+
+    switch (info.kind) {
+        case ProgramIdSystem:
+            return print_system_info(&info.system, header, fields, fields_used);
+        case ProgramIdStake:
+            return print_stake_info(&info.stake, header, fields, fields_used);
         case ProgramIdUnknown:
             break;
     }
