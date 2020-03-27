@@ -7,44 +7,58 @@
 #include "util.h"
 #include <string.h>
 
+#define MAX_INSTRUCTIONS 1
+
 int process_message_body(uint8_t* message_body, int message_body_length, MessageHeader* header, field_t* fields, size_t* fields_used) {
-    BAIL_IF(header->instructions_length != 1);
+    BAIL_IF(header->instructions_length == 0);
+    BAIL_IF(header->instructions_length > MAX_INSTRUCTIONS);
+
+    InstructionInfo instruction_info[MAX_INSTRUCTIONS];
+    memset(instruction_info, 0, sizeof(InstructionInfo) * MAX_INSTRUCTIONS);
 
     Parser parser = {message_body, message_body_length};
-    Instruction instruction;
-    BAIL_IF(parse_instruction(&parser, &instruction));
-    BAIL_IF(instruction_validate(&instruction, header));
+    size_t instruction_count = 0;
+    for (; instruction_count < header->instructions_length; instruction_count++) {
+        Instruction instruction;
+        BAIL_IF(parse_instruction(&parser, &instruction));
+        BAIL_IF(instruction_validate(&instruction, header));
 
-    InstructionInfo info;
-    memset(&info, 0, sizeof(InstructionInfo));
-    enum ProgramId program_id = instruction_program_id(&instruction, header);
-    switch (program_id) {
-        case ProgramIdSystem:
-        {
-            if (parse_system_instructions(&instruction, header, &info.system) == 0) {
-                info.kind = program_id;
+        InstructionInfo* info = &instruction_info[instruction_count];
+        enum ProgramId program_id = instruction_program_id(&instruction, header);
+        switch (program_id) {
+            case ProgramIdSystem:
+            {
+                if (parse_system_instructions(&instruction, header, &info->system) == 0) {
+                    info->kind = program_id;
+                }
+                break;
             }
-            break;
-        }
-        case ProgramIdStake:
-        {
-            if (parse_stake_instructions(&instruction, header, &info.stake) == 0) {
-                info.kind = program_id;
+            case ProgramIdStake:
+            {
+                if (parse_stake_instructions(&instruction, header, &info->stake) == 0) {
+                    info->kind = program_id;
+                }
+                break;
             }
-            break;
+            case ProgramIdUnknown:
+                break;
         }
-        case ProgramIdUnknown:
-            break;
     }
 
-    // If we don't know about the instruction, bail
-    BAIL_IF(info.kind == ProgramIdUnknown);
+    // Ensure we've consumed the entire message body
+    BAIL_IF(!parser_is_empty(&parser));
 
-    switch (info.kind) {
+    // If we don't know about all of the instructions, bail
+    for (size_t i = 0; i < instruction_count; i++) {
+        BAIL_IF(instruction_info[i].kind == ProgramIdUnknown);
+    }
+
+    InstructionInfo* info = &instruction_info[0];
+    switch (info->kind) {
         case ProgramIdSystem:
-            return print_system_info(&info.system, header, fields, fields_used);
+            return print_system_info(&info->system, header, fields, fields_used);
         case ProgramIdStake:
-            return print_stake_info(&info.stake, header, fields, fields_used);
+            return print_stake_info(&info->stake, header, fields, fields_used);
         case ProgramIdUnknown:
             break;
     }
