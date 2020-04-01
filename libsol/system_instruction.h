@@ -40,3 +40,4 @@ typedef struct SystemInfo {
 
 int parse_system_instructions(Instruction* instruction, MessageHeader* header, SystemInfo* info);
 int print_system_info(SystemInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used);
+int print_system_nonced_transaction_sentinel(SystemInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used);

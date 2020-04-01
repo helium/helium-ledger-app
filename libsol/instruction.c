@@ -22,3 +22,14 @@ int instruction_validate(const Instruction* instruction, const MessageHeader* he
     }
     return 0;
 }
+
+bool instruction_info_matches_brief(const InstructionInfo* info, const InstructionBrief* brief) {
+    if (brief->program_id == info->kind) {
+        switch (brief->program_id) {
+            case ProgramIdStake: return (brief->stake == info->stake.kind);
+            case ProgramIdSystem: return (brief->system == info->system.kind);
+            case ProgramIdUnknown: break;
+        }
+    }
+    return false;
+}

@@ -7,7 +7,7 @@
 #include "util.h"
 #include <string.h>
 
-#define MAX_INSTRUCTIONS 1
+#define MAX_INSTRUCTIONS 2
 
 int process_message_body(uint8_t* message_body, int message_body_length, MessageHeader* header, field_t* fields, size_t* fields_used) {
     BAIL_IF(header->instructions_length == 0);
@@ -53,13 +53,30 @@ int process_message_body(uint8_t* message_body, int message_body_length, Message
         BAIL_IF(instruction_info[i].kind == ProgramIdUnknown);
     }
 
-    InstructionInfo* info = &instruction_info[0];
-    switch (info->kind) {
-        case ProgramIdSystem:
-            return print_system_info(&info->system, header, fields, fields_used);
-        case ProgramIdStake:
-            return print_stake_info(&info->stake, header, fields, fields_used);
-        case ProgramIdUnknown:
+    size_t operative_ix = 0;
+    InstructionInfo* info = &instruction_info[operative_ix];
+    if (instruction_count > 1) {
+        InstructionBrief nonce_brief = SYSTEM_IX_BRIEF(AdvanceNonceAccount);
+        if (instruction_info_matches_brief(info, &nonce_brief)) {
+            print_system_nonced_transaction_sentinel(&info->system, header, fields, fields_used);
+            operative_ix++;
+            instruction_count--;
+            info = &instruction_info[operative_ix];
+        }
+    }
+
+    switch (instruction_count) {
+        case 1:
+            switch (info->kind) {
+                case ProgramIdSystem:
+                    return print_system_info(&info->system, header, fields, fields_used);
+                case ProgramIdStake:
+                    return print_stake_info(&info->stake, header, fields, fields_used);
+                case ProgramIdUnknown:
+                    break;
+            }
+            break;
+        default:
             break;
     }
 

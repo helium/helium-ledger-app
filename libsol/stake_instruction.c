@@ -102,7 +102,7 @@ static int print_delegate_stake_info(DelegateStakeInfo* info, MessageHeader* hea
         strcpy(fields[3].text, "authorizer");
     }
 
-    *fields_used = 4;
+    *fields_used += 4;
     return 0;
 }
 

@@ -166,6 +166,30 @@ fn test_ledger_delegate_stake() {
 }
 
 /// This test requires interactive approval of message signing on the ledger.
+fn test_ledger_delegate_stake_with_nonce() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let authorized_pubkey = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let stake_pubkey = ledger_base_pubkey;
+    let vote_pubkey = Pubkey::new(&[1u8; 32]);
+    let instruction =
+        stake_instruction::delegate_stake(&stake_pubkey, &authorized_pubkey, &vote_pubkey);
+    let nonce_account = Pubkey::new(&[2u8; 32]);
+    let message = Message::new_with_nonce(vec![instruction], None, &nonce_account, &authorized_pubkey).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
+}
+
+/// This test requires interactive approval of message signing on the ledger.
 fn test_ledger_advance_nonce_account() {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
@@ -210,6 +234,28 @@ fn test_ledger_advance_nonce_account_separate_fee_payer() {
     assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
 }
 
+// This test requires interactive approval of message signing on the ledger.
+fn test_ledger_transfer_with_nonce() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let from = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let nonce_account = Pubkey::new(&[1u8; 32]);
+    let nonce_authority = Pubkey::new(&[2u8; 32]);
+    let instruction = system_instruction::transfer(&from, &ledger_base_pubkey, 42);
+    let message = Message::new_with_nonce(vec![instruction], None, &nonce_account, &nonce_authority).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&from.as_ref(), &message));
+}
+
 fn main() {
     test_ledger_pubkey();
     test_ledger_sign_garbage();
@@ -218,4 +264,6 @@ fn main() {
     test_ledger_delegate_stake();
     test_ledger_advance_nonce_account();
     test_ledger_advance_nonce_account_separate_fee_payer();
+    test_ledger_delegate_stake_with_nonce();
+    test_ledger_transfer_with_nonce();
 }

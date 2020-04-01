@@ -117,7 +117,7 @@ static int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* h
         strcpy(fields[3].text, "sender");
     }
 
-    *fields_used = 4;
+    *fields_used += 4;
     return 0;
 }
 
@@ -139,7 +139,7 @@ static int print_system_advance_nonce_account(SystemAdvanceNonceInfo* info, Mess
         print_summary(pubkey_buffer, fields[3].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
     }
 
-    *fields_used = 3;
+    *fields_used += 3;
     return 0;
 }
 
@@ -162,4 +162,18 @@ int print_system_info(SystemInfo* info, MessageHeader* header, field_t* fields, 
     }
 
     return 1;
+}
+
+int print_system_nonced_transaction_sentinel(SystemInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
+    SystemAdvanceNonceInfo* nonce_info = &info->advance_nonce;
+    char pubkey_buffer[BASE58_PUBKEY_LENGTH];
+
+    encode_base58((uint8_t*) nonce_info->account, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[4].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+    encode_base58((uint8_t*) nonce_info->authority, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[5].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+    *fields_used += 2;
+    return 0;
 }

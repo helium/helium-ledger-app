@@ -7,7 +7,7 @@
 #include "sol/printer.h"
 #include "sol/message.h"
 
-static field_t G_fields[4];
+static field_t G_fields[6];
 
 static uint8_t G_message[MAX_MESSAGE_LENGTH];
 static int G_messageLength;
@@ -61,6 +61,20 @@ UX_STEP_NOCB(
       .title = "Fee paid by",
       .text = G_fields[3].text,
     });
+UX_STEP_NOCB(
+    ux_nonce_account_step,
+    bnnn_paging,
+    {
+      .title = "Nonce account",
+      .text = G_fields[4].text,
+    });
+UX_STEP_NOCB(
+    ux_nonce_authority_step,
+    bnnn_paging,
+    {
+      .title = "Nonce authority",
+      .text = G_fields[5].text,
+    });
 UX_STEP_VALID(
     ux_approve_step,
     pb,
@@ -91,6 +105,17 @@ UX_FLOW(ux_4_fields,
   &ux_sender_step,
   &ux_recipient_step,
   &ux_fee_payer_step,
+  &ux_approve_step,
+  &ux_reject_step
+);
+
+UX_FLOW(ux_6_fields,
+  &ux_instruction_step,
+  &ux_sender_step,
+  &ux_recipient_step,
+  &ux_fee_payer_step,
+  &ux_nonce_account_step,
+  &ux_nonce_authority_step,
   &ux_approve_step,
   &ux_reject_step
 );
@@ -159,6 +184,9 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
         break;
     case 4:
         ux_flow_init(0, ux_4_fields, NULL);
+        break;
+    case 6:
+        ux_flow_init(0, ux_6_fields, NULL);
         break;
     default:
         THROW(0x6f00);
