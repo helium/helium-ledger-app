@@ -14,7 +14,7 @@ int read_derivation_path(const uint8_t *dataBuffer, size_t size, uint32_t *deriv
         THROW(0x6a80);
     }
     if (1 + 4 * len > size) {
-      THROW(0x6a8);
+      THROW(0x6a80);
     }
 
     for (unsigned int i = 0; i < len; i++) {
