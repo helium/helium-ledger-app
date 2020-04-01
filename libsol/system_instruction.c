@@ -47,6 +47,25 @@ static int parse_system_transfer_instruction(Parser* parser, Instruction* instru
     return 0;
 }
 
+static int parse_system_advance_nonce_account_instruction(
+    Parser* parser,
+    Instruction* instruction,
+    MessageHeader* header,
+    SystemAdvanceNonceInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 3);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    accounts_index++; // Skip recent blockhashes sysvar
+
+    pubkeys_index = instruction->accounts[accounts_index++];
+    info->authority = &header->pubkeys[pubkeys_index];
+
+    return 0;
+}
+
 int parse_system_instructions(Instruction* instruction, MessageHeader* header, SystemInfo* info) {
     Parser parser = {instruction->data, instruction->data_length};
 
@@ -55,10 +74,16 @@ int parse_system_instructions(Instruction* instruction, MessageHeader* header, S
     switch (info->kind) {
         case Transfer:
             return parse_system_transfer_instruction(&parser, instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, &info->transfer);
+        case AdvanceNonceAccount:
+            return parse_system_advance_nonce_account_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->advance_nonce
+            );
         case CreateAccount:
         case Assign:
         case CreateAccountWithSeed:
-        case AdvanceNonceAccount:
         case WithdrawNonceAccount:
         case InitializeNonceAccount:
         case AuthorizeNonceAccount:
@@ -96,14 +121,37 @@ static int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* h
     return 0;
 }
 
+static int print_system_advance_nonce_account(SystemAdvanceNonceInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
+    char pubkey_buffer[BASE58_PUBKEY_LENGTH];
+
+    strcpy(fields[0].title, "Advance Nonce");
+    encode_base58((uint8_t*) info->account, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[0].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+    strcpy(fields[1].title, "Authorized by");
+    encode_base58((uint8_t*) info->authority, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[1].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+
+    if (memcmp(&header->pubkeys[0], info->authority, PUBKEY_SIZE) == 0) {
+        strcpy(fields[3].text, "authority");
+    } else {
+        encode_base58((uint8_t*) &header->pubkeys[0], PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
+        print_summary(pubkey_buffer, fields[3].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    }
+
+    *fields_used = 3;
+    return 0;
+}
+
 int print_system_info(SystemInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
     switch (info->kind) {
         case Transfer:
             return print_system_transfer_info(&info->transfer, header, fields, fields_used);
+        case AdvanceNonceAccount:
+            return print_system_advance_nonce_account(&info->advance_nonce, header, fields, fields_used);
         case CreateAccount:
         case Assign:
         case CreateAccountWithSeed:
-        case AdvanceNonceAccount:
         case WithdrawNonceAccount:
         case InitializeNonceAccount:
         case AuthorizeNonceAccount:

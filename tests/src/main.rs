@@ -165,10 +165,57 @@ fn test_ledger_delegate_stake() {
     assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
 }
 
+/// This test requires interactive approval of message signing on the ledger.
+fn test_ledger_advance_nonce_account() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let authorized_pubkey = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let nonce_account = Pubkey::new(&[1u8; 32]);
+    let instruction =
+        system_instruction::advance_nonce_account(&nonce_account, &authorized_pubkey);
+    let message = Message::new(vec![instruction]).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
+}
+
+/// This test requires interactive approval of message signing on the ledger.
+fn test_ledger_advance_nonce_account_separate_fee_payer() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let authorized_pubkey = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let nonce_account = Pubkey::new(&[1u8; 32]);
+    let fee_payer = Pubkey::new(&[2u8; 32]);
+    let instruction =
+        system_instruction::advance_nonce_account(&nonce_account, &authorized_pubkey);
+    let message = Message::new_with_payer(vec![instruction], Some(&fee_payer)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
+}
+
 fn main() {
     test_ledger_pubkey();
     test_ledger_sign_garbage();
     test_ledger_sign_transaction();
     test_ledger_sign_transaction_too_big();
     test_ledger_delegate_stake();
+    test_ledger_advance_nonce_account();
+    test_ledger_advance_nonce_account_separate_fee_payer();
 }

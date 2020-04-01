@@ -25,10 +25,16 @@ typedef struct SystemTransferInfo {
     uint64_t lamports;
 } SystemTransferInfo;
 
+typedef struct SystemAdvanceNonceInfo {
+    Pubkey* account;
+    Pubkey* authority;
+} SystemAdvanceNonceInfo;
+
 typedef struct SystemInfo {
     enum SystemInstructionKind kind;
     union {
         SystemTransferInfo transfer;
+        SystemAdvanceNonceInfo advance_nonce;
     };
 } SystemInfo;
 
