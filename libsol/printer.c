@@ -1,6 +1,7 @@
 #include <string.h>
-#include "sol/printer.h"
 #include "os_error.h"
+#include "sol/printer.h"
+#include "util.h"
 
 // max amount is max uint64 scaled down: "9223372036.854775807"
 #define AMOUNT_MAX_SIZE 22
@@ -114,5 +115,35 @@ int encode_base58(uint8_t *in, uint8_t length, uint8_t *out, uint8_t maxoutlen) 
     }
     memmove(out, (buffer + j), length);
     out[length] = '\0';
+    return 0;
+}
+
+int print_u64(uint64_t u64, char* out, int outlen) {
+    uint64_t dVal = u64;
+    int i = 0;
+    int j = 0;
+
+    if (i < (outlen - 1)) {
+        do {
+            if (dVal > 0) {
+                out[i] = (dVal % 10) + '0';
+                dVal /= 10;
+            } else {
+                out[i] = '0';
+            }
+            i++;
+        } while (dVal > 0 && i < outlen);
+    }
+
+    BAIL_IF(i >= outlen);
+
+    out[i--] = '\0';
+
+    for (; j < i; j++, i--) {
+        int tmp = out[j];
+        out[j] = out[i];
+        out[i] = tmp;
+    }
+
     return 0;
 }

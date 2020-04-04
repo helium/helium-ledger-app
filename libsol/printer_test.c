@@ -30,9 +30,23 @@ void test_print_summary() {
   assert_string_equal(summary, "GADFVW..LEQN2I");
 }
 
+void test_print_u64() {
+#define U64_MAX_STR (20 + 1) // strlen("18446744073709551615") + NUL
+    char out[U64_MAX_STR];
+
+    assert(print_u64(0, out, sizeof(out)) == 0);
+    assert_string_equal(out, "0");
+    assert(print_u64(UINT64_MAX, out, sizeof(out)) == 0);
+    assert_string_equal(out, "18446744073709551615");
+
+    assert(print_u64(UINT64_MAX, out, sizeof(out) - 1) == 1);
+    assert(print_u64(0, NULL, 0) == 1);
+}
+
 int main() {
     test_print_amount();
     test_print_summary();
+    test_print_u64();
 
     printf("passed\n");
     return 0;
