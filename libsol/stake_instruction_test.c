@@ -79,6 +79,7 @@ void test_parse_stake_instruction_kind() {
 
 int main() {
     test_parse_delegate_stake_instructions();
+    test_parse_stake_instruction_kind();
 
     printf("passed\n");
     return 0;
