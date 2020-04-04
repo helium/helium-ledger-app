@@ -75,10 +75,10 @@ int parse_pubkeys(Parser* parser, PubkeysHeader* header, Pubkey** pubkeys) {
     return 0;
 }
 
-int parse_blockhash(Parser* parser, Blockhash** blockhash) {
-    BAIL_IF(check_buffer_length(parser, BLOCKHASH_SIZE));
-    *blockhash = (Blockhash*) parser->buffer;
-    advance(parser, BLOCKHASH_SIZE);
+int parse_hash(Parser* parser, Hash** hash) {
+    BAIL_IF(check_buffer_length(parser, HASH_SIZE));
+    *hash = (Hash*) parser->buffer;
+    advance(parser, HASH_SIZE);
     return 0;
 }
 

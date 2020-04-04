@@ -106,21 +106,21 @@ void test_parse_pubkeys_too_short() {
    assert(parse_pubkeys(&parser, &header, &pubkeys) == 1);
 }
 
-void test_parse_blockhash() {
-   uint8_t message[BLOCKHASH_SIZE] = {42};
+void test_parse_hash() {
+   uint8_t message[HASH_SIZE] = {42};
    Parser parser = {message, sizeof(message)};
-   Blockhash* blockhash;
-   assert(parse_blockhash(&parser, &blockhash) == 0);
+   Hash* hash;
+   assert(parse_hash(&parser, &hash) == 0);
    assert(parser_is_empty(&parser));
-   assert(parser.buffer == message + BLOCKHASH_SIZE);
-   assert(blockhash->data[0] == 42);
+   assert(parser.buffer == message + HASH_SIZE);
+   assert(hash->data[0] == 42);
 }
 
-void test_parse_blockhash_too_short() {
+void test_parse_hash_too_short() {
    uint8_t message[31]; // <--- Too short!
    Parser parser = {message, sizeof(message)};
-   Blockhash* blockhash;
-   assert(parse_blockhash(&parser, &blockhash) == 1);
+   Hash* hash;
+   assert(parse_hash(&parser, &hash) == 1);
 }
 
 void test_parse_data() {
@@ -173,8 +173,8 @@ int main() {
     test_parse_pubkeys_header();
     test_parse_pubkeys();
     test_parse_pubkeys_too_short();
-    test_parse_blockhash();
-    test_parse_blockhash_too_short();
+    test_parse_hash();
+    test_parse_hash_too_short();
     test_parse_data();
     test_parse_data_too_short();
     test_parse_instruction();

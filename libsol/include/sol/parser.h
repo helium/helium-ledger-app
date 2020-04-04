@@ -4,7 +4,8 @@
 #include <stddef.h>
 
 #define PUBKEY_SIZE 32
-#define BLOCKHASH_SIZE PUBKEY_SIZE
+#define HASH_SIZE 32
+#define BLOCKHASH_SIZE HASH_SIZE
 
 typedef struct Parser {
     uint8_t* buffer;
@@ -15,9 +16,10 @@ typedef struct Pubkey {
     uint8_t data[PUBKEY_SIZE];
 } Pubkey;
 
-typedef struct Blockhash {
-    uint8_t data[BLOCKHASH_SIZE];
-} Blockhash;
+typedef struct Hash {
+    uint8_t data[HASH_SIZE];
+} Hash;
+typedef struct Hash Blockhash;
 
 typedef struct Instruction {
     uint8_t program_id_index;
@@ -55,7 +57,8 @@ int parse_pubkeys_header(Parser* parser, PubkeysHeader* header);
 
 int parse_pubkeys(Parser* parser, PubkeysHeader* header, Pubkey** pubkeys);
 
-int parse_blockhash(Parser* parser, Blockhash** blockhash);
+int parse_blockhash(Parser* parser, Hash** hash);
+#define parse_blockhash parse_hash
 
 int parse_message_header(Parser* parser, MessageHeader* header);
 
