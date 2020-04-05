@@ -162,8 +162,8 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
 
     // Set fee payer text
     char pubkeyBuffer[BASE58_PUBKEY_LENGTH];
-    encode_base58((uint8_t*) &header.pubkeys[0], PUBKEY_LENGTH, (uint8_t*) pubkeyBuffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkeyBuffer, G_fields[3].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    encode_base58(&header.pubkeys[0], PUBKEY_LENGTH, pubkeyBuffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkeyBuffer, G_fields[3].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
     size_t fieldsUsed = 0;
     if (process_message_body(parser.buffer, parser.buffer_length, &header, G_fields, &fieldsUsed)) {
@@ -174,7 +174,7 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
         cx_hash_sha256(dataBuffer, dataLength, messageHashBytes, HASH_LENGTH);
 
         strcpy(G_fields[1].title, "Message Hash");
-        encode_base58(messageHashBytes, HASH_LENGTH, (uint8_t*) G_fields[1].text, BASE58_PUBKEY_LENGTH);
+        encode_base58(messageHashBytes, HASH_LENGTH, G_fields[1].text, BASE58_PUBKEY_LENGTH);
         fieldsUsed = 3;
     }
 

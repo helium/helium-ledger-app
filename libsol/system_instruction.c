@@ -98,16 +98,16 @@ int parse_system_instructions(Instruction* instruction, MessageHeader* header, S
 
 static int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
     strcpy(fields[0].title, "Transfer");
-    print_amount(info->lamports, "SOL", fields[0].text);
+    print_amount(info->lamports, "SOL", fields[0].text, BASE58_PUBKEY_LENGTH);
 
     char pubkey_buffer[BASE58_PUBKEY_LENGTH];
     strcpy(fields[1].title, "Sender");
-    encode_base58((uint8_t*) info->from, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkey_buffer, fields[1].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    encode_base58(info->from, PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[1].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
     strcpy(fields[2].title, "Recipient");
-    encode_base58((uint8_t*) info->to, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkey_buffer, fields[2].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    encode_base58(info->to, PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[2].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
     if (memcmp(&header->pubkeys[0], info->to, PUBKEY_SIZE) == 0) {
         strcpy(fields[3].text, "recipient");
@@ -125,18 +125,18 @@ static int print_system_advance_nonce_account(SystemAdvanceNonceInfo* info, Mess
     char pubkey_buffer[BASE58_PUBKEY_LENGTH];
 
     strcpy(fields[0].title, "Advance Nonce");
-    encode_base58((uint8_t*) info->account, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkey_buffer, fields[0].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    encode_base58(info->account, PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[0].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
     strcpy(fields[1].title, "Authorized by");
-    encode_base58((uint8_t*) info->authority, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkey_buffer, fields[1].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    encode_base58(info->authority, PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[1].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
     if (memcmp(&header->pubkeys[0], info->authority, PUBKEY_SIZE) == 0) {
         strcpy(fields[3].text, "authority");
     } else {
-        encode_base58((uint8_t*) &header->pubkeys[0], PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
-        print_summary(pubkey_buffer, fields[3].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+        encode_base58(&header->pubkeys[0], PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
+        print_summary(pubkey_buffer, fields[3].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
     }
 
     *fields_used += 3;
@@ -168,11 +168,11 @@ int print_system_nonced_transaction_sentinel(SystemInfo* info, MessageHeader* he
     SystemAdvanceNonceInfo* nonce_info = &info->advance_nonce;
     char pubkey_buffer[BASE58_PUBKEY_LENGTH];
 
-    encode_base58((uint8_t*) nonce_info->account, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkey_buffer, fields[4].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    encode_base58(nonce_info->account, PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[4].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
-    encode_base58((uint8_t*) nonce_info->authority, PUBKEY_SIZE, (uint8_t*) pubkey_buffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkey_buffer, fields[5].text, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    encode_base58(nonce_info->authority, PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
+    print_summary(pubkey_buffer, fields[5].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
 
     *fields_used += 2;
     return 0;
