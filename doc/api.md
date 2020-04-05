@@ -7,139 +7,126 @@ This application describes the APDU messages interface to communicate with the S
 
 The application covers the following functionalities :
 
-  - Retrieve an address given an account number
+   - Retrieve an address given an account number
 
 The application interface can be accessed over HID or BLE
 
 ## General purpose APDUs
 
-
 ### GET APP CONFIGURATION
 
 #### Description
 
-This command returns specific application configuration
+_This command returns specific application configuration_
 
-#### Coding
+##### Command
 
-'Command'
+| *CLA*         | *INS*         | *P1*  | *P2*          | *Lc*          | *Le*   |
+| ------------- |:-------------:| -----:| ------------- |:-------------:| -----: |
+| E0            | 01            | 00    | 00            | 00            | 04     |
 
-[width="80%"]
-|==============================================================================================================================
-| *CLA* | *INS*  | *P1*               | *P2*       | *Lc*     | *Le*
-|   E0  |   01   |  00                |   00       | 00       | 04
-|==============================================================================================================================
+##### Input data
 
-'Input data'
+_None_
 
-None
+##### Output data
 
-'Output data'
 
-[width="80%"]
-|==============================================================================================================================
 | *Description*                                                                     | *Length*
-|
+| ------------- |:-------------:|
 | Dummy setting n°1 value                                                           | 01
 | Dummy setting n°2 value                                                           | 01
 | Application major version                                                         | 01
 | Application minor version                                                         | 01
 | Application patch version                                                         | 01
-|==============================================================================================================================
 
 
 ### GET PUBKEY
 
 #### Description
 
-This command returns a Solana pubkey for the given BIP 32 path
+_This command returns a Solana pubkey for the given BIP 32 path_
 
-#### Coding
+##### Command
 
-'Command'
+| *CLA*         | *INS*         | *P1*  | *P2*          | *Lc*          | *Le*   |
+| ------------- |:-------------:| -----:| ------------- |:-------------:| -----: |
+| E0            | 02            | 00    | 00            | variable          | variable     |
 
-[width="80%"]
-|==============================================================================================================================
-| *CLA* | *INS*  | *P1*               | *P2*       | *Lc*     | *Le*
-|   E0  |   02   |  00                |   00       | variable | variable
-|==============================================================================================================================
 
-'Input data'
 
-|==============================================================================================================================
+##### Input data
+
+
 | *Description*                                                                     | *Length*
+| ------------- |:-------------:|
 | Number of BIP 32 derivations to perform (3 or 4)                                  | 1
 | First derivation index (big endian)                                               | 4
 | ...                                                                               | 4
 | Last derivation index (big endian)                                                | 4
-|==============================================================================================================================
 
-'Output data'
+##### Output data
 
-[width="80%"]
-|==============================================================================================================================
+
 | *Description*                                                                     | *Length*
+| ------------- |:-------------:|
 | Pubkey                                                                            | 32
-|==============================================================================================================================
 
 
 ### SIGN SOLANA TRANSFER
 
 #### Description
 
-This command signs a Solana System transfer after having the user validate the following parameters
+_This command signs a Solana System transfer after having the user validate the following parameters:_
 
-  - Amount
-  - Sender pubkey
-  - Recipient pubkey
-  - Fee payer
+  * Amount
+  * Sender pubkey
+  * Recipient pubkey
+  * Fee payer
 
-#### Coding
+##### Command
 
-'Command'
 
-[width="80%"]
-|==============================================================================================================================
 | *CLA* | *INS*  | *P1*               | *P2*       | *Lc*     | *Le*
+| ------------- |:-------------:| -----:| ------------- |:-------------:| -----: |
 |   E0  |   03   |  01                |   00       | variable | variable
-|==============================================================================================================================
 
-'Input data'
 
-[width="80%"]
-|==============================================================================================================================
+##### Input data
+
+
 | *Description*                                                                     | *Length*
+| ------------- |:-------------:|
 | Number of BIP 32 derivations to perform (3 or 4)                                  | 1
 | First derivation index (big endian)                                               | 4
 | ...                                                                               | 4
 | Last derivation index (big endian)                                                | 4
 | Serialized transaction                                                            | variable
-|==============================================================================================================================
 
-'Output data'
+##### Output data
 
-[width="80%"]
-|==============================================================================================================================
+
 | *Description*                                                                     | *Length*
+| ------------- |:-------------:|
 | Signature                                                                         | 64
-|==============================================================================================================================
+
 
 ## Transport protocol
 
 ### General transport description
 
-Ledger APDUs requests and responses are encapsulated using a flexible protocol allowing to fragment large payloads over different underlying transport mechanisms.
+_Ledger APDUs requests and responses are encapsulated using a flexible protocol allowing to fragment large payloads over different underlying transport mechanisms._
 
-The common transport header is defined as follows :
+The common transport header is defined as follows:
 
-[width="80%"]
-|==============================================================================================================================
+
 | *Description*                                                                     | *Length*
+| ------------- |:-------------:|
 | Communication channel ID (big endian)                                             | 2
 | Command tag                                                                       | 1
 | Packet sequence index (big endian)                                                | 2
 | Payload                                                                           | var
-|==============================================================================================================================
+
 
 The Communication channel ID allows commands multiplexing over the same physical link. It is not used for the time being, and should be set to 0101 to avoid compatibility issues with implementations ignoring a leading 00 byte.
 
@@ -151,9 +138,9 @@ The Packet sequence index describes the current sequence for fragmented payloads
 
 APDU Command payloads are encoded as follows :
 
-[width="80%"]
-|==============================================================================================================================
+
 | *Description*                                                                     | *Length*
+| ------------- |:-------------:|
 | APDU length (big endian)                                                          | 2
 | APDU CLA                                                                          | 1
 | APDU INS                                                                          | 1
@@ -161,29 +148,28 @@ APDU Command payloads are encoded as follows :
 | APDU P2                                                                           | 1
 | APDU data length                                                                  | 2
 | Optional APDU data                                                                | var
-|==============================================================================================================================
 
 APDU payload is encoded according to the APDU case
 
-[width="80%"]
-|=======================================================================================
+
 | Case Number  | *Lc* | *Le* | Case description
+| -----------  | ---- | ---- | ----------------
 |   1          |  0   |  0   | No data in either direction - L is set to 00
 |   2          |  0   |  !0  | Input Data present, no Output Data - L is set to Lc
 |   3          |  !0  |  0   | Output Data present, no Input Data - L is set to Le
 |   4          |  !0  |  !0  | Both Input and Output Data are present - L is set to Lc
-|=======================================================================================
+
 
 ### APDU Response payload encoding
 
 APDU Response payloads are encoded as follows :
 
-[width="80%"]
-|==============================================================================================================================
+
 | *Description*                                                                     | *Length*
+| ------------- |:-------------:|
 | APDU response length (big endian)                                                 | 2
 | APDU response data and Status Word                                                | var
-|==============================================================================================================================
+
 
 ### USB mapping
 
@@ -203,15 +189,13 @@ Requests are encoded using the standard BLE 20 bytes MTU size
 
 The following standard Status Words are returned for all APDUs - some specific Status Words can be used for specific commands and are mentioned in the command description.
 
-'Status Words'
+##### Status Words
 
-[width="80%"]
-|===============================================================================================
 | *SW*     | *Description*
+| ------------- |:-------------:|
 |   6700   | Incorrect length
 |   6982   | Security status not satisfied (Canceled by user)
 |   6A80   | Invalid data
 |   6B00   | Incorrect parameter P1 or P2
 |   6Fxx   | Technical problem (Internal error, please report)
 |   9000   | Normal ending of the command
-|===============================================================================================
