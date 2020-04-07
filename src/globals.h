@@ -11,7 +11,12 @@
 #define P2_EXTEND 0x01
 #define P2_MORE 0x02
 
-#define MAX_MESSAGE_LENGTH 1000
+#define ROUND_TO_NEXT(x, next) (((x) == 0) ? 0 : ((((x - 1) / (next)) + 1) * (next)))
+
+/* See constant by same name in sdk/src/packet.rs */
+#define PACKET_DATA_SIZE (1280 - 40 - 8)
+
+#define MAX_MESSAGE_LENGTH ROUND_TO_NEXT(PACKET_DATA_SIZE, USB_SEGMENT_SIZE)
 #define SIGNATURE_LENGTH 64
 #define HASH_LENGTH 32
 #define PUBKEY_LENGTH HASH_LENGTH
