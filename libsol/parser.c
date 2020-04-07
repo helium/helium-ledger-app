@@ -42,6 +42,11 @@ int parse_u64(Parser* parser, uint64_t* value) {
     return 0;
 }
 
+int parse_i64(Parser* parser, int64_t* value) {
+    uint64_t* as_u64 = (uint64_t*) value;
+    return parse_u64(parser, as_u64);
+}
+
 int parse_length(Parser* parser, size_t* value) {
     uint8_t value_u8;
     BAIL_IF(parse_u8(parser, &value_u8));
@@ -55,6 +60,23 @@ int parse_length(Parser* parser, size_t* value) {
             *value = ((value_u8 & 0x7f) << 14) | *value;
 	}
     }
+    return 0;
+}
+
+int parse_sized_string(Parser* parser, SizedString* string) {
+    BAIL_IF(parse_u64(parser, &string->length));
+    BAIL_IF(string->length > SIZE_MAX);
+    size_t len = (size_t) string->length;
+    BAIL_IF(check_buffer_length(parser, len));
+    string->string = (char*)parser->buffer;
+    advance(parser, len);
+    return 0;
+}
+
+int parse_pubkey(Parser* parser, Pubkey** pubkey) {
+    BAIL_IF(check_buffer_length(parser, PUBKEY_SIZE));
+    *pubkey = (Pubkey*) parser->buffer;
+    advance(parser, PUBKEY_SIZE);
     return 0;
 }
 

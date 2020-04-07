@@ -1,6 +1,8 @@
 #include "instruction.h"
 #include "parser.c"
+#include "sol/printer.h"
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 
 void test_parse_u8() {
@@ -57,6 +59,22 @@ void test_parse_u64() {
    assert(parser_is_empty(&parser));
 }
 
+void test_parse_i64() {
+    uint8_t buffer[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f
+    };
+    Parser parser = { buffer, sizeof(buffer) };
+    int64_t value;
+    assert(parse_i64(&parser, &value) == 0);
+    assert(value == INT64_MIN);
+    assert(parse_i64(&parser, &value) == 0);
+    assert(value == 0);
+    assert(parse_i64(&parser, &value) == 0);
+    assert(value == INT64_MAX);
+}
+
 void test_parse_length() {
    uint8_t message[] = {1, 2};
    Parser parser = {message, sizeof(message)};
@@ -65,6 +83,54 @@ void test_parse_length() {
    assert(parser.buffer_length == 1);
    assert(parser.buffer == message + 1);
    assert(value == 1);
+}
+
+void test_parse_sized_string() {
+    SizedString value;
+    uint8_t buffer[] = {
+        /* "test" */
+        0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x74, 0x65, 0x73, 0x74,
+        /* length too long */
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        /* remaining buffer too short for length */
+        0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        /* buffer to short to read length */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+    Parser parser = { buffer, sizeof(buffer) };
+
+    assert(parse_sized_string(&parser, &value) == 0);
+    assert(value.length == 4);
+    assert(strncmp("test", value.string, value.length) == 0);
+
+    assert(parse_sized_string(&parser, &value) == 1);
+    assert(parse_sized_string(&parser, &value) == 1);
+    assert(parse_sized_string(&parser, &value) == 1);
+}
+
+void test_parse_pubkey() {
+    Pubkey* value;
+    const char* expected_string = "11111111111111111111111111111111";
+    char value_string[BASE58_PUBKEY_LENGTH];
+    uint8_t buffer[] = {
+        /* valid */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        /* too short */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+    Parser parser = { buffer, sizeof(buffer) };
+    assert(parse_pubkey(&parser, &value) == 0);
+    encode_base58(value, sizeof(Pubkey), value_string, sizeof(value_string));
+    assert_string_equal(expected_string, value_string);
+
+    assert(parse_pubkey(&parser, &value) == 1);
 }
 
 void test_parse_length_two_bytes() {
@@ -168,8 +234,11 @@ int main() {
     test_parse_u16();
     test_parse_u32();
     test_parse_u64();
+    test_parse_i64();
     test_parse_length();
     test_parse_length_two_bytes();
+    test_parse_sized_string();
+    test_parse_pubkey();
     test_parse_pubkeys_header();
     test_parse_pubkeys();
     test_parse_pubkeys_too_short();

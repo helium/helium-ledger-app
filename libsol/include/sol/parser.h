@@ -12,6 +12,13 @@ typedef struct Parser {
     size_t buffer_length;
 } Parser;
 
+typedef struct SizedString {
+    uint64_t length;
+    // TODO: This can technically contain UTF-8. Need to figure out a
+    // nano-s-compatible strategy for dealing with non-ASCII chars...
+    const char* string;
+} SizedString;
+
 typedef struct Pubkey {
     uint8_t data[PUBKEY_SIZE];
 } Pubkey;
@@ -51,7 +58,13 @@ int parse_u32(Parser* parser, uint32_t* value);
 
 int parse_u64(Parser* parser, uint64_t* value);
 
+int parse_i64(Parser* parser, int64_t* value);
+
 int parse_length(Parser* parser, size_t* value);
+
+int parse_sized_string(Parser* parser, SizedString* string);
+
+int parse_pubkey(Parser* parser, Pubkey** pubkey);
 
 int parse_pubkeys_header(Parser* parser, PubkeysHeader* header);
 
