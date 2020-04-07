@@ -29,4 +29,4 @@ typedef struct StakeInfo {
 } StakeInfo;
 
 int parse_stake_instructions(Instruction* instruction, MessageHeader* header, StakeInfo* info);
-int print_stake_info(StakeInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used);
+int print_stake_info(StakeInfo* info, MessageHeader* header);

@@ -1,5 +1,5 @@
 #include "message.c"
-#include "sol/printer.h"
+#include "sol/transaction_summary.h"
 #include "util.h"
 #include <assert.h>
 #include <stdio.h>
@@ -13,10 +13,13 @@ void test_process_message_body_ok() {
     Blockhash blockhash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
     MessageHeader header = {{1, 0, 1, 3}, accounts, &blockhash, 1};
     uint8_t msg_body[] = {2, 2, 0, 1, 12, 2, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0};
-    field_t fields[5];
-    size_t fields_used = 0;
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header, fields, &fields_used) == 0);
-    assert(fields_used == 4);
+
+    transaction_summary_reset();
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 0);
+    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
+    size_t num_kinds;
+    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
+    assert(num_kinds == 4);
 }
 
 void test_process_message_body_xfer_w_nonce_ok() {
@@ -31,16 +34,17 @@ void test_process_message_body_xfer_w_nonce_ok() {
         2, 3, 0, 1, 0, 4, 4, 0, 0, 0, // Nonce
         2, 2, 0, 1, 12, 2, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0
     };
-    field_t fields[6];
-    size_t fields_used = 0;
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header, fields, &fields_used) == 0);
-    assert(fields_used == 6);
+    transaction_summary_reset();
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 0);
+    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
+    size_t num_kinds;
+    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
+    assert(num_kinds == 6);
 }
 
 void test_process_message_body_too_few_ix_fail() {
     MessageHeader header = {{0, 0, 0, 0}, NULL, NULL, 0};
-    size_t fields_used = 0;
-    assert(process_message_body(NULL, 0, &header, NULL, &fields_used) == 1);
+    assert(process_message_body(NULL, 0, &header) == 1);
 }
 
 void test_process_message_body_too_many_ix_fail() {
@@ -61,15 +65,12 @@ void test_process_message_body_too_many_ix_fail() {
         memcpy(start, xfer_ix, XFER_IX_LEN);
     }
     MessageHeader header = {{1, 0, 1, 3}, accounts, &blockhash, TOO_MANY_IX};
-    field_t fields[5];
-    size_t fields_used = 0;
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header, fields, &fields_used) == 1);
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 1);
 }
 
 void test_process_message_body_data_too_short_fail() {
     MessageHeader header = {{0, 0, 0, 0}, NULL, NULL, 1};
-    size_t fields_used = 0;
-    assert(process_message_body(NULL, 0, &header, NULL, &fields_used) == 1);
+    assert(process_message_body(NULL, 0, &header) == 1);
 }
 
 void test_process_message_body_data_too_long_fail() {
@@ -84,16 +85,13 @@ void test_process_message_body_data_too_long_fail() {
         2, 2, 0, 1, 12, 2, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0,
         0
     };
-    field_t fields[5];
-    size_t fields_used = 0;
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header, fields, &fields_used) == 1);
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 1);
 }
 
 void test_process_message_body_bad_ix_account_index_fail() {
     MessageHeader header = {{0, 0, 0, 1}, NULL, NULL, 1};
     uint8_t msg_body[] = {1, 0, 0};
-    size_t fields_used = 0;
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header, NULL, &fields_used) == 1);
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 1);
 }
 
 void test_process_message_body_unknown_ix_enum_fail() {
@@ -107,9 +105,7 @@ void test_process_message_body_unknown_ix_enum_fail() {
     uint8_t msg_body[] = {
         2, 2, 0, 1, 12, 255, 255, 255, 255, 42, 0, 0, 0, 0, 0, 0, 0,
     };
-    field_t fields[5];
-    size_t fields_used = 0;
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header, fields, &fields_used) == 1);
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 1);
 }
 
 void test_process_message_body_ix_with_unknown_program_id_fail() {
@@ -123,9 +119,7 @@ void test_process_message_body_ix_with_unknown_program_id_fail() {
     uint8_t msg_body[] = {
         2, 2, 0, 1, 12, 2, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0,
     };
-    field_t fields[5];
-    size_t fields_used = 0;
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header, fields, &fields_used) == 1);
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 1);
 }
 
 int main() {

@@ -1,5 +1,5 @@
 #include "sol/parser.h"
-#include "sol/printer.h"
+#include "sol/transaction_summary.h"
 #include "system_instruction.h"
 #include "util.h"
 #include <string.h>
@@ -96,59 +96,51 @@ int parse_system_instructions(Instruction* instruction, MessageHeader* header, S
     return 1;
 }
 
-static int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
-    strcpy(fields[0].title, "Transfer");
-    print_amount(info->lamports, "SOL", fields[0].text, BASE58_PUBKEY_LENGTH);
+static int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* header) {
+    SummaryItem* item;
 
-    char pubkey_buffer[BASE58_PUBKEY_LENGTH];
-    strcpy(fields[1].title, "Sender");
-    encode_base58(info->from, PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkey_buffer, fields[1].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    item = transaction_summary_primary_item();
+    summary_item_set_amount(item, "Transfer", info->lamports);
 
-    strcpy(fields[2].title, "Recipient");
-    encode_base58(info->to, PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkey_buffer, fields[2].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Sender", info->from);
 
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Recipient", info->to);
+
+    item = transaction_summary_fee_payer_item();
     if (memcmp(&header->pubkeys[0], info->to, PUBKEY_SIZE) == 0) {
-        strcpy(fields[3].text, "recipient");
+        transaction_summary_set_fee_payer_string("recipient");
+    } else if (memcmp(&header->pubkeys[0], info->from, PUBKEY_SIZE) == 0) {
+        transaction_summary_set_fee_payer_string("sender");
     }
 
-    if (memcmp(&header->pubkeys[0], info->from, PUBKEY_SIZE) == 0) {
-        strcpy(fields[3].text, "sender");
-    }
-
-    *fields_used += 4;
     return 0;
 }
 
-static int print_system_advance_nonce_account(SystemAdvanceNonceInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
-    char pubkey_buffer[BASE58_PUBKEY_LENGTH];
+static int print_system_advance_nonce_account(SystemAdvanceNonceInfo* info, MessageHeader* header) {
+    SummaryItem* item;
 
-    strcpy(fields[0].title, "Advance Nonce");
-    encode_base58(info->account, PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkey_buffer, fields[0].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Advance Nonce", info->account);
 
-    strcpy(fields[1].title, "Authorized by");
-    encode_base58(info->authority, PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkey_buffer, fields[1].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Authorized by", info->authority);
 
+    item = transaction_summary_fee_payer_item();
     if (memcmp(&header->pubkeys[0], info->authority, PUBKEY_SIZE) == 0) {
-        strcpy(fields[3].text, "authority");
-    } else {
-        encode_base58(&header->pubkeys[0], PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
-        print_summary(pubkey_buffer, fields[3].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
+        transaction_summary_set_fee_payer_string("authority");
     }
 
-    *fields_used += 3;
     return 0;
 }
 
-int print_system_info(SystemInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
+int print_system_info(SystemInfo* info, MessageHeader* header) {
     switch (info->kind) {
         case Transfer:
-            return print_system_transfer_info(&info->transfer, header, fields, fields_used);
+            return print_system_transfer_info(&info->transfer, header);
         case AdvanceNonceAccount:
-            return print_system_advance_nonce_account(&info->advance_nonce, header, fields, fields_used);
+            return print_system_advance_nonce_account(&info->advance_nonce, header);
         case CreateAccount:
         case Assign:
         case CreateAccountWithSeed:
@@ -164,16 +156,15 @@ int print_system_info(SystemInfo* info, MessageHeader* header, field_t* fields, 
     return 1;
 }
 
-int print_system_nonced_transaction_sentinel(SystemInfo* info, MessageHeader* header, field_t* fields, size_t* fields_used) {
+int print_system_nonced_transaction_sentinel(SystemInfo* info, MessageHeader* header) {
     SystemAdvanceNonceInfo* nonce_info = &info->advance_nonce;
-    char pubkey_buffer[BASE58_PUBKEY_LENGTH];
+    SummaryItem* item;
 
-    encode_base58(nonce_info->account, PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkey_buffer, fields[4].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    item = transaction_summary_nonce_account_item();
+    summary_item_set_pubkey(item, "Nonce Account", nonce_info->account);
 
-    encode_base58(nonce_info->authority, PUBKEY_SIZE, pubkey_buffer, BASE58_PUBKEY_LENGTH);
-    print_summary(pubkey_buffer, fields[5].text, BASE58_PUBKEY_SHORT, SUMMARY_LENGTH, SUMMARY_LENGTH);
+    item = transaction_summary_nonce_authority_item();
+    summary_item_set_pubkey(item, "Nonce Authority", nonce_info->authority);
 
-    *fields_used += 2;
     return 0;
 }

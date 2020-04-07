@@ -2,8 +2,6 @@
 #include <assert.h>
 #include <stdio.h>
 
-#define assert_string_equal(actual, expected) assert(strcmp(actual, expected) == 0)
-
 void test_print_amount() {
   char printed[24];
   const char *asset = "SOL";
