@@ -55,6 +55,24 @@ int print_amount(uint64_t amount, const char *asset, char *out, size_t out_lengt
     return 0;
 }
 
+int print_sized_string(const SizedString* string, char* out, size_t out_length) {
+    return print_string(string->string, out, out_length);
+}
+
+int print_string(const char *in, char *out, size_t out_length){
+    strncpy(out, in, out_length);
+    int rc = (out[--out_length] != '\0');
+    if (rc) {
+        /* ensure the output is NUL terminated */
+        out[out_length] = '\0';
+        if (out_length != 0) {
+            /* signal truncation */
+            out[out_length - 1] = '~';
+        }
+    }
+    return rc;
+}
+
 int print_summary(const char *in, char *out, size_t out_length, size_t left_length, size_t right_length) {
     BAIL_IF(out_length <= (left_length + right_length + 2));
     size_t in_length = strlen(in);
@@ -65,7 +83,7 @@ int print_summary(const char *in, char *out, size_t out_length, size_t left_leng
         memcpy(out + left_length + 2, in + in_length - right_length, right_length);
         out[left_length + right_length + 2] = '\0';
     } else {
-        strncpy(out, in, out_length);
+        print_string(in, out, out_length);
     }
 
     return 0;
@@ -119,6 +137,18 @@ int encode_base58(const void *in, size_t length, char *out, size_t maxoutlen) {
     memmove(out, (buffer + j), length);
     out[length] = '\0';
     return 0;
+}
+
+int print_i64(int64_t i64, char* out, size_t out_length) {
+    BAIL_IF(out_length < 1);
+    uint64_t u64 = (uint64_t) i64;
+    if (i64 < 0) {
+        out[0] = '-';
+        out++;
+        out_length--;
+        u64 = (u64 ^ 0xffffffffffffffff) + 1;
+    }
+    return print_u64(u64, out, out_length);
 }
 
 int print_u64(uint64_t u64, char* out, size_t out_length) {

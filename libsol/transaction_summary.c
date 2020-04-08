@@ -135,11 +135,10 @@ static int transaction_summary_update_display_for_item(const SummaryItem* item) 
             BAIL_IF(encode_base58(item->hash, BLOCKHASH_SIZE, G_transaction_summary_text, TEXT_BUFFER_LENGTH));
             break;
         case SummaryItemString:
-            strncpy(G_transaction_summary_text, item->string, TEXT_BUFFER_LENGTH);
+            print_string(item->string, G_transaction_summary_text, TEXT_BUFFER_LENGTH);
             break;
     }
-    // TODO: Write a safe string printer...
-    strncpy(G_transaction_summary_title, item->title, TITLE_SIZE);
+    print_string(item->title, G_transaction_summary_title, TITLE_SIZE);
     return 0;
 }
 

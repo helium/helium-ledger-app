@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sol/parser.h"
 #include <stdint.h>
 #include <stddef.h>
 
@@ -11,6 +12,10 @@
 int print_amount(uint64_t amount, const char *asset, char *out, size_t out_length);
 
 int print_u64(uint64_t u64, char* out, size_t out_length);
+
+int print_sized_string(const SizedString* string, char* out, size_t out_length);
+
+int print_string(const char *in, char *out, size_t out_length);
 
 int print_summary(const char *in, char *out, size_t out_length, size_t left_length, size_t right_length);
 
