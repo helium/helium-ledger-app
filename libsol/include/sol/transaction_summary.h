@@ -19,7 +19,7 @@
 //
 // If all _Required_ `SummaryItem`s have not been set, finalization will fail.
 
-#define NUM_GENERAL_ITEMS 2
+#define NUM_GENERAL_ITEMS 9
 #define MAX_TRANSACTION_SUMMARY_ITEMS ( \
     1       /* primary */               \
     + NUM_GENERAL_ITEMS                 \

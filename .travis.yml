@@ -16,6 +16,7 @@ before_install:
   - python3 -m pip install ledgerblue
 
 script:
+  - make -C libsol
   - make
   - make -f host.mk release
 
