@@ -55,7 +55,7 @@ int process_message_body(uint8_t* message_body, int message_body_length, Message
     size_t operative_ix = 0;
     InstructionInfo* info = &instruction_info[operative_ix];
     if (instruction_count > 1) {
-        InstructionBrief nonce_brief = SYSTEM_IX_BRIEF(AdvanceNonceAccount);
+        InstructionBrief nonce_brief = SYSTEM_IX_BRIEF(SystemAdvanceNonceAccount);
         if (instruction_info_matches_brief(info, &nonce_brief)) {
             print_system_nonced_transaction_sentinel(&info->system, header);
             operative_ix++;

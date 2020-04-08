@@ -23,43 +23,43 @@ void test_parse_stake_instruction_kind() {
     uint8_t buf[] = {0, 0, 0, 0};
     Parser parser = {buf, ARRAY_LEN(buf)};
     assert(parse_stake_instruction_kind(&parser, &kind) == 0);
-    assert(kind == Initialize);
+    assert(kind == StakeInitialize);
 
     buf[0] = 1;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_stake_instruction_kind(&parser, &kind) == 0);
-    assert(kind == Authorize);
+    assert(kind == StakeAuthorize);
 
     buf[0] = 2;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_stake_instruction_kind(&parser, &kind) == 0);
-    assert(kind == DelegateStake);
+    assert(kind == StakeDelegate);
 
     buf[0] = 3;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_stake_instruction_kind(&parser, &kind) == 0);
-    assert(kind == Split);
+    assert(kind == StakeSplit);
 
     buf[0] = 4;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_stake_instruction_kind(&parser, &kind) == 0);
-    assert(kind == Withdraw);
+    assert(kind == StakeWithdraw);
 
     buf[0] = 5;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_stake_instruction_kind(&parser, &kind) == 0);
-    assert(kind == Deactivate);
+    assert(kind == StakeDeactivate);
 
     buf[0] = 6;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_stake_instruction_kind(&parser, &kind) == 0);
-    assert(kind == SetLockup);
+    assert(kind == StakeSetLockup);
 
     // Fail the first unused enum value to be sure this test gets updated
     buf[0] = 7;

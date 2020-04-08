@@ -68,7 +68,7 @@ void test_parse_system_advance_nonce_account_instruction() {
     enum SystemInstructionKind kind;
     Parser instruction_parser = { instruction.data, instruction.data_length };
     assert(parse_system_instruction_kind(&instruction_parser, &kind) == 0);
-    assert(kind == AdvanceNonceAccount);
+    assert(kind == SystemAdvanceNonceAccount);
 
     SystemAdvanceNonceInfo info;
     assert(parse_system_advance_nonce_account_instruction(&instruction_parser, &instruction, &header, &info) == 0);
@@ -130,67 +130,67 @@ void test_parse_system_instruction_kind() {
     uint8_t buf[] = {0, 0, 0, 0};
     Parser parser = {buf, ARRAY_LEN(buf)};
     assert(parse_system_instruction_kind(&parser, &kind) == 0);
-    assert(kind == CreateAccount);
+    assert(kind == SystemCreateAccount);
 
     buf[0] = 1;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_system_instruction_kind(&parser, &kind) == 0);
-    assert(kind == Assign);
+    assert(kind == SystemAssign);
 
     buf[0] = 2;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_system_instruction_kind(&parser, &kind) == 0);
-    assert(kind == Transfer);
+    assert(kind == SystemTransfer);
 
     buf[0] = 3;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_system_instruction_kind(&parser, &kind) == 0);
-    assert(kind == CreateAccountWithSeed);
+    assert(kind == SystemCreateAccountWithSeed);
 
     buf[0] = 4;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_system_instruction_kind(&parser, &kind) == 0);
-    assert(kind == AdvanceNonceAccount);
+    assert(kind == SystemAdvanceNonceAccount);
 
     buf[0] = 5;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_system_instruction_kind(&parser, &kind) == 0);
-    assert(kind == WithdrawNonceAccount);
+    assert(kind == SystemWithdrawNonceAccount);
 
     buf[0] = 6;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_system_instruction_kind(&parser, &kind) == 0);
-    assert(kind == InitializeNonceAccount);
+    assert(kind == SystemInitializeNonceAccount);
 
     buf[0] = 7;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_system_instruction_kind(&parser, &kind) == 0);
-    assert(kind == AuthorizeNonceAccount);
+    assert(kind == SystemAuthorizeNonceAccount);
 
     buf[0] = 8;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_system_instruction_kind(&parser, &kind) == 0);
-    assert(kind == Allocate);
+    assert(kind == SystemAllocate);
 
     buf[0] = 9;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_system_instruction_kind(&parser, &kind) == 0);
-    assert(kind == AllocateWithSeed);
+    assert(kind == SystemAllocateWithSeed);
 
     buf[0] = 10;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_system_instruction_kind(&parser, &kind) == 0);
-    assert(kind == AssignWithSeed);
+    assert(kind == SystemAssignWithSeed);
 
     // Fail the first unused enum value to be sure this test gets updated
     buf[0] = 11;

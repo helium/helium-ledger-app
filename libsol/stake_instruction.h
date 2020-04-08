@@ -6,25 +6,25 @@
 extern const Pubkey stake_program_id;
 
 enum StakeInstructionKind {
-    Initialize,
-    Authorize,
-    DelegateStake,
-    Split,
-    Withdraw,
-    Deactivate,
-    SetLockup,
+    StakeInitialize,
+    StakeAuthorize,
+    StakeDelegate,
+    StakeSplit,
+    StakeWithdraw,
+    StakeDeactivate,
+    StakeSetLockup,
 };
 
-typedef struct DelegateStakeInfo {
+typedef struct StakeDelegateInfo {
     Pubkey* stake_pubkey;
     Pubkey* vote_pubkey;
     Pubkey* authorized_pubkey;
-} DelegateStakeInfo;
+} StakeDelegateInfo;
 
 typedef struct StakeInfo {
     enum StakeInstructionKind kind;
     union {
-        DelegateStakeInfo delegate_stake;
+        StakeDelegateInfo delegate_stake;
     };
 } StakeInfo;
 

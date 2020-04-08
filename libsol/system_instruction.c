@@ -13,17 +13,17 @@ static int parse_system_instruction_kind(Parser* parser, enum SystemInstructionK
     uint32_t maybe_kind;
     BAIL_IF(parse_u32(parser, &maybe_kind));
     switch (maybe_kind) {
-        case CreateAccount:
-        case Assign:
-        case Transfer:
-        case CreateAccountWithSeed:
-        case AdvanceNonceAccount:
-        case WithdrawNonceAccount:
-        case InitializeNonceAccount:
-        case AuthorizeNonceAccount:
-        case Allocate:
-        case AllocateWithSeed:
-        case AssignWithSeed:
+        case SystemCreateAccount:
+        case SystemAssign:
+        case SystemTransfer:
+        case SystemCreateAccountWithSeed:
+        case SystemAdvanceNonceAccount:
+        case SystemWithdrawNonceAccount:
+        case SystemInitializeNonceAccount:
+        case SystemAuthorizeNonceAccount:
+        case SystemAllocate:
+        case SystemAllocateWithSeed:
+        case SystemAssignWithSeed:
             *kind = (enum SystemInstructionKind) maybe_kind;
             return 0;
     }
@@ -72,24 +72,24 @@ int parse_system_instructions(Instruction* instruction, MessageHeader* header, S
     BAIL_IF(parse_system_instruction_kind(&parser, &info->kind));
 
     switch (info->kind) {
-        case Transfer:
+        case SystemTransfer:
             return parse_system_transfer_instruction(&parser, instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, &info->transfer);
-        case AdvanceNonceAccount:
+        case SystemAdvanceNonceAccount:
             return parse_system_advance_nonce_account_instruction(
                 &parser,
                 instruction,
                 header,
                 &info->advance_nonce
             );
-        case CreateAccount:
-        case Assign:
-        case CreateAccountWithSeed:
-        case WithdrawNonceAccount:
-        case InitializeNonceAccount:
-        case AuthorizeNonceAccount:
-        case Allocate:
-        case AllocateWithSeed:
-        case AssignWithSeed:
+        case SystemCreateAccount:
+        case SystemAssign:
+        case SystemCreateAccountWithSeed:
+        case SystemWithdrawNonceAccount:
+        case SystemInitializeNonceAccount:
+        case SystemAuthorizeNonceAccount:
+        case SystemAllocate:
+        case SystemAllocateWithSeed:
+        case SystemAssignWithSeed:
             break;
     }
 
@@ -137,19 +137,19 @@ static int print_system_advance_nonce_account(SystemAdvanceNonceInfo* info, Mess
 
 int print_system_info(SystemInfo* info, MessageHeader* header) {
     switch (info->kind) {
-        case Transfer:
+        case SystemTransfer:
             return print_system_transfer_info(&info->transfer, header);
-        case AdvanceNonceAccount:
+        case SystemAdvanceNonceAccount:
             return print_system_advance_nonce_account(&info->advance_nonce, header);
-        case CreateAccount:
-        case Assign:
-        case CreateAccountWithSeed:
-        case WithdrawNonceAccount:
-        case InitializeNonceAccount:
-        case AuthorizeNonceAccount:
-        case Allocate:
-        case AllocateWithSeed:
-        case AssignWithSeed:
+        case SystemCreateAccount:
+        case SystemAssign:
+        case SystemCreateAccountWithSeed:
+        case SystemWithdrawNonceAccount:
+        case SystemInitializeNonceAccount:
+        case SystemAuthorizeNonceAccount:
+        case SystemAllocate:
+        case SystemAllocateWithSeed:
+        case SystemAssignWithSeed:
             break;
     }
 

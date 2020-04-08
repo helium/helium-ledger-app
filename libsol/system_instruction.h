@@ -5,17 +5,17 @@
 extern const Pubkey system_program_id;
 
 enum SystemInstructionKind {
-    CreateAccount,
-    Assign,
-    Transfer,
-    CreateAccountWithSeed,
-    AdvanceNonceAccount,
-    WithdrawNonceAccount,
-    InitializeNonceAccount,
-    AuthorizeNonceAccount,
-    Allocate,
-    AllocateWithSeed,
-    AssignWithSeed
+    SystemCreateAccount,
+    SystemAssign,
+    SystemTransfer,
+    SystemCreateAccountWithSeed,
+    SystemAdvanceNonceAccount,
+    SystemWithdrawNonceAccount,
+    SystemInitializeNonceAccount,
+    SystemAuthorizeNonceAccount,
+    SystemAllocate,
+    SystemAllocateWithSeed,
+    SystemAssignWithSeed
 };
 
 typedef struct SystemTransferInfo {

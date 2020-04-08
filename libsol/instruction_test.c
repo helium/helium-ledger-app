@@ -60,11 +60,11 @@ void test_instruction_validate_bad_last_account_index_fail() {
 }
 
 void test_static_brief_initializer_macros() {
-    InstructionBrief system_test = SYSTEM_IX_BRIEF(Transfer);
-    InstructionBrief system_expect = { ProgramIdSystem, .system = Transfer };
+    InstructionBrief system_test = SYSTEM_IX_BRIEF(SystemTransfer);
+    InstructionBrief system_expect = { ProgramIdSystem, .system = SystemTransfer };
     assert(memcmp(&system_test, &system_expect, sizeof(InstructionBrief)) == 0);
-    InstructionBrief stake_test = STAKE_IX_BRIEF(DelegateStake);
-    InstructionBrief stake_expect = { ProgramIdStake, .stake = DelegateStake };
+    InstructionBrief stake_test = STAKE_IX_BRIEF(StakeDelegate);
+    InstructionBrief stake_expect = { ProgramIdStake, .stake = StakeDelegate };
     assert(memcmp(&stake_test, &stake_expect, sizeof(InstructionBrief)) == 0);
 }
 
@@ -72,13 +72,13 @@ void test_instruction_info_matches_brief() {
     InstructionInfo info = {
         .kind = ProgramIdSystem,
         .system = {
-            .kind = Transfer,
+            .kind = SystemTransfer,
             .transfer = { NULL, NULL, 0 },
         },
     };
-    InstructionBrief brief_pass = SYSTEM_IX_BRIEF(Transfer);
+    InstructionBrief brief_pass = SYSTEM_IX_BRIEF(SystemTransfer);
     assert(instruction_info_matches_brief(&info, &brief_pass));
-    InstructionBrief brief_fail = SYSTEM_IX_BRIEF(AdvanceNonceAccount);
+    InstructionBrief brief_fail = SYSTEM_IX_BRIEF(SystemAdvanceNonceAccount);
     assert(!instruction_info_matches_brief(&info, &brief_fail));
 }
 
@@ -87,25 +87,25 @@ void test_instruction_infos_match_briefs() {
         {
             .kind = ProgramIdSystem,
             .system = {
-                .kind = Transfer,
+                .kind = SystemTransfer,
                 .transfer = { NULL, NULL, 0 },
             },
         },
         {
             .kind = ProgramIdStake,
             .stake = {
-                .kind = DelegateStake,
+                .kind = StakeDelegate,
                 .delegate_stake = { NULL, NULL, NULL },
             },
         }
     };
     InstructionBrief briefs[] = {
-        SYSTEM_IX_BRIEF(Transfer),
-        STAKE_IX_BRIEF(DelegateStake),
+        SYSTEM_IX_BRIEF(SystemTransfer),
+        STAKE_IX_BRIEF(StakeDelegate),
     };
     InstructionBrief bad_briefs[] = {
-        SYSTEM_IX_BRIEF(Transfer),
-        STAKE_IX_BRIEF(Split),
+        SYSTEM_IX_BRIEF(SystemTransfer),
+        STAKE_IX_BRIEF(StakeSplit),
     };
     size_t infos_len = ARRAY_LEN(infos);
     assert(infos_len == ARRAY_LEN(briefs));

@@ -16,22 +16,22 @@ static int parse_stake_instruction_kind(Parser* parser, enum StakeInstructionKin
     uint32_t maybe_kind;
     BAIL_IF(parse_u32(parser, &maybe_kind));
     switch (maybe_kind) {
-        case Initialize:
-        case Authorize:
-        case DelegateStake:
-        case Split:
-        case Withdraw:
-        case Deactivate:
-        case SetLockup:
+        case StakeInitialize:
+        case StakeAuthorize:
+        case StakeDelegate:
+        case StakeSplit:
+        case StakeWithdraw:
+        case StakeDeactivate:
+        case StakeSetLockup:
             *kind = (enum StakeInstructionKind) maybe_kind;
             return 0;
     }
     return 1;
 }
 
-// Returns 0 and populates DelegateStakeInfo if provided a MessageHeader and a delegate
+// Returns 0 and populates StakeDelegateInfo if provided a MessageHeader and a delegate
 // instruction, otherwise non-zero.
-static int parse_delegate_stake_instruction(Instruction* instruction, Pubkey* pubkeys, size_t pubkeys_length, DelegateStakeInfo* info) {
+static int parse_delegate_stake_instruction(Instruction* instruction, Pubkey* pubkeys, size_t pubkeys_length, StakeDelegateInfo* info) {
     BAIL_IF(instruction->accounts_length < 6);
     uint8_t accounts_index = 0;
     uint8_t pubkeys_index = instruction->accounts[accounts_index++];
@@ -70,21 +70,21 @@ int parse_stake_instructions(Instruction* instruction, MessageHeader* header, St
     BAIL_IF(parse_stake_instruction_kind(&parser, &info->kind));
 
     switch (info->kind) {
-        case DelegateStake:
+        case StakeDelegate:
             return parse_delegate_stake_instruction(instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, &info->delegate_stake);
-        case Initialize:
-        case Authorize:
-        case Split:
-        case Withdraw:
-        case Deactivate:
-        case SetLockup:
+        case StakeInitialize:
+        case StakeAuthorize:
+        case StakeSplit:
+        case StakeWithdraw:
+        case StakeDeactivate:
+        case StakeSetLockup:
             break;
     }
 
     return 1;
 }
 
-static int print_delegate_stake_info(DelegateStakeInfo* info, MessageHeader* header) {
+static int print_delegate_stake_info(StakeDelegateInfo* info, MessageHeader* header) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -106,14 +106,14 @@ static int print_delegate_stake_info(DelegateStakeInfo* info, MessageHeader* hea
 
 int print_stake_info(StakeInfo* info, MessageHeader* header) {
     switch (info->kind) {
-        case DelegateStake:
+        case StakeDelegate:
             return print_delegate_stake_info(&info->delegate_stake, header);
-        case Initialize:
-        case Authorize:
-        case Split:
-        case Withdraw:
-        case Deactivate:
-        case SetLockup:
+        case StakeInitialize:
+        case StakeAuthorize:
+        case StakeSplit:
+        case StakeWithdraw:
+        case StakeDeactivate:
+        case StakeSetLockup:
             break;
     }
 
