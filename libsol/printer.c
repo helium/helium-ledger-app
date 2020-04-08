@@ -56,7 +56,19 @@ int print_amount(uint64_t amount, const char *asset, char *out, size_t out_lengt
 }
 
 int print_sized_string(const SizedString* string, char* out, size_t out_length) {
-    return print_string(string->string, out, out_length);
+    size_t len = MIN(out_length, string->length);
+    strncpy(out, string->string, len);
+    if (string->length < out_length) {
+        out[string->length] = '\0';
+        return 0;
+    } else {
+        out[--out_length] = '\0';
+        if (out_length != 0) {
+            /* signal truncation */
+            out[out_length - 1] = '~';
+        }
+        return 1;
+    }
 }
 
 int print_string(const char *in, char *out, size_t out_length){

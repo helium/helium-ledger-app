@@ -26,8 +26,14 @@ void test_print_sized_string() {
     assert(print_sized_string(&string, buf, sizeof(buf)) == 0);
     assert_string_equal(buf, "test");
 
-    assert(print_sized_string(&string, buf, sizeof(buf) - 1) == 1);
+    assert(print_sized_string(&string, buf, 4) == 1);
     assert_string_equal(buf, "te~");
+
+    assert(print_sized_string(&string, buf, 2) == 1);
+    assert_string_equal(buf, "~");
+
+    assert(print_sized_string(&string, buf, 1) == 1);
+    assert_string_equal(buf, "");
 }
 
 void test_print_string() {
@@ -38,7 +44,6 @@ void test_print_string() {
     assert(print_string("too long", buf, sizeof(buf)) == 1);
     assert_string_equal("too~", buf);
     assert(print_string("too_long", buf, 2) == 1);
-    puts(buf);
     assert_string_equal("~", buf);
     assert(print_string("too_long", buf, 1) == 1);
     assert_string_equal("", buf);
@@ -87,6 +92,7 @@ void test_print_u64() {
 
 int main() {
     test_print_amount();
+    test_print_sized_string();
     test_print_string();
     test_print_summary();
     test_print_i64();
