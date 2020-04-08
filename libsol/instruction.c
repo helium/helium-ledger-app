@@ -33,3 +33,13 @@ bool instruction_info_matches_brief(const InstructionInfo* info, const Instructi
     }
     return false;
 }
+
+bool instruction_infos_match_briefs(const InstructionInfo* infos, const InstructionBrief* briefs, size_t len) {
+    size_t i;
+    for (i = 0; i < len; i++) {
+        if (!instruction_info_matches_brief(&infos[i], &briefs[i])) {
+            break;
+        }
+    }
+    return (i == len);
+}

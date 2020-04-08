@@ -35,3 +35,4 @@ typedef struct InstructionBrief {
 #define STAKE_IX_BRIEF(stake_ix) { ProgramIdStake, .stake = (stake_ix) }
 
 bool instruction_info_matches_brief(const InstructionInfo* info, const InstructionBrief* brief);
+bool instruction_infos_match_briefs(const InstructionInfo* infos, const InstructionBrief* briefs, size_t len);

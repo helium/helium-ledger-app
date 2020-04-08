@@ -2,6 +2,7 @@
 #include "sol/parser.h"
 #include "stake_instruction.h"
 #include "system_instruction.h"
+#include "util.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -81,6 +82,38 @@ void test_instruction_info_matches_brief() {
     assert(!instruction_info_matches_brief(&info, &brief_fail));
 }
 
+void test_instruction_infos_match_briefs() {
+    InstructionInfo infos[] = {
+        {
+            .kind = ProgramIdSystem,
+            .system = {
+                .kind = Transfer,
+                .transfer = { NULL, NULL, 0 },
+            },
+        },
+        {
+            .kind = ProgramIdStake,
+            .stake = {
+                .kind = DelegateStake,
+                .delegate_stake = { NULL, NULL, NULL },
+            },
+        }
+    };
+    InstructionBrief briefs[] = {
+        SYSTEM_IX_BRIEF(Transfer),
+        STAKE_IX_BRIEF(DelegateStake),
+    };
+    InstructionBrief bad_briefs[] = {
+        SYSTEM_IX_BRIEF(Transfer),
+        STAKE_IX_BRIEF(Split),
+    };
+    size_t infos_len = ARRAY_LEN(infos);
+    assert(infos_len == ARRAY_LEN(briefs));
+    assert(infos_len == ARRAY_LEN(bad_briefs));
+    assert(instruction_infos_match_briefs(infos, briefs, infos_len));
+    assert(!instruction_infos_match_briefs(infos, bad_briefs, infos_len));
+}
+
 int main() {
     test_instruction_validate_ok();
     test_instruction_validate_bad_program_id_index_fail();
@@ -91,6 +124,7 @@ int main() {
     test_instruction_program_id_system();
     test_static_brief_initializer_macros();
     test_instruction_info_matches_brief();
+    test_instruction_infos_match_briefs();
 
     printf("passed\n");
     return 0;
