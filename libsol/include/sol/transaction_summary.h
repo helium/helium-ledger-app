@@ -31,9 +31,11 @@
 enum SummaryItemKind {
     SummaryItemNone = 0, // SummaryItemNone always zero
     SummaryItemAmount,
+    SummaryItemI64,
     SummaryItemU64,
     SummaryItemPubkey,
     SummaryItemHash,
+    SummaryItemSizedString,
     SummaryItemString,
 };
 
@@ -59,8 +61,10 @@ int transaction_summary_set_fee_payer_string(const char* string);
 
 // Assign type/title/value to a SummaryItem
 void summary_item_set_amount(SummaryItem* item, const char* title, uint64_t value);
+void summary_item_set_i64(SummaryItem* item, const char* title, int64_t value);
 void summary_item_set_u64(SummaryItem* item, const char* title, uint64_t value);
 void summary_item_set_pubkey(SummaryItem* item, const char* title, const Pubkey* value);
 void summary_item_set_hash(SummaryItem* item, const char* title, const Hash* value);
+void summary_item_set_sized_string(SummaryItem* item, const char* title, const SizedString* value);
 void summary_item_set_string(SummaryItem* item, const char* title, const char* value);
 

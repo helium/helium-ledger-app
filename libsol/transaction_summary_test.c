@@ -10,6 +10,11 @@ void test_summary_item_setters() {
     assert_string_equal(item.title, "amount");
     assert(item.u64 == 42);
 
+    summary_item_set_i64(&item, "i64", -42);
+    assert(item.kind == SummaryItemI64);
+    assert_string_equal(item.title, "i64");
+    assert(item.i64 == -42);
+
     summary_item_set_u64(&item, "u64", 4242);
     assert(item.kind == SummaryItemU64);
     assert_string_equal(item.title, "u64");
@@ -34,6 +39,17 @@ void test_summary_item_setters() {
     assert(item.kind == SummaryItemString);
     assert_string_equal(item.title, "string");
     assert(item.string == string);
+
+    uint8_t string_data[4] = { 0x74, 0x65, 0x73, 0x74 };
+    SizedString sized_string = {
+        sizeof(string_data),
+        (char*) string_data,
+    };
+    summary_item_set_sized_string(&item, "sizedString", &sized_string);
+    assert(item.kind == SummaryItemSizedString);
+    assert_string_equal(item.title, "sizedString");
+    assert(item.sized_string.length == sizeof(string_data));
+    assert(strncmp("test", item.sized_string.string, item.sized_string.length) == 0);
 }
 
 void test_summary_item_as_unused() {
@@ -45,6 +61,9 @@ void test_summary_item_as_unused() {
     item.kind = SummaryItemAmount;
     assert(summary_item_as_unused(&item) == NULL);
 
+    item.kind = SummaryItemI64;
+    assert(summary_item_as_unused(&item) == NULL);
+
     item.kind = SummaryItemU64;
     assert(summary_item_as_unused(&item) == NULL);
 
@@ -52,6 +71,9 @@ void test_summary_item_as_unused() {
     assert(summary_item_as_unused(&item) == NULL);
 
     item.kind = SummaryItemHash;
+    assert(summary_item_as_unused(&item) == NULL);
+
+    item.kind = SummaryItemSizedString;
     assert(summary_item_as_unused(&item) == NULL);
 
     item.kind = SummaryItemString;
@@ -130,6 +152,10 @@ void test_transaction_summary_update_display_for_item() {
     assert(transaction_summary_update_display_for_item(&item) == 0);
     assert_transaction_summary_display("amount", "0.000000042 SOL");
 
+    summary_item_set_i64(&item, "i64", -42);
+    assert(transaction_summary_update_display_for_item(&item) == 0);
+    assert_transaction_summary_display("i64", "-42");
+
     summary_item_set_u64(&item, "u64", 4242);
     assert(transaction_summary_update_display_for_item(&item) == 0);
     assert_transaction_summary_display("u64", "4242");
@@ -145,6 +171,12 @@ void test_transaction_summary_update_display_for_item() {
     summary_item_set_hash(&item, "hash", &hash);
     assert(transaction_summary_update_display_for_item(&item) == 0);
     assert_transaction_summary_display("hash", "11111111111111111111111111111111");
+
+    uint8_t string_data[] = { 0x74, 0x65, 0x73, 0x74 };
+    SizedString sized_string = { sizeof(string_data), (char*)string_data };
+    summary_item_set_sized_string(&item, "sizedString", &sized_string);
+    assert(transaction_summary_update_display_for_item(&item) == 0);
+    assert_transaction_summary_display("sizedString", "test");
 
     const char* string = "value";
     summary_item_set_string(&item, "string", string);

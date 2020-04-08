@@ -1,3 +1,4 @@
+#include "sol/parser.h"
 #include "sol/printer.h"
 #include "sol/transaction_summary.h"
 #include "util.h"
@@ -8,9 +9,11 @@ struct SummaryItem {
     enum SummaryItemKind kind;
     union {
         uint64_t u64;
+        int64_t i64;
         const Pubkey* pubkey;
         const Hash* hash;
         const char* string;
+        SizedString sized_string;
     };
 };
 
@@ -18,6 +21,12 @@ void summary_item_set_amount(SummaryItem* item, const char* title, uint64_t valu
     item->kind = SummaryItemAmount;
     item->title = title;
     item->u64 = value;
+}
+
+void summary_item_set_i64(SummaryItem* item, const char* title, int64_t value) {
+    item->kind = SummaryItemI64;
+    item->title = title;
+    item->i64 = value;
 }
 
 void summary_item_set_u64(SummaryItem* item, const char* title, uint64_t value) {
@@ -36,6 +45,13 @@ void summary_item_set_hash(SummaryItem* item, const char* title, const Hash* val
     item->kind = SummaryItemHash;
     item->title = title;
     item->hash = value;
+}
+
+void summary_item_set_sized_string(SummaryItem* item, const char* title, const SizedString* value) {
+    item->kind = SummaryItemSizedString;
+    item->title = title;
+    item->sized_string.length = value->length;
+    item->sized_string.string = value->string;
 }
 
 void summary_item_set_string(SummaryItem* item, const char* title, const char* value) {
@@ -122,6 +138,9 @@ static int transaction_summary_update_display_for_item(const SummaryItem* item) 
         case SummaryItemAmount:
             BAIL_IF(print_amount(item->u64, "SOL", G_transaction_summary_text, BASE58_PUBKEY_LENGTH));
             break;
+        case SummaryItemI64:
+            BAIL_IF(print_i64(item->i64, G_transaction_summary_text, TEXT_BUFFER_LENGTH));
+            break;
         case SummaryItemU64:
             BAIL_IF(print_u64(item->u64, G_transaction_summary_text, TEXT_BUFFER_LENGTH));
             break;
@@ -136,6 +155,9 @@ static int transaction_summary_update_display_for_item(const SummaryItem* item) 
             break;
         case SummaryItemString:
             print_string(item->string, G_transaction_summary_text, TEXT_BUFFER_LENGTH);
+            break;
+        case SummaryItemSizedString:
+            print_sized_string(&item->sized_string, G_transaction_summary_text, TEXT_BUFFER_LENGTH);
             break;
     }
     print_string(item->title, G_transaction_summary_title, TITLE_SIZE);
