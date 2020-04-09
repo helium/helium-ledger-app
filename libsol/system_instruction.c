@@ -1,3 +1,4 @@
+#include "common_byte_strings.h"
 #include "sol/parser.h"
 #include "sol/transaction_summary.h"
 #include "system_instruction.h"
@@ -5,8 +6,7 @@
 #include <string.h>
 
 const Pubkey system_program_id = {{
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    PROGRAM_ID_SYSTEM
 }};
 
 static int parse_system_instruction_kind(Parser* parser, enum SystemInstructionKind* kind) {
