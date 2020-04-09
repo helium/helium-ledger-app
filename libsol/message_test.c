@@ -174,7 +174,6 @@ void test_process_message_body_nonced_stake_create_with_seed() {
 }
 
 int main() {
-#if 0
     test_process_message_body_ok();
     test_process_message_body_too_few_ix_fail();
     test_process_message_body_too_many_ix_fail();
@@ -184,7 +183,6 @@ int main() {
     test_process_message_body_unknown_ix_enum_fail();
     test_process_message_body_ix_with_unknown_program_id_fail();
     test_process_message_body_xfer_w_nonce_ok();
-#endif
     test_process_message_body_nonced_stake_create_with_seed();
 
     printf("passed\n");
