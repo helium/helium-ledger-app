@@ -1,12 +1,13 @@
 #include "instruction.h"
 #include "sol/parser.h"
 #include "sol/message.h"
+#include "sol/transaction_summary.h"
 #include "system_instruction.h"
 #include "stake_instruction.h"
 #include "util.h"
 #include <string.h>
 
-#define MAX_INSTRUCTIONS 2
+#define MAX_INSTRUCTIONS 3
 
 int process_message_body(uint8_t* message_body, int message_body_length, MessageHeader* header) {
     BAIL_IF(header->instructions_length == 0);
@@ -75,6 +76,49 @@ int process_message_body(uint8_t* message_body, int message_body_length, Message
                     break;
             }
             break;
+        case 2: {
+            const InstructionBrief system_create_stake_account_with_seed_brief[] = {
+                SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
+                STAKE_IX_BRIEF(StakeInitialize),
+            };
+            if (instruction_infos_match_briefs(info, system_create_stake_account_with_seed_brief, 2)) {
+                SystemCreateAccountWithSeedInfo* cws_info = &info[0].system.create_account_with_seed;
+                StakeInitializeInfo* si_info = &info[1].stake.initialize;
+
+                SummaryItem* item;
+                item = transaction_summary_primary_item();
+                summary_item_set_pubkey(item, "New stake account", cws_info->to);
+
+                item = transaction_summary_general_item();
+                summary_item_set_amount(item, "Transfer", cws_info->lamports);
+
+                item = transaction_summary_general_item();
+                summary_item_set_pubkey(item, "From", cws_info->from);
+
+                item = transaction_summary_general_item();
+                summary_item_set_pubkey(item, "Base", cws_info->base);
+
+                item = transaction_summary_general_item();
+                summary_item_set_sized_string(item, "Seed", &cws_info->seed);
+
+                item = transaction_summary_general_item();
+                summary_item_set_pubkey(item, "New stake auth", si_info->stake_authority);
+
+                item = transaction_summary_general_item();
+                summary_item_set_pubkey(item, "New withdraw auth", si_info->withdraw_authority);
+
+                item = transaction_summary_general_item();
+                summary_item_set_i64(item, "Lockup time", si_info->lockup.unix_timestamp);
+
+                item = transaction_summary_general_item();
+                summary_item_set_u64(item, "Lockup epoch", si_info->lockup.epoch);
+
+                item = transaction_summary_general_item();
+                summary_item_set_pubkey(item, "Lockup custodian", si_info->lockup.custodian);
+
+                return 0;
+            }
+        }
         default:
             break;
     }

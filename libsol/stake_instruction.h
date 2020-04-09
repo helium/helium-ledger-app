@@ -21,10 +21,39 @@ typedef struct StakeDelegateInfo {
     Pubkey* authorized_pubkey;
 } StakeDelegateInfo;
 
+// To support the `LockupArgs` type of the `SetLockup` instruction
+// which looks like a `Lockup`, but all of the members are wrapped
+// with `Option<>`s
+typedef enum StakeLockupPresent {
+    StakeLockupHasTimestamp = 1 << 0,
+    StakeLockupHasEpoch     = 1 << 1,
+    StakeLockupHasCustodian = 1 << 2,
+    StakeLockupHasAll       = (
+        StakeLockupHasTimestamp
+        | StakeLockupHasEpoch
+        | StakeLockupHasCustodian
+    ),
+} StakeLockupPresent;
+
+typedef struct StakeLockup {
+    StakeLockupPresent present;
+    int64_t unix_timestamp;
+    uint64_t epoch;
+    Pubkey* custodian;
+} StakeLockup;
+
+typedef struct StakeInitializeInfo {
+    Pubkey* account;
+    Pubkey* stake_authority;
+    Pubkey* withdraw_authority;
+    StakeLockup lockup;
+} StakeInitializeInfo;
+
 typedef struct StakeInfo {
     enum StakeInstructionKind kind;
     union {
         StakeDelegateInfo delegate_stake;
+        StakeInitializeInfo initialize;
     };
 } StakeInfo;
 

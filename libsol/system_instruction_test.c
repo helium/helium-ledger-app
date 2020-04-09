@@ -1,3 +1,4 @@
+#include "common_byte_strings.h"
 #include "instruction.h"
 #include "system_instruction.c"
 #include <stdio.h>
@@ -94,6 +95,70 @@ void test_parse_system_advance_nonce_account_instruction() {
     assert(print_system_info(&info2, &header) == 0);
     assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
     assert(num_kinds == 3);
+}
+
+void test_system_create_account_with_seed_instruction() {
+#define FROM_PUBKEY     BYTES32_BS58_2
+#define TO_PUBKEY       BYTES32_BS58_3
+#define BASE_PUBKEY     BYTES32_BS58_4
+    Pubkey pubkeys[3] = {
+        {{ FROM_PUBKEY }},
+        {{ TO_PUBKEY }},
+    };
+    memcpy(&pubkeys[2], &system_program_id, PUBKEY_SIZE);
+    Blockhash blockhash = {{ BYTES32_BS58_5 }};
+    MessageHeader header = {
+        { 2, 0, 0, ARRAY_LEN(pubkeys) },
+        pubkeys,
+        &blockhash,
+        1,
+    };
+    uint8_t accounts[] = { 0, 1 };
+    uint8_t ix_data[] = {
+        /* kind */
+        0x03, 0x00, 0x00, 0x00,
+        /* base */
+        BASE_PUBKEY,
+        /* seed ("seed" as sized string) */
+        0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x73, 0x65, 0x65, 0x64,
+        /* lamports (1) */
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        /* space (16) */
+        0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        /* program id */
+        PROGRAM_ID_STAKE
+    };
+    Instruction instruction = {
+        2,
+        accounts,
+        2,
+        ix_data,
+        sizeof(ix_data),
+    };
+
+    /* skip kind */
+    Parser parser = { ix_data + sizeof(uint32_t), sizeof(ix_data) - sizeof(uint32_t) };
+    SystemInfo info;
+    assert(parse_system_create_account_with_seed_instruction(
+        &parser,
+        &instruction,
+        &header,
+        &info.create_account_with_seed
+    ) == 0);
+    SystemCreateAccountWithSeedInfo* cws_info = &info.create_account_with_seed;
+    Pubkey from = {{ FROM_PUBKEY }};
+    assert(memcmp(&from, cws_info->from, PUBKEY_SIZE) == 0);
+    Pubkey to = {{ TO_PUBKEY }};
+    assert(memcmp(&to, cws_info->to, PUBKEY_SIZE) == 0);
+    Pubkey base = {{ BASE_PUBKEY }};
+    assert(memcmp(&base, cws_info->base, PUBKEY_SIZE) == 0);
+    SizedString* seed = &cws_info->seed;
+    assert(strncmp("seed", seed->string, seed->length) == 0);
+    assert(cws_info->lamports == 1);
+
+    /* check routing */
+    assert(parse_system_instructions(&instruction, &header, &info) == 0);
 }
 
 void test_process_system_transfer() {
@@ -212,6 +277,7 @@ int main() {
     test_parse_system_transfer_instructions();
     test_parse_system_transfer_instructions_with_payer();
     test_parse_system_advance_nonce_account_instruction();
+    test_system_create_account_with_seed_instruction();
     test_process_system_transfer();
 
     printf("passed\n");

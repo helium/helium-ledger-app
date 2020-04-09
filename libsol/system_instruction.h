@@ -18,6 +18,14 @@ enum SystemInstructionKind {
     SystemAssignWithSeed
 };
 
+typedef struct SystemCreateAccountWithSeedInfo {
+    Pubkey* from;
+    Pubkey* to;
+    Pubkey* base;
+    SizedString seed;
+    uint64_t lamports;
+} SystemCreateAccountWithSeedInfo;
+
 typedef struct SystemTransferInfo {
     Pubkey* from;
     Pubkey* to;
@@ -33,6 +41,7 @@ typedef struct SystemInfo {
     enum SystemInstructionKind kind;
     union {
         SystemTransferInfo transfer;
+        SystemCreateAccountWithSeedInfo create_account_with_seed;
         SystemAdvanceNonceInfo advance_nonce;
     };
 } SystemInfo;

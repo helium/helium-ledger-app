@@ -61,6 +61,26 @@ static int parse_delegate_stake_instruction(Instruction* instruction, Pubkey* pu
     return 0;
 }
 
+static int parse_stake_initialize_instruction(Parser* parser, Instruction* instruction, MessageHeader* header, StakeInitializeInfo* info) {
+    BAIL_IF(instruction->accounts_length < 2);
+    size_t accounts_index = 0;
+    uint8_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    accounts_index++; // Skip rent sysvar
+
+    BAIL_IF(parse_pubkey(parser, &info->stake_authority));
+    BAIL_IF(parse_pubkey(parser, &info->withdraw_authority));
+
+    // Lockup
+    BAIL_IF(parse_i64(parser, &info->lockup.unix_timestamp));
+    BAIL_IF(parse_u64(parser, &info->lockup.epoch));
+    BAIL_IF(parse_pubkey(parser, &info->lockup.custodian));
+    info->lockup. present = StakeLockupHasAll;
+
+    return 0;
+}
+
 int parse_stake_instructions(Instruction* instruction, MessageHeader* header, StakeInfo* info) {
     Parser parser = {instruction->data, instruction->data_length};
 
@@ -70,6 +90,7 @@ int parse_stake_instructions(Instruction* instruction, MessageHeader* header, St
         case StakeDelegate:
             return parse_delegate_stake_instruction(instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, &info->delegate_stake);
         case StakeInitialize:
+            return parse_stake_initialize_instruction(&parser, instruction, header, &info->initialize);
         case StakeAuthorize:
         case StakeSplit:
         case StakeWithdraw:

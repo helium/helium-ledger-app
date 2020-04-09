@@ -47,6 +47,26 @@ static int parse_system_transfer_instruction(Parser* parser, Instruction* instru
     return 0;
 }
 
+static int parse_system_create_account_with_seed_instruction(
+    Parser* parser,
+    Instruction* instruction,
+    MessageHeader* header,
+    SystemCreateAccountWithSeedInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 2);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+
+    info->from = &header->pubkeys[pubkeys_index++];
+    info->to = &header->pubkeys[pubkeys_index++];
+
+    BAIL_IF(parse_pubkey(parser, &info->base));
+    BAIL_IF(parse_sized_string(parser, &info->seed));
+    BAIL_IF(parse_u64(parser, &info->lamports));
+
+    return 0;
+}
+
 static int parse_system_advance_nonce_account_instruction(
     Parser* parser,
     Instruction* instruction,
@@ -81,9 +101,15 @@ int parse_system_instructions(Instruction* instruction, MessageHeader* header, S
                 header,
                 &info->advance_nonce
             );
+        case SystemCreateAccountWithSeed:
+            return parse_system_create_account_with_seed_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->create_account_with_seed
+            );
         case SystemCreateAccount:
         case SystemAssign:
-        case SystemCreateAccountWithSeed:
         case SystemWithdrawNonceAccount:
         case SystemInitializeNonceAccount:
         case SystemAuthorizeNonceAccount:

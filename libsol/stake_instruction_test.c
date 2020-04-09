@@ -1,3 +1,4 @@
+#include "common_byte_strings.h"
 #include "instruction.h"
 #include "stake_instruction.c"
 #include <stdio.h>
@@ -16,6 +17,77 @@ void test_parse_delegate_stake_instructions() {
     StakeInfo info;
     assert(parse_stake_instructions(&instruction, &header, &info) == 0);
     assert(parser.buffer_length == 0);
+}
+
+void test_parse_stake_initialize_instruction() {
+#define ACCOUNT_PUBKEY_BYTES        BYTES32_BS58_2
+#define ST_AUTHORITY_PUBKEY_BYTES   BYTES32_BS58_3
+#define WD_AUTHORITY_PUBKEY_BYTES   BYTES32_BS58_4
+#define CUSTODIAN_PUBKEY_BYTES      BYTES32_BS58_5
+    Pubkey pubkeys[3] = {
+        {{ ACCOUNT_PUBKEY_BYTES }},
+        {{ SYSVAR_RENT }},
+    };
+    memcpy(&pubkeys[2], &stake_program_id, PUBKEY_SIZE);
+    Blockhash blockhash = {{ BYTES32_BS58_6 }};
+    MessageHeader header = {
+        { 1, 0, 1, ARRAY_LEN(pubkeys) },
+        pubkeys,
+        &blockhash,
+        1
+    };
+    uint8_t accounts[] = { 0, 1 };
+    uint8_t ix_data[] = {
+        /* kind */
+        0x00, 0x00, 0x00, 0x00,
+        /* authorized */
+            /* staker */
+            ST_AUTHORITY_PUBKEY_BYTES,
+            /* withdrawer */
+            WD_AUTHORITY_PUBKEY_BYTES,
+        /* lockup */
+            /* unix_timestamp (16) */
+            0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            /* epoch (1) */
+            0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            /* custodian */
+            CUSTODIAN_PUBKEY_BYTES
+    };
+    Instruction instruction = {
+        2,
+        accounts,
+        2,
+        ix_data,
+        sizeof(ix_data),
+    };
+
+    /* kind is already parsed when we get here, skip it */
+    Parser parser = { ix_data + sizeof(uint32_t), sizeof(ix_data) - sizeof(uint32_t) };
+    StakeInfo info;
+    assert(parse_stake_initialize_instruction(&parser, &instruction, &header, &info.initialize) == 0);
+    StakeInitializeInfo* sii = &info.initialize;
+    assert(sii->lockup.unix_timestamp == 16);
+    assert(sii->lockup.epoch == 1);
+    Pubkey new_account = {{
+        ACCOUNT_PUBKEY_BYTES
+    }};
+    assert(memcmp(&new_account, sii->account, PUBKEY_SIZE) == 0);
+    Pubkey stake_authority = {{
+        ST_AUTHORITY_PUBKEY_BYTES
+    }};
+    assert(memcmp(&stake_authority, sii->stake_authority, PUBKEY_SIZE) == 0);
+    Pubkey withdraw_authority = {{
+        WD_AUTHORITY_PUBKEY_BYTES
+    }};
+    assert(memcmp(&withdraw_authority, sii->withdraw_authority, PUBKEY_SIZE) == 0);
+
+    Pubkey custodian = {{
+        CUSTODIAN_PUBKEY_BYTES
+    }};
+    assert(memcmp(&custodian, sii->lockup.custodian, PUBKEY_SIZE) == 0);
+
+    /* Check that we're routed properly */
+    assert(parse_stake_instructions(&instruction, &header, &info) == 0);
 }
 
 void test_parse_stake_instruction_kind() {
@@ -79,6 +151,7 @@ void test_parse_stake_instruction_kind() {
 
 int main() {
     test_parse_delegate_stake_instructions();
+    test_parse_stake_initialize_instruction();
     test_parse_stake_instruction_kind();
 
     printf("passed\n");
