@@ -56,7 +56,7 @@ SummaryItem* transaction_summary_nonce_account_item();
 SummaryItem* transaction_summary_nonce_authority_item();
 SummaryItem* transaction_summary_general_item();
 
-int transaction_summary_set_fee_payer_pubkey(Pubkey* pubkey);
+int transaction_summary_set_fee_payer_pubkey(const Pubkey* pubkey);
 int transaction_summary_set_fee_payer_string(const char* string);
 
 // Assign type/title/value to a SummaryItem

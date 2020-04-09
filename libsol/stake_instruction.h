@@ -16,9 +16,9 @@ enum StakeInstructionKind {
 };
 
 typedef struct StakeDelegateInfo {
-    Pubkey* stake_pubkey;
-    Pubkey* vote_pubkey;
-    Pubkey* authorized_pubkey;
+    const Pubkey* stake_pubkey;
+    const Pubkey* vote_pubkey;
+    const Pubkey* authorized_pubkey;
 } StakeDelegateInfo;
 
 // To support the `LockupArgs` type of the `SetLockup` instruction
@@ -39,13 +39,13 @@ typedef struct StakeLockup {
     StakeLockupPresent present;
     int64_t unix_timestamp;
     uint64_t epoch;
-    Pubkey* custodian;
+    const Pubkey* custodian;
 } StakeLockup;
 
 typedef struct StakeInitializeInfo {
-    Pubkey* account;
-    Pubkey* stake_authority;
-    Pubkey* withdraw_authority;
+    const Pubkey* account;
+    const Pubkey* stake_authority;
+    const Pubkey* withdraw_authority;
     StakeLockup lockup;
 } StakeInitializeInfo;
 
@@ -57,5 +57,5 @@ typedef struct StakeInfo {
     };
 } StakeInfo;
 
-int parse_stake_instructions(Instruction* instruction, MessageHeader* header, StakeInfo* info);
-int print_stake_info(StakeInfo* info, MessageHeader* header);
+int parse_stake_instructions(const Instruction* instruction, const MessageHeader* header, StakeInfo* info);
+int print_stake_info(const StakeInfo* info, const MessageHeader* header);

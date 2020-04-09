@@ -8,7 +8,7 @@
 #define BLOCKHASH_SIZE HASH_SIZE
 
 typedef struct Parser {
-    uint8_t* buffer;
+    const uint8_t* buffer;
     size_t buffer_length;
 } Parser;
 
@@ -30,9 +30,9 @@ typedef struct Hash Blockhash;
 
 typedef struct Instruction {
     uint8_t program_id_index;
-    uint8_t* accounts;
+    const uint8_t* accounts;
     size_t accounts_length;
-    uint8_t* data;
+    const uint8_t* data;
     size_t data_length;
 } Instruction;
 
@@ -45,8 +45,8 @@ typedef struct PubkeysHeader {
 
 typedef struct MessageHeader {
     PubkeysHeader pubkeys_header;
-    Pubkey* pubkeys;
-    Blockhash* blockhash;
+    const Pubkey* pubkeys;
+    const Blockhash* blockhash;
     size_t instructions_length;
 } MessageHeader;
 
@@ -64,13 +64,13 @@ int parse_length(Parser* parser, size_t* value);
 
 int parse_sized_string(Parser* parser, SizedString* string);
 
-int parse_pubkey(Parser* parser, Pubkey** pubkey);
+int parse_pubkey(Parser* parser, const Pubkey** pubkey);
 
 int parse_pubkeys_header(Parser* parser, PubkeysHeader* header);
 
-int parse_pubkeys(Parser* parser, PubkeysHeader* header, Pubkey** pubkeys);
+int parse_pubkeys(Parser* parser, PubkeysHeader* header, const Pubkey** pubkeys);
 
-int parse_blockhash(Parser* parser, Hash** hash);
+int parse_blockhash(Parser* parser, const Hash** hash);
 #define parse_blockhash parse_hash
 
 int parse_message_header(Parser* parser, MessageHeader* header);

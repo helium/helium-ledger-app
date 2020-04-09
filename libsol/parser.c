@@ -68,14 +68,14 @@ int parse_sized_string(Parser* parser, SizedString* string) {
     BAIL_IF(string->length > SIZE_MAX);
     size_t len = (size_t) string->length;
     BAIL_IF(check_buffer_length(parser, len));
-    string->string = (char*)parser->buffer;
+    string->string = (const char*)parser->buffer;
     advance(parser, len);
     return 0;
 }
 
-int parse_pubkey(Parser* parser, Pubkey** pubkey) {
+int parse_pubkey(Parser* parser, const Pubkey** pubkey) {
     BAIL_IF(check_buffer_length(parser, PUBKEY_SIZE));
-    *pubkey = (Pubkey*) parser->buffer;
+    *pubkey = (const Pubkey*) parser->buffer;
     advance(parser, PUBKEY_SIZE);
     return 0;
 }
@@ -88,18 +88,18 @@ int parse_pubkeys_header(Parser* parser, PubkeysHeader* header) {
     return 0;
 }
 
-int parse_pubkeys(Parser* parser, PubkeysHeader* header, Pubkey** pubkeys) {
+int parse_pubkeys(Parser* parser, PubkeysHeader* header, const Pubkey** pubkeys) {
     BAIL_IF(parse_pubkeys_header(parser, header));
     size_t pubkeys_size = header->pubkeys_length * PUBKEY_SIZE;
     BAIL_IF(check_buffer_length(parser, pubkeys_size));
-    *pubkeys = (Pubkey*) parser->buffer;
+    *pubkeys = (const Pubkey*) parser->buffer;
     advance(parser, pubkeys_size);
     return 0;
 }
 
-int parse_hash(Parser* parser, Hash** hash) {
+int parse_hash(Parser* parser, const Hash** hash) {
     BAIL_IF(check_buffer_length(parser, HASH_SIZE));
-    *hash = (Hash*) parser->buffer;
+    *hash = (const Hash*) parser->buffer;
     advance(parser, HASH_SIZE);
     return 0;
 }
@@ -111,7 +111,7 @@ int parse_message_header(Parser* parser, MessageHeader* header) {
     return 0;
 }
 
-static int parse_data(Parser* parser, uint8_t** data, size_t* data_length) {
+static int parse_data(Parser* parser, const uint8_t** data, size_t* data_length) {
     BAIL_IF(parse_length(parser, data_length));
     BAIL_IF(check_buffer_length(parser, *data_length));
     *data = parser->buffer;

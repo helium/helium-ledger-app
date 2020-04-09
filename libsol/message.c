@@ -9,7 +9,7 @@
 
 #define MAX_INSTRUCTIONS 3
 
-int process_message_body(uint8_t* message_body, int message_body_length, MessageHeader* header) {
+int process_message_body(const uint8_t* message_body, int message_body_length, const MessageHeader* header) {
     BAIL_IF(header->instructions_length == 0);
     BAIL_IF(header->instructions_length > MAX_INSTRUCTIONS);
 

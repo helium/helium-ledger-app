@@ -117,7 +117,7 @@ SummaryItem* transaction_summary_general_item() {
 }
 
 #define FEE_PAYER_TITLE "Fee payer"
-int transaction_summary_set_fee_payer_pubkey(Pubkey* pubkey) {
+int transaction_summary_set_fee_payer_pubkey(const Pubkey* pubkey) {
     SummaryItem* item = transaction_summary_fee_payer_item();
     BAIL_IF(item == NULL);
     summary_item_set_pubkey(item, FEE_PAYER_TITLE, pubkey);

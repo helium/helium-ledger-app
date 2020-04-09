@@ -16,7 +16,7 @@ void test_parse_system_transfer_instructions() {
     assert(parse_instruction(&parser, &instruction) == 0);
     assert(instruction_validate(&instruction, &header) == 0);
 
-    Pubkey* fee_payer_pubkey = &header.pubkeys[0];
+    const Pubkey* fee_payer_pubkey = &header.pubkeys[0];
     SystemInfo info;
     assert(parse_system_instructions(&instruction, &header, &info) == 0);
     assert(parser.buffer_length == 0);
@@ -34,7 +34,7 @@ void test_parse_system_transfer_instructions_with_payer() {
     assert(parse_instruction(&parser, &instruction) == 0);
     assert(instruction_validate(&instruction, &header) == 0);
 
-    Pubkey* fee_payer_pubkey = &header.pubkeys[0];
+    const Pubkey* fee_payer_pubkey = &header.pubkeys[0];
     SystemInfo info;
     assert(parse_system_instructions(&instruction, &header, &info) == 0);
 

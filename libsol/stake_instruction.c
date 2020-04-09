@@ -28,40 +28,41 @@ static int parse_stake_instruction_kind(Parser* parser, enum StakeInstructionKin
 
 // Returns 0 and populates StakeDelegateInfo if provided a MessageHeader and a delegate
 // instruction, otherwise non-zero.
-static int parse_delegate_stake_instruction(Instruction* instruction, Pubkey* pubkeys, size_t pubkeys_length, StakeDelegateInfo* info) {
+static int parse_delegate_stake_instruction(const Instruction* instruction, const MessageHeader* header, StakeDelegateInfo* info) {
     BAIL_IF(instruction->accounts_length < 6);
+    size_t pubkeys_length = header->pubkeys_header.pubkeys_length;
     uint8_t accounts_index = 0;
     uint8_t pubkeys_index = instruction->accounts[accounts_index++];
     BAIL_IF(pubkeys_index >= pubkeys_length);
-    info->stake_pubkey = &pubkeys[pubkeys_index];
+    info->stake_pubkey = &header->pubkeys[pubkeys_index];
 
     pubkeys_index = instruction->accounts[accounts_index++];
     BAIL_IF(pubkeys_index >= pubkeys_length);
-    info->vote_pubkey = &pubkeys[pubkeys_index];
+    info->vote_pubkey = &header->pubkeys[pubkeys_index];
 
     pubkeys_index = instruction->accounts[accounts_index++];
     BAIL_IF(pubkeys_index >= pubkeys_length);
-    //Pubkey* pubkey = &pubkeys[pubkeys_index];
+    //const Pubkey* pubkey = &header->pubkeys[pubkeys_index];
     //BAIL_IF(memcmp(pubkey, &clock_pubkey, PUBKEY_SIZE));
 
     pubkeys_index = instruction->accounts[accounts_index++];
     BAIL_IF(pubkeys_index >= pubkeys_length);
-    //pubkey = &pubkeys[pubkeys_index];
+    //pubkey = &header->pubkeys[pubkeys_index];
     //BAIL_IF(memcmp(pubkey, &stake_history_pubkey, PUBKEY_SIZE));
 
     pubkeys_index = instruction->accounts[accounts_index++];
     BAIL_IF(pubkeys_index >= pubkeys_length);
-    //pubkey = &pubkeys[pubkeys_index];
+    //pubkey = &header-:pubkeys[pubkeys_index];
     //BAIL_IF(memcmp(pubkey, &config_pubkey, PUBKEY_SIZE));
 
     pubkeys_index = instruction->accounts[accounts_index++];
     BAIL_IF(pubkeys_index >= pubkeys_length);
-    info->authorized_pubkey = &pubkeys[pubkeys_index];
+    info->authorized_pubkey = &header->pubkeys[pubkeys_index];
 
     return 0;
 }
 
-static int parse_stake_initialize_instruction(Parser* parser, Instruction* instruction, MessageHeader* header, StakeInitializeInfo* info) {
+static int parse_stake_initialize_instruction(Parser* parser, const Instruction* instruction, const MessageHeader* header, StakeInitializeInfo* info) {
     BAIL_IF(instruction->accounts_length < 2);
     size_t accounts_index = 0;
     uint8_t pubkeys_index = instruction->accounts[accounts_index++];
@@ -81,14 +82,14 @@ static int parse_stake_initialize_instruction(Parser* parser, Instruction* instr
     return 0;
 }
 
-int parse_stake_instructions(Instruction* instruction, MessageHeader* header, StakeInfo* info) {
+int parse_stake_instructions(const Instruction* instruction, const MessageHeader* header, StakeInfo* info) {
     Parser parser = {instruction->data, instruction->data_length};
 
     BAIL_IF(parse_stake_instruction_kind(&parser, &info->kind));
 
     switch (info->kind) {
         case StakeDelegate:
-            return parse_delegate_stake_instruction(instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, &info->delegate_stake);
+            return parse_delegate_stake_instruction(instruction, header, &info->delegate_stake);
         case StakeInitialize:
             return parse_stake_initialize_instruction(&parser, instruction, header, &info->initialize);
         case StakeAuthorize:
@@ -102,7 +103,7 @@ int parse_stake_instructions(Instruction* instruction, MessageHeader* header, St
     return 1;
 }
 
-static int print_delegate_stake_info(StakeDelegateInfo* info, MessageHeader* header) {
+static int print_delegate_stake_info(const StakeDelegateInfo* info, const MessageHeader* header) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -122,7 +123,7 @@ static int print_delegate_stake_info(StakeDelegateInfo* info, MessageHeader* hea
     return 0;
 }
 
-int print_stake_info(StakeInfo* info, MessageHeader* header) {
+int print_stake_info(const StakeInfo* info, const MessageHeader* header) {
     switch (info->kind) {
         case StakeDelegate:
             return print_delegate_stake_info(&info->delegate_stake, header);

@@ -32,25 +32,26 @@ static int parse_system_instruction_kind(Parser* parser, enum SystemInstructionK
 
 // Returns 0 and populates SystemTransferInfo if provided a MessageHeader and a transfer
 // instruction, otherwise non-zero.
-static int parse_system_transfer_instruction(Parser* parser, Instruction* instruction, Pubkey* pubkeys, size_t pubkeys_length, SystemTransferInfo* info) {
+static int parse_system_transfer_instruction(Parser* parser, const Instruction* instruction, const MessageHeader* header, SystemTransferInfo* info) {
     BAIL_IF(parse_u64(parser, &info->lamports));
+    size_t pubkeys_length = header->pubkeys_header.pubkeys_length;
 
     BAIL_IF(instruction->accounts_length < 2);
     uint8_t from_index = instruction->accounts[0];
     BAIL_IF(from_index >= pubkeys_length);
-    info->from = &pubkeys[from_index];
+    info->from = &header->pubkeys[from_index];
 
     uint8_t to_index = instruction->accounts[1];
     BAIL_IF(to_index >= pubkeys_length);
-    info->to = &pubkeys[to_index];
+    info->to = &header->pubkeys[to_index];
 
     return 0;
 }
 
 static int parse_system_create_account_with_seed_instruction(
     Parser* parser,
-    Instruction* instruction,
-    MessageHeader* header,
+    const Instruction* instruction,
+    const MessageHeader* header,
     SystemCreateAccountWithSeedInfo* info
 ) {
     BAIL_IF(instruction->accounts_length < 2);
@@ -69,8 +70,8 @@ static int parse_system_create_account_with_seed_instruction(
 
 static int parse_system_advance_nonce_account_instruction(
     Parser* parser,
-    Instruction* instruction,
-    MessageHeader* header,
+    const Instruction* instruction,
+    const MessageHeader* header,
     SystemAdvanceNonceInfo* info
 ) {
     BAIL_IF(instruction->accounts_length < 3);
@@ -86,14 +87,14 @@ static int parse_system_advance_nonce_account_instruction(
     return 0;
 }
 
-int parse_system_instructions(Instruction* instruction, MessageHeader* header, SystemInfo* info) {
+int parse_system_instructions(const Instruction* instruction, const MessageHeader* header, SystemInfo* info) {
     Parser parser = {instruction->data, instruction->data_length};
 
     BAIL_IF(parse_system_instruction_kind(&parser, &info->kind));
 
     switch (info->kind) {
         case SystemTransfer:
-            return parse_system_transfer_instruction(&parser, instruction, header->pubkeys, header->pubkeys_header.pubkeys_length, &info->transfer);
+            return parse_system_transfer_instruction(&parser, instruction, header, &info->transfer);
         case SystemAdvanceNonceAccount:
             return parse_system_advance_nonce_account_instruction(
                 &parser,
@@ -122,7 +123,7 @@ int parse_system_instructions(Instruction* instruction, MessageHeader* header, S
     return 1;
 }
 
-static int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* header) {
+static int print_system_transfer_info(const SystemTransferInfo* info, const MessageHeader* header) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -144,7 +145,7 @@ static int print_system_transfer_info(SystemTransferInfo* info, MessageHeader* h
     return 0;
 }
 
-static int print_system_advance_nonce_account(SystemAdvanceNonceInfo* info, MessageHeader* header) {
+static int print_system_advance_nonce_account(const SystemAdvanceNonceInfo* info, const MessageHeader* header) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -161,7 +162,7 @@ static int print_system_advance_nonce_account(SystemAdvanceNonceInfo* info, Mess
     return 0;
 }
 
-int print_system_info(SystemInfo* info, MessageHeader* header) {
+int print_system_info(const SystemInfo* info, const MessageHeader* header) {
     switch (info->kind) {
         case SystemTransfer:
             return print_system_transfer_info(&info->transfer, header);
@@ -182,8 +183,8 @@ int print_system_info(SystemInfo* info, MessageHeader* header) {
     return 1;
 }
 
-int print_system_nonced_transaction_sentinel(SystemInfo* info, MessageHeader* header) {
-    SystemAdvanceNonceInfo* nonce_info = &info->advance_nonce;
+int print_system_nonced_transaction_sentinel(const SystemInfo* info, const MessageHeader* header) {
+    const SystemAdvanceNonceInfo* nonce_info = &info->advance_nonce;
     SummaryItem* item;
 
     item = transaction_summary_nonce_account_item();
