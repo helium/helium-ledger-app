@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 
 #define PUBKEY_SIZE 32
 #define HASH_SIZE 32
@@ -76,3 +77,8 @@ int parse_blockhash(Parser* parser, const Hash** hash);
 int parse_message_header(Parser* parser, MessageHeader* header);
 
 int parse_instruction(Parser* parser, Instruction* instruction);
+
+// FIXME: I don't belong here
+static inline int pubkeys_equal(const Pubkey* pubkey1, const Pubkey* pubkey2) {
+    return memcmp(pubkey1, pubkey2, PUBKEY_SIZE);
+}

@@ -171,6 +171,15 @@ void test_process_message_body_nonced_stake_create_with_seed() {
     assert(parse_message_header(&parser, &header) == 0);
     transaction_summary_reset();
     assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
+    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
+
+    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
+    size_t num_kinds;
+    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
+    assert(num_kinds == 12);
+    for (size_t i = 0; i < num_kinds; i++) {
+        assert(transaction_summary_display_item(i) == 0);
+    }
 }
 
 int main() {

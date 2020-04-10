@@ -5,6 +5,8 @@
 #include "util.h"
 #include <string.h>
 
+#define CREATE_ACCOUNT_TITLE "Create account"
+
 const Pubkey system_program_id = {{
     PROGRAM_ID_SYSTEM
 }};
@@ -169,6 +171,11 @@ int print_system_info(const SystemInfo* info, const MessageHeader* header) {
         case SystemAdvanceNonceAccount:
             return print_system_advance_nonce_account(&info->advance_nonce, header);
         case SystemCreateAccount:
+            return print_system_create_account_with_seed_info(
+                CREATE_ACCOUNT_TITLE,
+                &info->create_account_with_seed,
+                header
+            );
         case SystemAssign:
         case SystemCreateAccountWithSeed:
         case SystemWithdrawNonceAccount:
@@ -192,6 +199,32 @@ int print_system_nonced_transaction_sentinel(const SystemInfo* info, const Messa
 
     item = transaction_summary_nonce_authority_item();
     summary_item_set_pubkey(item, "Nonce Authority", nonce_info->authority);
+
+    return 0;
+}
+
+int print_system_create_account_with_seed_info(
+    const char* primary_title,
+    const SystemCreateAccountWithSeedInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+    if (primary_title != NULL) {
+        item = transaction_summary_primary_item();
+        summary_item_set_pubkey(item, primary_title, info->to);
+    }
+
+    item = transaction_summary_general_item();
+    summary_item_set_amount(item, "Transfer", info->lamports);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "From", info->from);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Base", info->base);
+
+    item = transaction_summary_general_item();
+    summary_item_set_sized_string(item, "Seed", &info->seed);
 
     return 0;
 }

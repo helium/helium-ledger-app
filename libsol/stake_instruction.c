@@ -3,6 +3,7 @@
 #include "sol/transaction_summary.h"
 #include "stake_instruction.h"
 #include "util.h"
+#include <stdbool.h>
 #include <string.h>
 
 const Pubkey stake_program_id = {{
@@ -128,6 +129,7 @@ int print_stake_info(const StakeInfo* info, const MessageHeader* header) {
         case StakeDelegate:
             return print_delegate_stake_info(&info->delegate_stake, header);
         case StakeInitialize:
+            return print_stake_initialize_info("Init. stake acct", &info->initialize, header);
         case StakeAuthorize:
         case StakeSplit:
         case StakeWithdraw:
@@ -137,4 +139,43 @@ int print_stake_info(const StakeInfo* info, const MessageHeader* header) {
     }
 
     return 1;
+}
+
+int print_stake_initialize_info(
+    const char* primary_title,
+    const StakeInitializeInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+    bool one_authority = pubkeys_equal(
+        info->withdraw_authority,
+        info->stake_authority
+    );
+
+    if (primary_title != NULL) {
+        item = transaction_summary_primary_item();
+        summary_item_set_pubkey(item, primary_title, info->account);
+    }
+
+    if (one_authority) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "New authority", info->stake_authority);
+    } else {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "New stake auth", info->stake_authority);
+
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "New withdraw auth", info->withdraw_authority);
+    }
+
+    item = transaction_summary_general_item();
+    summary_item_set_i64(item, "Lockup time", info->lockup.unix_timestamp);
+
+    item = transaction_summary_general_item();
+    summary_item_set_u64(item, "Lockup epoch", info->lockup.epoch);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Lockup custodian", info->lockup.custodian);
+
+    return 0;
 }
