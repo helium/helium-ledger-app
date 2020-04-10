@@ -18,6 +18,12 @@ enum SystemInstructionKind {
     SystemAssignWithSeed
 };
 
+typedef struct SystemCreateAccountInfo {
+    const Pubkey* from;
+    const Pubkey* to;
+    uint64_t lamports;
+} SystemCreateAccountInfo;
+
 typedef struct SystemCreateAccountWithSeedInfo {
     const Pubkey* from;
     const Pubkey* to;
@@ -41,6 +47,7 @@ typedef struct SystemInfo {
     enum SystemInstructionKind kind;
     union {
         SystemTransferInfo transfer;
+        SystemCreateAccountInfo create_account;
         SystemCreateAccountWithSeedInfo create_account_with_seed;
         SystemAdvanceNonceInfo advance_nonce;
     };
@@ -49,6 +56,11 @@ typedef struct SystemInfo {
 int parse_system_instructions(const Instruction* instruction, const MessageHeader* header, SystemInfo* info);
 int print_system_info(const SystemInfo* info, const MessageHeader* header);
 int print_system_nonced_transaction_sentinel(const SystemInfo* info, const MessageHeader* header);
+int print_system_create_account_info(
+    const char* primary_title,
+    const SystemCreateAccountInfo* info,
+    const MessageHeader* header
+);
 int print_system_create_account_with_seed_info(
     const char* primary_title,
     const SystemCreateAccountWithSeedInfo* info,

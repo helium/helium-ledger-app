@@ -4,6 +4,17 @@
 #include "transaction_printers.h"
 #include "util.h"
 
+const InstructionBrief create_stake_account_brief[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccount),
+    STAKE_IX_BRIEF(StakeInitialize),
+};
+#define is_create_stake_account(infos, infos_length)\
+    instruction_infos_match_briefs(                 \
+        info,                                       \
+        create_stake_account_brief,                 \
+        infos_length                                \
+    )
+
 const InstructionBrief create_stake_account_with_seed_brief[] = {
     SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
     STAKE_IX_BRIEF(StakeInitialize),
@@ -14,6 +25,23 @@ const InstructionBrief create_stake_account_with_seed_brief[] = {
         create_stake_account_with_seed_brief,                   \
         infos_length                                            \
     )
+
+static int print_create_stake_account(
+    const MessageHeader* header,
+    const InstructionInfo* infos,
+    size_t infos_length
+) {
+    const SystemCreateAccountInfo* ca_info = &infos[0].system.create_account;
+    const StakeInitializeInfo* si_info = &infos[1].stake.initialize;
+
+    SummaryItem* item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Create stake Acct", ca_info->to);
+
+    BAIL_IF(print_system_create_account_info(NULL, ca_info, header));
+    BAIL_IF(print_stake_initialize_info(NULL, si_info, header));
+
+    return 0;
+}
 
 static int print_create_stake_account_with_seed(
     const MessageHeader* header,
@@ -57,7 +85,9 @@ int print_transaction(const MessageHeader* header, const InstructionInfo* infos,
             }
             break;
         case 2: {
-            if (is_create_stake_account_with_seed(infos, infos_length)) {
+            if (is_create_stake_account(infos, infos_length)) {
+                return print_create_stake_account(header, info, infos_length);
+            } else if (is_create_stake_account_with_seed(infos, infos_length)) {
                 return print_create_stake_account_with_seed(header, info, infos_length);
             }
         }

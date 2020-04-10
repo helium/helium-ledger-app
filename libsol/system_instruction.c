@@ -50,6 +50,24 @@ static int parse_system_transfer_instruction(Parser* parser, const Instruction* 
     return 0;
 }
 
+static int parse_system_create_account_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SystemCreateAccountInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 2);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+
+    info->from = &header->pubkeys[pubkeys_index++];
+    info->to = &header->pubkeys[pubkeys_index++];
+
+    BAIL_IF(parse_u64(parser, &info->lamports));
+
+    return 0;
+}
+
 static int parse_system_create_account_with_seed_instruction(
     Parser* parser,
     const Instruction* instruction,
@@ -104,6 +122,13 @@ int parse_system_instructions(const Instruction* instruction, const MessageHeade
                 header,
                 &info->advance_nonce
             );
+        case SystemCreateAccount:
+            return parse_system_create_account_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->create_account
+            );
         case SystemCreateAccountWithSeed:
             return parse_system_create_account_with_seed_instruction(
                 &parser,
@@ -111,7 +136,6 @@ int parse_system_instructions(const Instruction* instruction, const MessageHeade
                 header,
                 &info->create_account_with_seed
             );
-        case SystemCreateAccount:
         case SystemAssign:
         case SystemWithdrawNonceAccount:
         case SystemInitializeNonceAccount:
@@ -171,13 +195,18 @@ int print_system_info(const SystemInfo* info, const MessageHeader* header) {
         case SystemAdvanceNonceAccount:
             return print_system_advance_nonce_account(&info->advance_nonce, header);
         case SystemCreateAccount:
+            return print_system_create_account_info(
+                CREATE_ACCOUNT_TITLE,
+                &info->create_account,
+                header
+            );
+        case SystemCreateAccountWithSeed:
             return print_system_create_account_with_seed_info(
                 CREATE_ACCOUNT_TITLE,
                 &info->create_account_with_seed,
                 header
             );
         case SystemAssign:
-        case SystemCreateAccountWithSeed:
         case SystemWithdrawNonceAccount:
         case SystemInitializeNonceAccount:
         case SystemAuthorizeNonceAccount:
@@ -199,6 +228,26 @@ int print_system_nonced_transaction_sentinel(const SystemInfo* info, const Messa
 
     item = transaction_summary_nonce_authority_item();
     summary_item_set_pubkey(item, "Nonce Authority", nonce_info->authority);
+
+    return 0;
+}
+
+int print_system_create_account_info(
+    const char* primary_title,
+    const SystemCreateAccountInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+    if (primary_title != NULL) {
+        item = transaction_summary_primary_item();
+        summary_item_set_pubkey(item, primary_title, info->to);
+    }
+
+    item = transaction_summary_general_item();
+    summary_item_set_amount(item, "Transfer", info->lamports);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "From", info->from);
 
     return 0;
 }

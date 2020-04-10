@@ -243,6 +243,7 @@ fn test_ledger_transfer_with_nonce() {
     assert!(signature.verify(&from.as_ref(), &message));
 }
 
+// This test requires interactive approval of message signing on the ledger.
 fn test_create_stake_account_with_seed_and_nonce() {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
@@ -279,6 +280,39 @@ fn test_create_stake_account_with_seed_and_nonce() {
     assert!(signature.verify(&from.as_ref(), &message));
 }
 
+// This test requires interactive approval of message signing on the ledger.
+fn test_create_stake_account() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let from = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let stake_account = ledger_base_pubkey;
+    let authorized = stake_state::Authorized {
+        staker: Pubkey::new(&[3u8; 32]),
+        withdrawer: Pubkey::new(&[4u8; 32]),
+    };
+    let instructions = stake_instruction::create_account(
+        &from,
+        &stake_account,
+        &authorized,
+        &stake_state::Lockup::default(),
+        42,
+    );
+    let message = Message::new(instructions).serialize();
+    println!("{:?}", message);
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&from.as_ref(), &message));
+}
+
+// This test requires interactive approval of message signing on the ledger.
 fn test_sign_full_shred_of_garbage_tx() {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
@@ -308,6 +342,7 @@ fn test_sign_full_shred_of_garbage_tx() {
 }
 
 fn main() {
+    test_create_stake_account();
     test_ledger_pubkey();
     test_ledger_sign_transaction();
     test_ledger_sign_transaction_too_big();
