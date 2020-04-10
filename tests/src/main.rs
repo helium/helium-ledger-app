@@ -1,3 +1,4 @@
+use rand::prelude::{RngCore, SeedableRng, StdRng};
 use solana_remote_wallet::ledger::LedgerWallet;
 use solana_remote_wallet::remote_wallet::{
     initialize_wallet_manager, DerivationPath, RemoteWallet,
@@ -79,20 +80,6 @@ fn test_ledger_pubkey() {
     pubkey_set.insert(pubkey_1_0);
 
     assert_eq!(pubkey_set.len(), 5); // Ensure keys at various derivation paths are unique
-}
-
-/// This test requires interactive approval of message signing on the ledger.
-fn test_ledger_sign_garbage() {
-    let (ledger, _ledger_base_pubkey) = get_ledger();
-
-    let derivation_path = DerivationPath {
-        account: Some(12345),
-        change: None,
-    };
-
-    // Test invalid message
-    let data = hex::decode("deadbeef").expect("decode hex");
-    ledger.sign_message(&derivation_path, &data).unwrap_err();
 }
 
 // This test requires interactive approval of message signing on the ledger.
@@ -257,7 +244,7 @@ fn test_ledger_transfer_with_nonce() {
 }
 
 fn test_create_stake_account_with_seed_and_nonce() {
-    let (ledger, ledger_base_pubkey) = get_ledger();
+    let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345),
@@ -292,9 +279,36 @@ fn test_create_stake_account_with_seed_and_nonce() {
     assert!(signature.verify(&from.as_ref(), &message));
 }
 
+fn test_sign_full_shred_of_garbage_tx() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let from = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+
+    let program_id = Pubkey::new(&[1u8; 32]);
+    let mut data = [0u8; 1232 - 106].to_vec();
+    let mut rng = StdRng::seed_from_u64(0);
+    rng.fill_bytes(&mut data);
+    let instruction = Instruction {
+        program_id,
+        accounts: Vec::new().with_signer(&from),
+        data,
+    };
+    let message = Message::new(vec![instruction]).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&from.as_ref(), &message));
+}
+
 fn main() {
     test_ledger_pubkey();
-    test_ledger_sign_garbage();
     test_ledger_sign_transaction();
     test_ledger_sign_transaction_too_big();
     test_ledger_delegate_stake();
@@ -303,4 +317,5 @@ fn main() {
     test_ledger_delegate_stake_with_nonce();
     test_ledger_transfer_with_nonce();
     test_create_stake_account_with_seed_and_nonce();
+    test_sign_full_shred_of_garbage_tx();
 }
