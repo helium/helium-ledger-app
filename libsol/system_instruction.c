@@ -107,6 +107,25 @@ static int parse_system_advance_nonce_account_instruction(
     return 0;
 }
 
+static int parse_system_initialize_nonce_account_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SystemInitializeNonceInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 3);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    accounts_index++; // Skip recent blockhashes sysvar
+    accounts_index++; // Skip rent blockhashes sysvar
+
+    BAIL_IF(parse_pubkey(parser, &info->authority));
+
+    return 0;
+}
+
 int parse_system_instructions(const Instruction* instruction, const MessageHeader* header, SystemInfo* info) {
     Parser parser = {instruction->data, instruction->data_length};
 
@@ -136,9 +155,15 @@ int parse_system_instructions(const Instruction* instruction, const MessageHeade
                 header,
                 &info->create_account_with_seed
             );
+        case SystemInitializeNonceAccount:
+            return parse_system_initialize_nonce_account_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->initialize_nonce
+            );
         case SystemAssign:
         case SystemWithdrawNonceAccount:
-        case SystemInitializeNonceAccount:
         case SystemAuthorizeNonceAccount:
         case SystemAllocate:
         case SystemAllocateWithSeed:
@@ -206,9 +231,14 @@ int print_system_info(const SystemInfo* info, const MessageHeader* header) {
                 &info->create_account_with_seed,
                 header
             );
+        case SystemInitializeNonceAccount:
+            return print_system_initialize_nonce_info(
+                "Init. nonce acct.",
+                &info->initialize_nonce,
+                header
+            );
         case SystemAssign:
         case SystemWithdrawNonceAccount:
-        case SystemInitializeNonceAccount:
         case SystemAuthorizeNonceAccount:
         case SystemAllocate:
         case SystemAllocateWithSeed:
@@ -274,6 +304,23 @@ int print_system_create_account_with_seed_info(
 
     item = transaction_summary_general_item();
     summary_item_set_sized_string(item, "Seed", &info->seed);
+
+    return 0;
+}
+
+int print_system_initialize_nonce_info(
+    const char* primary_title,
+    const SystemInitializeNonceInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+    if (primary_title != NULL) {
+        item = transaction_summary_primary_item();
+        summary_item_set_pubkey(item, primary_title, info->account);
+    }
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "New authority", info->authority);
 
     return 0;
 }

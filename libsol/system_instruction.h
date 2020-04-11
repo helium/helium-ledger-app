@@ -43,6 +43,11 @@ typedef struct SystemAdvanceNonceInfo {
     const Pubkey* authority;
 } SystemAdvanceNonceInfo;
 
+typedef struct SystemInitializeNonceInfo {
+    const Pubkey* account;
+    const Pubkey* authority;
+} SystemInitializeNonceInfo;
+
 typedef struct SystemInfo {
     enum SystemInstructionKind kind;
     union {
@@ -50,6 +55,7 @@ typedef struct SystemInfo {
         SystemCreateAccountInfo create_account;
         SystemCreateAccountWithSeedInfo create_account_with_seed;
         SystemAdvanceNonceInfo advance_nonce;
+        SystemInitializeNonceInfo initialize_nonce;
     };
 } SystemInfo;
 
@@ -64,5 +70,10 @@ int print_system_create_account_info(
 int print_system_create_account_with_seed_info(
     const char* primary_title,
     const SystemCreateAccountWithSeedInfo* info,
+    const MessageHeader* header
+);
+int print_system_initialize_nonce_info(
+    const char* primary_title,
+    const SystemInitializeNonceInfo* info,
     const MessageHeader* header
 );

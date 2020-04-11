@@ -3,7 +3,7 @@ use solana_remote_wallet::ledger::LedgerWallet;
 use solana_remote_wallet::remote_wallet::{
     initialize_wallet_manager, DerivationPath, RemoteWallet,
 };
-use solana_sdk::{instruction::{Instruction, WithSigner}, message::Message, pubkey::Pubkey, system_instruction};
+use solana_sdk::{instruction::{Instruction, WithSigner}, message::Message, pubkey::Pubkey, system_instruction, system_program};
 use solana_stake_program::{stake_instruction, stake_state};
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -305,6 +305,63 @@ fn test_create_stake_account() {
         42,
     );
     let message = Message::new(instructions).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&from.as_ref(), &message));
+}
+
+// This test requires interactive approval of message signing on the ledger.
+fn test_create_nonce_account_with_seed() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let from = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let base = from;
+    let seed = "seedseedseedseedseedseedseedseed";
+    let nonce_account = system_instruction::create_address_with_seed(&base, seed, &system_program::id()).unwrap();
+    let instructions = system_instruction::create_nonce_account_with_seed(
+        &from,
+        &nonce_account,
+        &base,
+        seed,
+        &Pubkey::new(&[1u8; 32]),
+        42,
+    );
+    let message = Message::new(instructions).serialize();
+    println!("{:?}", message);
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&from.as_ref(), &message));
+}
+
+// This test requires interactive approval of message signing on the ledger.
+fn test_create_nonce_account() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let from = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let nonce_account = ledger_base_pubkey;
+    let instructions = system_instruction::create_nonce_account(
+        &from,
+        &nonce_account,
+        &Pubkey::new(&[1u8; 32]),
+        42,
+    );
+    let message = Message::new(instructions).serialize();
     println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
@@ -342,6 +399,8 @@ fn test_sign_full_shred_of_garbage_tx() {
 }
 
 fn main() {
+    test_create_nonce_account();
+    test_create_nonce_account_with_seed();
     test_create_stake_account();
     test_ledger_pubkey();
     test_ledger_sign_transaction();
