@@ -5,6 +5,7 @@ use solana_remote_wallet::remote_wallet::{
 };
 use solana_sdk::{instruction::{Instruction, WithSigner}, message::Message, pubkey::Pubkey, system_instruction, system_program};
 use solana_stake_program::{stake_instruction, stake_state};
+use solana_vote_program::{vote_instruction, vote_state};
 use std::collections::HashSet;
 use std::sync::Arc;
 
@@ -335,7 +336,6 @@ fn test_create_nonce_account_with_seed() {
         42,
     );
     let message = Message::new(instructions).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -362,7 +362,6 @@ fn test_create_nonce_account() {
         42,
     );
     let message = Message::new(instructions).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -398,7 +397,77 @@ fn test_sign_full_shred_of_garbage_tx() {
     assert!(signature.verify(&from.as_ref(), &message));
 }
 
+// This test requires interactive approval of message signing on the ledger.
+fn test_create_vote_account() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let from = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let vote_account = ledger_base_pubkey;
+    let vote_init = vote_state::VoteInit {
+        node_pubkey: Pubkey::new(&[1u8; 32]),
+        authorized_voter: Pubkey::new(&[2u8; 32]),
+        authorized_withdrawer: Pubkey::new(&[3u8; 32]),
+        commission: 50u8,
+    };
+    let instructions = vote_instruction::create_account(
+        &from,
+        &vote_account,
+        &vote_init,
+        42,
+    );
+    let message = Message::new(instructions).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&from.as_ref(), &message));
+}
+
+// This test requires interactive approval of message signing on the ledger.
+fn test_create_vote_account_with_seed() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let from = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let base = from;
+    let seed = "seedseedseedseedseedseedseedseed";
+    let vote_account = system_instruction::create_address_with_seed(&base, seed, &solana_vote_program::id()).unwrap();
+    let vote_init = vote_state::VoteInit {
+        node_pubkey: Pubkey::new(&[1u8; 32]),
+        authorized_voter: Pubkey::new(&[2u8; 32]),
+        authorized_withdrawer: Pubkey::new(&[3u8; 32]),
+        commission: 50u8,
+    };
+    let instructions = vote_instruction::create_account_with_seed(
+        &from,
+        &vote_account,
+        &base,
+        seed,
+        &vote_init,
+        42,
+    );
+    let message = Message::new(instructions).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&from.as_ref(), &message));
+}
+
 fn main() {
+    test_create_vote_account();
+    test_create_vote_account_with_seed();
     test_create_nonce_account();
     test_create_nonce_account_with_seed();
     test_create_stake_account();

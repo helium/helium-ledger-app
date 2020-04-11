@@ -182,93 +182,6 @@ void test_process_message_body_nonced_stake_create_with_seed() {
     }
 }
 
-void test_process_message_body_create_nonce_account() {
-    uint8_t message[] = {
-        2, 0, 3,
-        5,
-            18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
-            112, 173, 25, 161, 89, 143, 220, 223, 128, 33, 149, 41, 12, 152, 202, 202, 203, 163, 182, 246, 158, 15, 22, 77, 171, 71, 63, 249, 10, 117, 172, 52,
-            6, 167, 213, 23, 25, 44, 86, 142, 224, 138, 132, 95, 115, 210, 151, 136, 207, 3, 92, 49, 69, 178, 26, 179, 68, 216, 6, 46, 169, 64, 0, 0,
-            6, 167, 213, 23, 25, 44, 92, 81, 33, 140, 201, 76, 61, 74, 241, 127, 88, 218, 238, 8, 155, 161, 253, 68, 227, 219, 217, 138, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        2,
-            4,
-            2,
-                0, 1,
-            52,
-                0, 0, 0, 0,
-                42, 0, 0, 0, 0, 0, 0, 0,
-                80, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            4,
-            3,
-                1, 2, 3,
-            36,
-                6, 0, 0, 0,
-                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-    };
-    MessageHeader header;
-    Parser parser = { message, sizeof(message) };
-    assert(parse_message_header(&parser, &header) == 0);
-    transaction_summary_reset();
-    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
-    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
-
-    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
-    size_t num_kinds;
-    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
-    assert(num_kinds == 4);
-    for (size_t i = 0; i < num_kinds; i++) {
-        assert(transaction_summary_display_item(i) == 0);
-    }
-}
-
-void test_process_message_body_create_stake_account_with_seed() {
-    uint8_t message[] = {
-        1, 0, 3,
-        5,
-            18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
-            133, 66, 139, 176, 93, 124, 142, 23, 153, 82, 31, 46, 236, 244, 156, 121, 7, 225, 187, 61, 33, 34, 179, 138, 134, 108, 157, 56, 213, 162, 32, 68,
-            6, 167, 213, 23, 25, 44, 86, 142, 224, 138, 132, 95, 115, 210, 151, 136, 207, 3, 92, 49, 69, 178, 26, 179, 68, 216, 6, 46, 169, 64, 0, 0,
-            6, 167, 213, 23, 25, 44, 92, 81, 33, 140, 201, 76, 61, 74, 241, 127, 88, 218, 238, 8, 155, 161, 253, 68, 227, 219, 217, 138, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        2,
-            4,
-            2,
-                0, 1,
-            124,
-                3, 0, 0, 0,
-                18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
-                32, 0, 0, 0, 0, 0, 0, 0,
-                    115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100,
-                42, 0, 0, 0, 0, 0, 0, 0,
-                80, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            4,
-            3,
-                1, 2, 3,
-            36,
-                6, 0, 0, 0,
-                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-    };
-    MessageHeader header;
-    Parser parser = { message, sizeof(message) };
-    assert(parse_message_header(&parser, &header) == 0);
-    transaction_summary_reset();
-    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
-    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
-
-    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
-    size_t num_kinds;
-    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
-    assert(num_kinds == 6);
-    for (size_t i = 0; i < num_kinds; i++) {
-        assert(transaction_summary_display_item(i) == 0);
-    }
-}
-
 void test_process_message_body_create_stake_account() {
     uint8_t message[] = {
         2, 0, 3,
@@ -315,6 +228,188 @@ void test_process_message_body_create_stake_account() {
     }
 }
 
+void test_process_message_body_create_nonce_account() {
+    uint8_t message[] = {
+        2, 0, 3,
+        5,
+            18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
+            112, 173, 25, 161, 89, 143, 220, 223, 128, 33, 149, 41, 12, 152, 202, 202, 203, 163, 182, 246, 158, 15, 22, 77, 171, 71, 63, 249, 10, 117, 172, 52,
+            6, 167, 213, 23, 25, 44, 86, 142, 224, 138, 132, 95, 115, 210, 151, 136, 207, 3, 92, 49, 69, 178, 26, 179, 68, 216, 6, 46, 169, 64, 0, 0,
+            6, 167, 213, 23, 25, 44, 92, 81, 33, 140, 201, 76, 61, 74, 241, 127, 88, 218, 238, 8, 155, 161, 253, 68, 227, 219, 217, 138, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        2,
+            4,
+            2,
+                0, 1,
+            52,
+                0, 0, 0, 0,
+                42, 0, 0, 0, 0, 0, 0, 0,
+                80, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            4,
+            3,
+                1, 2, 3,
+            36,
+                6, 0, 0, 0,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    };
+    MessageHeader header;
+    Parser parser = { message, sizeof(message) };
+    assert(parse_message_header(&parser, &header) == 0);
+    transaction_summary_reset();
+    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
+    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
+
+    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
+    size_t num_kinds;
+    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
+    assert(num_kinds == 5);
+    for (size_t i = 0; i < num_kinds; i++) {
+        assert(transaction_summary_display_item(i) == 0);
+    }
+}
+
+void test_process_message_body_create_nonce_account_with_seed() {
+    uint8_t message[] = {
+        1, 0, 3,
+        5,
+            18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
+            133, 66, 139, 176, 93, 124, 142, 23, 153, 82, 31, 46, 236, 244, 156, 121, 7, 225, 187, 61, 33, 34, 179, 138, 134, 108, 157, 56, 213, 162, 32, 68,
+            6, 167, 213, 23, 25, 44, 86, 142, 224, 138, 132, 95, 115, 210, 151, 136, 207, 3, 92, 49, 69, 178, 26, 179, 68, 216, 6, 46, 169, 64, 0, 0,
+            6, 167, 213, 23, 25, 44, 92, 81, 33, 140, 201, 76, 61, 74, 241, 127, 88, 218, 238, 8, 155, 161, 253, 68, 227, 219, 217, 138, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        2,
+            4,
+            2,
+                0, 1,
+            124,
+                3, 0, 0, 0,
+                18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
+                32, 0, 0, 0, 0, 0, 0, 0,
+                    115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100,
+                42, 0, 0, 0, 0, 0, 0, 0,
+                80, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            4,
+            3,
+                1, 2, 3,
+            36,
+                6, 0, 0, 0,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    };
+    MessageHeader header;
+    Parser parser = { message, sizeof(message) };
+    assert(parse_message_header(&parser, &header) == 0);
+    transaction_summary_reset();
+    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
+    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
+
+    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
+    size_t num_kinds;
+    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
+    assert(num_kinds == 7);
+    for (size_t i = 0; i < num_kinds; i++) {
+        assert(transaction_summary_display_item(i) == 0);
+    }
+}
+
+void test_process_message_body_create_vote_account() {
+    uint8_t message[] = {
+        2, 0, 4,
+        6,
+            18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
+            112, 173, 25, 161, 89, 143, 220, 223, 128, 33, 149, 41, 12, 152, 202, 202, 203, 163, 182, 246, 158, 15, 22, 77, 171, 71, 63, 249, 10, 117, 172, 52,
+            6, 167, 213, 23, 25, 44, 92, 81, 33, 140, 201, 76, 61, 74, 241, 127, 88, 218, 238, 8, 155, 161, 253, 68, 227, 219, 217, 138, 0, 0, 0, 0,
+            6, 167, 213, 23, 24, 199, 116, 201, 40, 86, 99, 152, 105, 29, 94, 182, 139, 94, 184, 163, 155, 75, 109, 92, 115, 85, 91, 33, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            7, 97, 72, 29, 53, 116, 116, 187, 124, 77, 118, 36, 235, 211, 189, 179, 216, 53, 94, 115, 209, 16, 67, 252, 13, 163, 83, 128, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        2,
+            4,
+            2,
+                0, 1,
+            52,
+                0, 0, 0, 0,
+                42, 0, 0, 0, 0, 0, 0, 0,
+                147, 14, 0, 0, 0, 0, 0, 0,
+                7, 97, 72, 29, 53, 116, 116, 187, 124, 77, 118, 36, 235, 211, 189, 179, 216, 53, 94, 115, 209, 16, 67, 252, 13, 163, 83, 128, 0, 0, 0, 0,
+            5,
+            3,
+                1, 2, 3,
+            101,
+                0, 0, 0, 0,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+                50
+    };
+    MessageHeader header;
+    Parser parser = { message, sizeof(message) };
+    assert(parse_message_header(&parser, &header) == 0);
+    transaction_summary_reset();
+    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
+    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
+
+    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
+    size_t num_kinds;
+    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
+    assert(num_kinds == 8);
+    for (size_t i = 0; i < num_kinds; i++) {
+        assert(transaction_summary_display_item(i) == 0);
+    }
+}
+
+void test_process_message_body_create_vote_account_with_seed() {
+    uint8_t message[] = {
+        1, 0, 4,
+        6,
+            18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
+            228, 28, 89, 247, 92, 128, 175, 120, 101, 30, 55, 24, 60, 143, 49, 55, 57, 67, 79, 63, 90, 198, 149, 232, 85, 165, 148, 141, 164, 223, 110, 211,
+            6, 167, 213, 23, 25, 44, 92, 81, 33, 140, 201, 76, 61, 74, 241, 127, 88, 218, 238, 8, 155, 161, 253, 68, 227, 219, 217, 138, 0, 0, 0, 0,
+            6, 167, 213, 23, 24, 199, 116, 201, 40, 86, 99, 152, 105, 29, 94, 182, 139, 94, 184, 163, 155, 75, 109, 92, 115, 85, 91, 33, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            7, 97, 72, 29, 53, 116, 116, 187, 124, 77, 118, 36, 235, 211, 189, 179, 216, 53, 94, 115, 209, 16, 67, 252, 13, 163, 83, 128, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        2,
+            4,
+            2,
+                0, 1,
+            124,
+                3, 0, 0, 0,
+                18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
+                32, 0, 0, 0, 0, 0, 0, 0,
+                    115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100, 115, 101, 101, 100,
+                42, 0, 0, 0, 0, 0, 0, 0,
+                147, 14, 0, 0, 0, 0, 0, 0,
+                7, 97, 72, 29, 53, 116, 116, 187, 124, 77, 118, 36, 235, 211, 189, 179, 216, 53, 94, 115, 209, 16, 67, 252, 13, 163, 83, 128, 0, 0, 0, 0,
+            5,
+            3,
+                1, 2, 3,
+            101,
+                0, 0, 0, 0,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+                50
+    };
+    MessageHeader header;
+    Parser parser = { message, sizeof(message) };
+    assert(parse_message_header(&parser, &header) == 0);
+    transaction_summary_reset();
+    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
+    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
+
+    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
+    size_t num_kinds;
+    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
+    assert(num_kinds == 10);
+    for (size_t i = 0; i < num_kinds; i++) {
+        assert(transaction_summary_display_item(i) == 0);
+    }
+}
+
 int main() {
     test_process_message_body_ok();
     test_process_message_body_too_few_ix_fail();
@@ -327,6 +422,10 @@ int main() {
     test_process_message_body_xfer_w_nonce_ok();
     test_process_message_body_nonced_stake_create_with_seed();
     test_process_message_body_create_stake_account();
+    test_process_message_body_create_nonce_account_with_seed();
+    test_process_message_body_create_nonce_account();
+    test_process_message_body_create_vote_account_with_seed();
+    test_process_message_body_create_vote_account();
 
     printf("passed\n");
     return 0;

@@ -3,6 +3,7 @@
 #include "sol/message.h"
 #include "system_instruction.h"
 #include "stake_instruction.h"
+#include "vote_instruction.h"
 #include "transaction_printers.h"
 #include "util.h"
 #include <string.h>
@@ -36,6 +37,12 @@ int process_message_body(const uint8_t* message_body, int message_body_length, c
             case ProgramIdStake:
             {
                 if (parse_stake_instructions(&instruction, header, &info->stake) == 0) {
+                    info->kind = program_id;
+                }
+                break;
+            }
+            case ProgramIdVote: {
+                if (parse_vote_instructions(&instruction, header, &info->vote) == 0) {
                     info->kind = program_id;
                 }
                 break;

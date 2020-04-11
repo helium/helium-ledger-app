@@ -26,15 +26,15 @@ const InstructionBrief create_stake_account_with_seed_brief[] = {
         infos_length                                            \
     )
 
-const InstructionBrief create_nonce_account[] = {
+const InstructionBrief create_nonce_account_brief[] = {
     SYSTEM_IX_BRIEF(SystemCreateAccount),
     SYSTEM_IX_BRIEF(SystemInitializeNonceAccount),
 };
-#define is_create_nonce_account(infos, infos_length)   \
-    instruction_infos_match_briefs(                         \
-        info,                                               \
-        create_nonce_account,                               \
-        infos_length                                        \
+#define is_create_nonce_account(infos, infos_length)    \
+    instruction_infos_match_briefs(                     \
+        info,                                           \
+        create_nonce_account_brief,                     \
+        infos_length                                    \
     )
 
 const InstructionBrief create_nonce_account_with_seed_brief[] = {
@@ -48,6 +48,28 @@ const InstructionBrief create_nonce_account_with_seed_brief[] = {
         infos_length                                            \
     )
 
+const InstructionBrief create_vote_account_brief[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccount),
+    VOTE_IX_BRIEF(VoteInitialize),
+};
+#define is_create_vote_account(infos, infos_length) \
+    instruction_infos_match_briefs(                 \
+        info,                                       \
+        create_vote_account_brief,                  \
+        infos_length                                \
+    )
+
+const InstructionBrief create_vote_account_with_seed_brief[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
+    VOTE_IX_BRIEF(VoteInitialize),
+};
+#define is_create_vote_account_with_seed(infos, infos_length)   \
+    instruction_infos_match_briefs(                             \
+        info,                                                   \
+        create_vote_account_with_seed_brief,                    \
+        infos_length                                            \
+    )
+
 static int print_create_stake_account(
     const MessageHeader* header,
     const InstructionInfo* infos,
@@ -57,7 +79,7 @@ static int print_create_stake_account(
     const StakeInitializeInfo* si_info = &infos[1].stake.initialize;
 
     SummaryItem* item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Create stake Acct", ca_info->to);
+    summary_item_set_pubkey(item, "Create stake acct", ca_info->to);
 
     BAIL_IF(print_system_create_account_info(NULL, ca_info, header));
     BAIL_IF(print_stake_initialize_info(NULL, si_info, header));
@@ -74,7 +96,7 @@ static int print_create_stake_account_with_seed(
     const StakeInitializeInfo* si_info = &infos[1].stake.initialize;
 
     SummaryItem* item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Create stake Acct", cws_info->to);
+    summary_item_set_pubkey(item, "Create stake acct", cws_info->to);
 
     BAIL_IF(print_system_create_account_with_seed_info(NULL, cws_info, header));
     BAIL_IF(print_stake_initialize_info(NULL, si_info, header));
@@ -91,7 +113,7 @@ static int print_create_nonce_account(
     const SystemInitializeNonceInfo* ni_info = &infos[1].system.initialize_nonce;
 
     SummaryItem* item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Create nonce Acct", ca_info->to);
+    summary_item_set_pubkey(item, "Create nonce acct", ca_info->to);
 
     BAIL_IF(print_system_create_account_info(NULL, ca_info, header));
     BAIL_IF(print_system_initialize_nonce_info(NULL, ni_info, header));
@@ -108,10 +130,44 @@ static int print_create_nonce_account_with_seed(
     const SystemInitializeNonceInfo* ni_info = &infos[1].system.initialize_nonce;
 
     SummaryItem* item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Create nonce Acct", ca_info->to);
+    summary_item_set_pubkey(item, "Create nonce acct", ca_info->to);
 
     BAIL_IF(print_system_create_account_with_seed_info(NULL, ca_info, header));
     BAIL_IF(print_system_initialize_nonce_info(NULL, ni_info, header));
+
+    return 0;
+}
+
+static int print_create_vote_account(
+    const MessageHeader* header,
+    const InstructionInfo* infos,
+    size_t infos_length
+) {
+    const SystemCreateAccountInfo* ca_info = &infos[0].system.create_account;
+    const VoteInitializeInfo* vi_info = &infos[1].vote.initialize;
+
+    SummaryItem* item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Create vote acct", ca_info->to);
+
+    BAIL_IF(print_system_create_account_info(NULL, ca_info, header));
+    BAIL_IF(print_vote_initialize_info(NULL, vi_info, header));
+
+    return 0;
+}
+
+static int print_create_vote_account_with_seed(
+    const MessageHeader* header,
+    const InstructionInfo* infos,
+    size_t infos_length
+) {
+    const SystemCreateAccountWithSeedInfo* ca_info = &infos[0].system.create_account_with_seed;
+    const VoteInitializeInfo* vi_info = &infos[1].vote.initialize;
+
+    SummaryItem* item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Create vote acct", ca_info->to);
+
+    BAIL_IF(print_system_create_account_with_seed_info(NULL, ca_info, header));
+    BAIL_IF(print_vote_initialize_info(NULL, vi_info, header));
 
     return 0;
 }
@@ -136,6 +192,8 @@ int print_transaction(const MessageHeader* header, const InstructionInfo* infos,
                     return print_system_info(&info->system, header);
                 case ProgramIdStake:
                     return print_stake_info(&info->stake, header);
+                case ProgramIdVote:
+                    return print_vote_info(&info->vote, header);
                 case ProgramIdUnknown:
                     break;
             }
@@ -149,6 +207,10 @@ int print_transaction(const MessageHeader* header, const InstructionInfo* infos,
                 return print_create_nonce_account(header, info, infos_length);
             } else if (is_create_nonce_account_with_seed(infos, infos_length)) {
                 return print_create_nonce_account_with_seed(header, info, infos_length);
+            } else if (is_create_vote_account(infos, infos_length)) {
+                return print_create_vote_account(header, info, infos_length);
+            } else if (is_create_vote_account_with_seed(infos, infos_length)) {
+                return print_create_vote_account_with_seed(header, info, infos_length);
             }
         }
         default:

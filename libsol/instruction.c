@@ -10,6 +10,8 @@ enum ProgramId instruction_program_id(const Instruction* instruction, const Mess
         return ProgramIdSystem;
     } else if (memcmp(program_id, &stake_program_id, PUBKEY_SIZE) == 0) {
         return ProgramIdStake;
+    } else if (memcmp(program_id, &vote_program_id, PUBKEY_SIZE) == 0) {
+        return ProgramIdVote;
     }
 
     return ProgramIdUnknown;
@@ -28,6 +30,7 @@ bool instruction_info_matches_brief(const InstructionInfo* info, const Instructi
         switch (brief->program_id) {
             case ProgramIdStake: return (brief->stake == info->stake.kind);
             case ProgramIdSystem: return (brief->system == info->system.kind);
+            case ProgramIdVote: return (brief->vote == info->vote.kind);
             case ProgramIdUnknown: break;
         }
     }

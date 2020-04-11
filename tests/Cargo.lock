@@ -1269,6 +1269,7 @@ dependencies = [
  "solana-remote-wallet 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "solana-sdk 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "solana-stake-program 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "solana-vote-program 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

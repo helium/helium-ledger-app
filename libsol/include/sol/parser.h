@@ -55,6 +55,8 @@ static inline int parser_is_empty(Parser* parser) {
     return parser->buffer_length == 0;
 }
 
+int parse_u8(Parser* parser, uint8_t* value);
+
 int parse_u32(Parser* parser, uint32_t* value);
 
 int parse_u64(Parser* parser, uint64_t* value);

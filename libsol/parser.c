@@ -10,7 +10,7 @@ static void advance(Parser* parser, size_t num) {
     parser->buffer_length -= num;
 }
 
-static int parse_u8(Parser* parser, uint8_t* value) {
+int parse_u8(Parser* parser, uint8_t* value) {
     BAIL_IF(check_buffer_length(parser, 1));
     *value = *parser->buffer;
     advance(parser, 1);
