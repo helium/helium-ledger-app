@@ -47,6 +47,28 @@ static int parse_vote_initialize_instruction(
     return 0;
 }
 
+static int parse_vote_withdraw_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    VoteWithdrawInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 3);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    pubkeys_index = instruction->accounts[accounts_index++];
+    info->to = &header->pubkeys[pubkeys_index];
+
+    pubkeys_index = instruction->accounts[accounts_index++];
+    info->authority = &header->pubkeys[pubkeys_index];
+
+    BAIL_IF(parse_u64(parser, &info->lamports));
+
+    return 0;
+}
+
 int parse_vote_instructions(
     const Instruction* instruction,
     const MessageHeader* header,
@@ -64,14 +86,41 @@ int parse_vote_instructions(
                 header,
                 &info->initialize
             );
+        case VoteWithdraw:
+            return parse_vote_withdraw_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->withdraw
+            );
         case VoteAuthorize:
         case VoteVote:
-        case VoteWithdraw:
         case VoteUpdateNode:
             break;
     }
 
     return 1;
+}
+
+static int print_vote_withdraw_info(
+    const VoteWithdrawInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_amount(item, "Vote withdraw", info->lamports);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "From", info->account);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "To", info->to);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Authorized by", info->authority);
+
+    return 0;
 }
 
 int print_vote_info(const VoteInfo* info, const MessageHeader* header) {
@@ -82,9 +131,13 @@ int print_vote_info(const VoteInfo* info, const MessageHeader* header) {
                 &info->initialize,
                 header
             );
+        case VoteWithdraw:
+            return print_vote_withdraw_info(
+                &info->withdraw,
+                header
+            );
         case VoteAuthorize:
         case VoteVote:
-        case VoteWithdraw:
         case VoteUpdateNode:
             break;
     }

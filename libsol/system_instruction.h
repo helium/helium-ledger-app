@@ -48,6 +48,13 @@ typedef struct SystemInitializeNonceInfo {
     const Pubkey* authority;
 } SystemInitializeNonceInfo;
 
+typedef struct SystemWithdrawNonceInfo {
+    const Pubkey* account;
+    const Pubkey* authority;
+    const Pubkey* to;
+    uint64_t lamports;
+} SystemWithdrawNonceInfo;
+
 typedef struct SystemInfo {
     enum SystemInstructionKind kind;
     union {
@@ -56,6 +63,7 @@ typedef struct SystemInfo {
         SystemCreateAccountWithSeedInfo create_account_with_seed;
         SystemAdvanceNonceInfo advance_nonce;
         SystemInitializeNonceInfo initialize_nonce;
+        SystemWithdrawNonceInfo withdraw_nonce;
     };
 } SystemInfo;
 

@@ -126,6 +126,31 @@ static int parse_system_initialize_nonce_account_instruction(
     return 0;
 }
 
+static int parse_system_withdraw_nonce_account_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SystemWithdrawNonceInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 5);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    pubkeys_index = instruction->accounts[accounts_index++];
+    info->to = &header->pubkeys[pubkeys_index];
+
+    accounts_index++; // Skip recent blockhashes sysvar
+    accounts_index++; // Skip rent sysvar
+
+    pubkeys_index = instruction->accounts[accounts_index++];
+    info->authority = &header->pubkeys[pubkeys_index];
+
+    BAIL_IF(parse_u64(parser, &info->lamports));
+
+    return 0;
+}
+
 int parse_system_instructions(const Instruction* instruction, const MessageHeader* header, SystemInfo* info) {
     Parser parser = {instruction->data, instruction->data_length};
 
@@ -162,8 +187,14 @@ int parse_system_instructions(const Instruction* instruction, const MessageHeade
                 header,
                 &info->initialize_nonce
             );
-        case SystemAssign:
         case SystemWithdrawNonceAccount:
+            return parse_system_withdraw_nonce_account_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->withdraw_nonce
+            );
+        case SystemAssign:
         case SystemAuthorizeNonceAccount:
         case SystemAllocate:
         case SystemAllocateWithSeed:
@@ -213,6 +244,24 @@ static int print_system_advance_nonce_account(const SystemAdvanceNonceInfo* info
     return 0;
 }
 
+static int print_system_withdraw_nonce_info(const SystemWithdrawNonceInfo* info, const MessageHeader* header) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_amount(item, "Nonce withdraw", info->lamports);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "From", info->account);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "To", info->to);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Authorized by", info->authority);
+
+    return 0;
+}
+
 int print_system_info(const SystemInfo* info, const MessageHeader* header) {
     switch (info->kind) {
         case SystemTransfer:
@@ -237,8 +286,9 @@ int print_system_info(const SystemInfo* info, const MessageHeader* header) {
                 &info->initialize_nonce,
                 header
             );
-        case SystemAssign:
         case SystemWithdrawNonceAccount:
+            return print_system_withdraw_nonce_info(&info->withdraw_nonce, header);
+        case SystemAssign:
         case SystemAuthorizeNonceAccount:
         case SystemAllocate:
         case SystemAllocateWithSeed:

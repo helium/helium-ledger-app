@@ -24,10 +24,18 @@ typedef struct VoteInitializeInfo {
     VoteInitData vote_init;
 } VoteInitializeInfo;
 
+typedef struct VoteWithdrawInfo {
+    const Pubkey* account;
+    const Pubkey* authority;
+    const Pubkey* to;
+    uint64_t lamports;
+} VoteWithdrawInfo;
+
 typedef struct VoteInfo {
     enum VoteInstructionKind kind;
     union {
         VoteInitializeInfo initialize;
+        VoteWithdrawInfo withdraw;
     };
 } VoteInfo;
 

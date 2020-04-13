@@ -49,11 +49,19 @@ typedef struct StakeInitializeInfo {
     StakeLockup lockup;
 } StakeInitializeInfo;
 
+typedef struct StakeWithdrawInfo {
+    const Pubkey* account;
+    const Pubkey* authority;
+    const Pubkey* to;
+    uint64_t lamports;
+} StakeWithdrawInfo;
+
 typedef struct StakeInfo {
     enum StakeInstructionKind kind;
     union {
         StakeDelegateInfo delegate_stake;
         StakeInitializeInfo initialize;
+        StakeWithdrawInfo withdraw;
     };
 } StakeInfo;
 
