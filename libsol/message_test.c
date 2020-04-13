@@ -123,6 +123,23 @@ void test_process_message_body_ix_with_unknown_program_id_fail() {
     assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 1);
 }
 
+static void process_message_body_and_sanity_check(const uint8_t* message, size_t message_length, size_t expected_fields) {
+    MessageHeader header;
+    Parser parser = { message, message_length };
+    assert(parse_message_header(&parser, &header) == 0);
+    transaction_summary_reset();
+    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
+    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
+
+    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
+    size_t num_kinds;
+    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
+    assert(num_kinds == expected_fields);
+    for (size_t i = 0; i < num_kinds; i++) {
+        assert(transaction_summary_display_item(i) == 0);
+    }
+}
+
 void test_process_message_body_nonced_stake_create_with_seed() {
     uint8_t message[] = {
         2, 1, 4, 8,
@@ -136,13 +153,13 @@ void test_process_message_body_nonced_stake_create_with_seed() {
             6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         3,
-            /* nonce */
+            // system - advance nonce
             6,
             3,
                 2, 4, 1,
             4,
                 4, 0, 0, 0,
-            /* create w/ seed */
+            // system - create account with seed
             6,
             2,
                 0, 3,
@@ -154,7 +171,7 @@ void test_process_message_body_nonced_stake_create_with_seed() {
                 42, 0, 0, 0, 0, 0, 0, 0,
                 200, 0, 0, 0, 0, 0, 0, 0,
                 6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
-            /* initialize */
+            // stake - initialize
             7,
             2,
                 3, 5,
@@ -166,20 +183,8 @@ void test_process_message_body_nonced_stake_create_with_seed() {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
-    MessageHeader header;
-    Parser parser = { message, sizeof(message) };
-    assert(parse_message_header(&parser, &header) == 0);
-    transaction_summary_reset();
-    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
-    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
 
-    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
-    size_t num_kinds;
-    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
-    assert(num_kinds == 12);
-    for (size_t i = 0; i < num_kinds; i++) {
-        assert(transaction_summary_display_item(i) == 0);
-    }
+    process_message_body_and_sanity_check(message, sizeof(message), 12);
 }
 
 void test_process_message_body_create_stake_account() {
@@ -193,6 +198,7 @@ void test_process_message_body_create_stake_account() {
             6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         2,
+            // system - create account
             3,
             2,
                 0, 1,
@@ -201,6 +207,7 @@ void test_process_message_body_create_stake_account() {
                 42, 0, 0, 0, 0, 0, 0, 0,
                 200, 0, 0, 0, 0, 0, 0, 0,
                 6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
+            // stake - initialize
             4,
             2,
                 1, 2,
@@ -212,20 +219,8 @@ void test_process_message_body_create_stake_account() {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
-    MessageHeader header;
-    Parser parser = { message, sizeof(message) };
-    assert(parse_message_header(&parser, &header) == 0);
-    transaction_summary_reset();
-    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
-    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
 
-    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
-    size_t num_kinds;
-    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
-    assert(num_kinds == 8);
-    for (size_t i = 0; i < num_kinds; i++) {
-        assert(transaction_summary_display_item(i) == 0);
-    }
+    process_message_body_and_sanity_check(message, sizeof(message), 8);
 }
 
 void test_process_message_body_create_nonce_account() {
@@ -239,6 +234,7 @@ void test_process_message_body_create_nonce_account() {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         2,
+            // system - create account
             4,
             2,
                 0, 1,
@@ -247,6 +243,7 @@ void test_process_message_body_create_nonce_account() {
                 42, 0, 0, 0, 0, 0, 0, 0,
                 80, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            // system - initialize nonce
             4,
             3,
                 1, 2, 3,
@@ -254,20 +251,8 @@ void test_process_message_body_create_nonce_account() {
                 6, 0, 0, 0,
                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
     };
-    MessageHeader header;
-    Parser parser = { message, sizeof(message) };
-    assert(parse_message_header(&parser, &header) == 0);
-    transaction_summary_reset();
-    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
-    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
 
-    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
-    size_t num_kinds;
-    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
-    assert(num_kinds == 5);
-    for (size_t i = 0; i < num_kinds; i++) {
-        assert(transaction_summary_display_item(i) == 0);
-    }
+    process_message_body_and_sanity_check(message, sizeof(message), 5);
 }
 
 void test_process_message_body_create_nonce_account_with_seed() {
@@ -281,6 +266,7 @@ void test_process_message_body_create_nonce_account_with_seed() {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         2,
+            // system - create account with seed
             4,
             2,
                 0, 1,
@@ -292,6 +278,7 @@ void test_process_message_body_create_nonce_account_with_seed() {
                 42, 0, 0, 0, 0, 0, 0, 0,
                 80, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            // system - initialize nonce
             4,
             3,
                 1, 2, 3,
@@ -299,20 +286,8 @@ void test_process_message_body_create_nonce_account_with_seed() {
                 6, 0, 0, 0,
                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
     };
-    MessageHeader header;
-    Parser parser = { message, sizeof(message) };
-    assert(parse_message_header(&parser, &header) == 0);
-    transaction_summary_reset();
-    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
-    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
 
-    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
-    size_t num_kinds;
-    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
-    assert(num_kinds == 7);
-    for (size_t i = 0; i < num_kinds; i++) {
-        assert(transaction_summary_display_item(i) == 0);
-    }
+    process_message_body_and_sanity_check(message, sizeof(message), 7);
 }
 
 void test_process_message_body_create_vote_account() {
@@ -327,6 +302,7 @@ void test_process_message_body_create_vote_account() {
             7, 97, 72, 29, 53, 116, 116, 187, 124, 77, 118, 36, 235, 211, 189, 179, 216, 53, 94, 115, 209, 16, 67, 252, 13, 163, 83, 128, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         2,
+            // system - create account
             4,
             2,
                 0, 1,
@@ -335,6 +311,7 @@ void test_process_message_body_create_vote_account() {
                 42, 0, 0, 0, 0, 0, 0, 0,
                 147, 14, 0, 0, 0, 0, 0, 0,
                 7, 97, 72, 29, 53, 116, 116, 187, 124, 77, 118, 36, 235, 211, 189, 179, 216, 53, 94, 115, 209, 16, 67, 252, 13, 163, 83, 128, 0, 0, 0, 0,
+            // vote - initialize
             5,
             3,
                 1, 2, 3,
@@ -345,20 +322,8 @@ void test_process_message_body_create_vote_account() {
                 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
                 50
     };
-    MessageHeader header;
-    Parser parser = { message, sizeof(message) };
-    assert(parse_message_header(&parser, &header) == 0);
-    transaction_summary_reset();
-    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
-    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
 
-    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
-    size_t num_kinds;
-    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
-    assert(num_kinds == 8);
-    for (size_t i = 0; i < num_kinds; i++) {
-        assert(transaction_summary_display_item(i) == 0);
-    }
+    process_message_body_and_sanity_check(message, sizeof(message), 8);
 }
 
 void test_process_message_body_create_vote_account_with_seed() {
@@ -373,6 +338,7 @@ void test_process_message_body_create_vote_account_with_seed() {
             7, 97, 72, 29, 53, 116, 116, 187, 124, 77, 118, 36, 235, 211, 189, 179, 216, 53, 94, 115, 209, 16, 67, 252, 13, 163, 83, 128, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         2,
+            // system - create account with seed
             4,
             2,
                 0, 1,
@@ -384,6 +350,7 @@ void test_process_message_body_create_vote_account_with_seed() {
                 42, 0, 0, 0, 0, 0, 0, 0,
                 147, 14, 0, 0, 0, 0, 0, 0,
                 7, 97, 72, 29, 53, 116, 116, 187, 124, 77, 118, 36, 235, 211, 189, 179, 216, 53, 94, 115, 209, 16, 67, 252, 13, 163, 83, 128, 0, 0, 0, 0,
+            // vote - initialize
             5,
             3,
                 1, 2, 3,
@@ -394,20 +361,8 @@ void test_process_message_body_create_vote_account_with_seed() {
                 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
                 50
     };
-    MessageHeader header;
-    Parser parser = { message, sizeof(message) };
-    assert(parse_message_header(&parser, &header) == 0);
-    transaction_summary_reset();
-    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
-    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
 
-    enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
-    size_t num_kinds;
-    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
-    assert(num_kinds == 10);
-    for (size_t i = 0; i < num_kinds; i++) {
-        assert(transaction_summary_display_item(i) == 0);
-    }
+    process_message_body_and_sanity_check(message, sizeof(message), 10);
 }
 
 int main() {
