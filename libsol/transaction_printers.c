@@ -10,7 +10,7 @@ const InstructionBrief create_stake_account_brief[] = {
 };
 #define is_create_stake_account(infos, infos_length)\
     instruction_infos_match_briefs(                 \
-        info,                                       \
+        infos,                                      \
         create_stake_account_brief,                 \
         infos_length                                \
     )
@@ -21,7 +21,7 @@ const InstructionBrief create_stake_account_with_seed_brief[] = {
 };
 #define is_create_stake_account_with_seed(infos, infos_length)  \
     instruction_infos_match_briefs(                             \
-        info,                                                   \
+        infos,                                                  \
         create_stake_account_with_seed_brief,                   \
         infos_length                                            \
     )
@@ -32,7 +32,7 @@ const InstructionBrief create_nonce_account_brief[] = {
 };
 #define is_create_nonce_account(infos, infos_length)    \
     instruction_infos_match_briefs(                     \
-        info,                                           \
+        infos,                                          \
         create_nonce_account_brief,                     \
         infos_length                                    \
     )
@@ -43,7 +43,7 @@ const InstructionBrief create_nonce_account_with_seed_brief[] = {
 };
 #define is_create_nonce_account_with_seed(infos, infos_length)  \
     instruction_infos_match_briefs(                             \
-        info,                                                   \
+        infos,                                                  \
         create_nonce_account_with_seed_brief,                   \
         infos_length                                            \
     )
@@ -54,7 +54,7 @@ const InstructionBrief create_vote_account_brief[] = {
 };
 #define is_create_vote_account(infos, infos_length) \
     instruction_infos_match_briefs(                 \
-        info,                                       \
+        infos,                                      \
         create_vote_account_brief,                  \
         infos_length                                \
     )
@@ -65,7 +65,7 @@ const InstructionBrief create_vote_account_with_seed_brief[] = {
 };
 #define is_create_vote_account_with_seed(infos, infos_length)   \
     instruction_infos_match_briefs(                             \
-        info,                                                   \
+        infos,                                                  \
         create_vote_account_with_seed_brief,                    \
         infos_length                                            \
     )
@@ -173,44 +173,41 @@ static int print_create_vote_account_with_seed(
 }
 
 int print_transaction(const MessageHeader* header, const InstructionInfo* infos, size_t infos_length) {
-    size_t operative_ix = 0;
-    const InstructionInfo* info = &infos[operative_ix];
     if (infos_length > 1) {
         InstructionBrief nonce_brief = SYSTEM_IX_BRIEF(SystemAdvanceNonceAccount);
-        if (instruction_info_matches_brief(info, &nonce_brief)) {
-            print_system_nonced_transaction_sentinel(&info->system, header);
-            operative_ix++;
+        if (instruction_info_matches_brief(infos, &nonce_brief)) {
+            print_system_nonced_transaction_sentinel(&infos->system, header);
+            infos++;
             infos_length--;
-            info = &infos[operative_ix];
         }
     }
 
     switch (infos_length) {
         case 1:
-            switch (info->kind) {
+            switch (infos->kind) {
                 case ProgramIdSystem:
-                    return print_system_info(&info->system, header);
+                    return print_system_info(&infos->system, header);
                 case ProgramIdStake:
-                    return print_stake_info(&info->stake, header);
+                    return print_stake_info(&infos->stake, header);
                 case ProgramIdVote:
-                    return print_vote_info(&info->vote, header);
+                    return print_vote_info(&infos->vote, header);
                 case ProgramIdUnknown:
                     break;
             }
             break;
         case 2: {
             if (is_create_stake_account(infos, infos_length)) {
-                return print_create_stake_account(header, info, infos_length);
+                return print_create_stake_account(header, infos, infos_length);
             } else if (is_create_stake_account_with_seed(infos, infos_length)) {
-                return print_create_stake_account_with_seed(header, info, infos_length);
+                return print_create_stake_account_with_seed(header, infos, infos_length);
             } else if (is_create_nonce_account(infos, infos_length)) {
-                return print_create_nonce_account(header, info, infos_length);
+                return print_create_nonce_account(header, infos, infos_length);
             } else if (is_create_nonce_account_with_seed(infos, infos_length)) {
-                return print_create_nonce_account_with_seed(header, info, infos_length);
+                return print_create_nonce_account_with_seed(header, infos, infos_length);
             } else if (is_create_vote_account(infos, infos_length)) {
-                return print_create_vote_account(header, info, infos_length);
+                return print_create_vote_account(header, infos, infos_length);
             } else if (is_create_vote_account_with_seed(infos, infos_length)) {
-                return print_create_vote_account_with_seed(header, info, infos_length);
+                return print_create_vote_account_with_seed(header, infos, infos_length);
             }
         }
         default:
