@@ -676,7 +676,35 @@ fn test_vote_authorize() {
     assert!(signature.verify(&vote_authority.as_ref(), &message));
 }
 
+// This test requires interactive approval of message signing on the ledger.
+fn test_vote_update_node() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let vote_account = ledger_base_pubkey;
+    let vote_authority = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let new_node = Pubkey::new(&[1u8; 32]);
+    let instruction = vote_instruction::update_node(
+        &vote_account,
+        &vote_authority,
+        &new_node,
+    );
+    let message = Message::new(vec![instruction]).serialize();
+    println!("{:?}", message);
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&vote_authority.as_ref(), &message));
+}
+
 fn main() {
+    test_vote_update_node();
     test_vote_authorize();
     test_stake_authorize();
     test_nonce_authorize();

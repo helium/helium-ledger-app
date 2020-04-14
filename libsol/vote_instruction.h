@@ -43,12 +43,19 @@ typedef struct VoteAuthorizeInfo {
     enum VoteAuthorize authorize;
 } VoteAuthorizeInfo;
 
+typedef struct VoteUpdateNodeInfo {
+    const Pubkey* account;
+    const Pubkey* authority;
+    const Pubkey* node_identity;
+} VoteUpdateNodeInfo;
+
 typedef struct VoteInfo {
     enum VoteInstructionKind kind;
     union {
         VoteInitializeInfo initialize;
         VoteWithdrawInfo withdraw;
         VoteAuthorizeInfo authorize;
+        VoteUpdateNodeInfo update_node;
     };
 } VoteInfo;
 

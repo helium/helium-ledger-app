@@ -106,6 +106,37 @@ static int parse_vote_authorize_instruction(
     return 0;
 }
 
+static int parse_vote_update_node_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    VoteUpdateNodeInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 3);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    if (instruction->data_length == sizeof(uint32_t)) {
+        // 1.0.8+, 1.1.3+ format
+        // https://github.com/solana-labs/solana/pull/8947
+        pubkeys_index = instruction->accounts[accounts_index++];
+        info->node_identity = &header->pubkeys[pubkeys_index];
+    } else if (instruction->data_length == (sizeof(uint32_t) + sizeof(Pubkey))) {
+        // Before 1.0.8 and 1.1.3, the node identity was passed as an
+        // instruction arg
+        BAIL_IF(parse_pubkey(parser, &info->node_identity));
+        accounts_index++; // Skip clock sysvar
+    } else {
+        return 1;
+    }
+
+    pubkeys_index = instruction->accounts[accounts_index++];
+    info->authority = &header->pubkeys[pubkeys_index];
+
+    return 0;
+}
+
 int parse_vote_instructions(
     const Instruction* instruction,
     const MessageHeader* header,
@@ -137,8 +168,14 @@ int parse_vote_instructions(
                 header,
                 &info->authorize
             );
-        case VoteVote:
         case VoteUpdateNode:
+            return parse_vote_update_node_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->update_node
+            );
+        case VoteVote:
             break;
     }
 
@@ -194,6 +231,21 @@ static int print_vote_authorize_info(
     return 0;
 }
 
+static int print_vote_update_node_info(const VoteUpdateNodeInfo* info, const MessageHeader* header) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Update vote node", info->account);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "New node ID", info->node_identity);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Authorized by", info->authority);
+
+    return 0;
+}
+
 int print_vote_info(const VoteInfo* info, const MessageHeader* header) {
     switch (info->kind) {
         case VoteInitialize:
@@ -212,8 +264,12 @@ int print_vote_info(const VoteInfo* info, const MessageHeader* header) {
                 &info->authorize,
                 header
             );
-        case VoteVote:
         case VoteUpdateNode:
+            return print_vote_update_node_info(
+                &info->update_node,
+                header
+            );
+        case VoteVote:
             break;
     }
 
