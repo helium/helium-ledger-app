@@ -149,10 +149,40 @@ void test_parse_stake_instruction_kind() {
     assert(parse_stake_instruction_kind(&parser, &kind) == 1);
 }
 
+void test_parse_stake_authorize_enum() {
+    enum StakeAuthorize authorize;
+    uint8_t buf[] = {0, 0, 0, 0};
+    Parser parser = {buf, ARRAY_LEN(buf)};
+    assert(parse_stake_authorize(&parser, &authorize) == 0);
+    assert(authorize == StakeAuthorizeStaker);
+
+    buf[0] = 1;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_stake_authorize(&parser, &authorize) == 0);
+    assert(authorize == StakeAuthorizeWithdrawer);
+
+    // Fail the first unused enum value to be sure this test gets updated
+    buf[0] = 2;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_stake_authorize(&parser, &authorize) == 1);
+
+    // Should always fail
+    buf[0] = 255;
+    buf[1] = 255;
+    buf[2] = 255;
+    buf[3] = 255;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_stake_authorize(&parser, &authorize) == 1);
+}
+
 int main() {
     test_parse_delegate_stake_instructions();
     test_parse_stake_initialize_instruction();
     test_parse_stake_instruction_kind();
+    test_parse_stake_authorize_enum();
 
     printf("passed\n");
     return 0;
