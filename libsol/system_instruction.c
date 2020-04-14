@@ -151,6 +151,25 @@ static int parse_system_withdraw_nonce_account_instruction(
     return 0;
 }
 
+static int parse_system_authorize_nonce_account_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SystemAuthorizeNonceInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 2);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    pubkeys_index = instruction->accounts[accounts_index++];
+    info->authority = &header->pubkeys[pubkeys_index];
+
+    BAIL_IF(parse_pubkey(parser, &info->new_authority));
+
+    return 0;
+}
+
 int parse_system_instructions(const Instruction* instruction, const MessageHeader* header, SystemInfo* info) {
     Parser parser = {instruction->data, instruction->data_length};
 
@@ -194,8 +213,14 @@ int parse_system_instructions(const Instruction* instruction, const MessageHeade
                 header,
                 &info->withdraw_nonce
             );
-        case SystemAssign:
         case SystemAuthorizeNonceAccount:
+            return parse_system_authorize_nonce_account_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->authorize_nonce
+            );
+        case SystemAssign:
         case SystemAllocate:
         case SystemAllocateWithSeed:
         case SystemAssignWithSeed:
@@ -262,6 +287,24 @@ static int print_system_withdraw_nonce_info(const SystemWithdrawNonceInfo* info,
     return 0;
 }
 
+static int print_system_authorize_nonce_info(
+    const SystemAuthorizeNonceInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Set nonce auth.", info->account);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "New authority", info->new_authority);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Authorized by", info->authority);
+
+    return 0;
+}
+
 int print_system_info(const SystemInfo* info, const MessageHeader* header) {
     switch (info->kind) {
         case SystemTransfer:
@@ -288,8 +331,9 @@ int print_system_info(const SystemInfo* info, const MessageHeader* header) {
             );
         case SystemWithdrawNonceAccount:
             return print_system_withdraw_nonce_info(&info->withdraw_nonce, header);
-        case SystemAssign:
         case SystemAuthorizeNonceAccount:
+            return print_system_authorize_nonce_info(&info->authorize_nonce, header);
+        case SystemAssign:
         case SystemAllocate:
         case SystemAllocateWithSeed:
         case SystemAssignWithSeed:

@@ -56,12 +56,25 @@ typedef struct StakeWithdrawInfo {
     uint64_t lamports;
 } StakeWithdrawInfo;
 
+enum StakeAuthorize {
+    StakeAuthorizeStaker,
+    StakeAuthorizeWithdrawer,
+};
+
+typedef struct StakeAuthorizeInfo {
+    const Pubkey* account;
+    const Pubkey* authority;
+    const Pubkey* new_authority;
+    enum StakeAuthorize authorize;
+} StakeAuthorizeInfo;
+
 typedef struct StakeInfo {
     enum StakeInstructionKind kind;
     union {
         StakeDelegateInfo delegate_stake;
         StakeInitializeInfo initialize;
         StakeWithdrawInfo withdraw;
+        StakeAuthorizeInfo authorize;
     };
 } StakeInfo;
 

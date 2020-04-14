@@ -31,11 +31,24 @@ typedef struct VoteWithdrawInfo {
     uint64_t lamports;
 } VoteWithdrawInfo;
 
+enum VoteAuthorize {
+    VoteAuthorizeVoter,
+    VoteAuthorizeWithdrawer,
+};
+
+typedef struct VoteAuthorizeInfo {
+    const Pubkey* account;
+    const Pubkey* authority;
+    const Pubkey* new_authority;
+    enum VoteAuthorize authorize;
+} VoteAuthorizeInfo;
+
 typedef struct VoteInfo {
     enum VoteInstructionKind kind;
     union {
         VoteInitializeInfo initialize;
         VoteWithdrawInfo withdraw;
+        VoteAuthorizeInfo authorize;
     };
 } VoteInfo;
 

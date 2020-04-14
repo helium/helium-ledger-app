@@ -23,6 +23,21 @@ static int parse_vote_instruction_kind(
     return 1;
 }
 
+static int parse_vote_authorize(
+    Parser* parser,
+    enum VoteAuthorize* authorize
+) {
+    uint32_t maybe_authorize;
+    BAIL_IF(parse_u32(parser, &maybe_authorize));
+    switch (maybe_authorize) {
+        case VoteAuthorizeVoter:
+        case VoteAuthorizeWithdrawer:
+            *authorize = (enum VoteAuthorize) maybe_authorize;
+            return 0;
+    }
+    return 1;
+}
+
 static int parse_vote_initialize_instruction(
     Parser* parser,
     const Instruction* instruction,
@@ -69,6 +84,28 @@ static int parse_vote_withdraw_instruction(
     return 0;
 }
 
+static int parse_vote_authorize_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    VoteAuthorizeInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 3);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    accounts_index++; // Skip clock sysvar
+
+    pubkeys_index = instruction->accounts[accounts_index++];
+    info->authority = &header->pubkeys[pubkeys_index];
+
+    BAIL_IF(parse_pubkey(parser, &info->new_authority));
+    BAIL_IF(parse_vote_authorize(parser, &info->authorize));
+
+    return 0;
+}
+
 int parse_vote_instructions(
     const Instruction* instruction,
     const MessageHeader* header,
@@ -94,6 +131,12 @@ int parse_vote_instructions(
                 &info->withdraw
             );
         case VoteAuthorize:
+            return parse_vote_authorize_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->authorize
+            );
         case VoteVote:
         case VoteUpdateNode:
             break;
@@ -123,6 +166,34 @@ static int print_vote_withdraw_info(
     return 0;
 }
 
+static int print_vote_authorize_info(
+    const VoteAuthorizeInfo* info,
+    const MessageHeader* header
+) {
+    const char* new_authority_title = NULL;
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Set vote auth.", info->account);
+
+    switch (info->authorize) {
+        case VoteAuthorizeVoter:
+            new_authority_title = "New vote auth.";
+            break;
+        case VoteAuthorizeWithdrawer:
+            new_authority_title = "New w/d auth.";
+            break;
+    }
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, new_authority_title, info->new_authority);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Authorized by", info->authority);
+
+    return 0;
+}
+
 int print_vote_info(const VoteInfo* info, const MessageHeader* header) {
     switch (info->kind) {
         case VoteInitialize:
@@ -137,6 +208,10 @@ int print_vote_info(const VoteInfo* info, const MessageHeader* header) {
                 header
             );
         case VoteAuthorize:
+            return print_vote_authorize_info(
+                &info->authorize,
+                header
+            );
         case VoteVote:
         case VoteUpdateNode:
             break;
