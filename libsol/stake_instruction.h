@@ -68,6 +68,11 @@ typedef struct StakeAuthorizeInfo {
     enum StakeAuthorize authorize;
 } StakeAuthorizeInfo;
 
+typedef struct StakeDeactivateInfo {
+    const Pubkey* account;
+    const Pubkey* authority;
+} StakeDeactivateInfo;
+
 typedef struct StakeInfo {
     enum StakeInstructionKind kind;
     union {
@@ -75,6 +80,7 @@ typedef struct StakeInfo {
         StakeInitializeInfo initialize;
         StakeWithdrawInfo withdraw;
         StakeAuthorizeInfo authorize;
+        StakeDeactivateInfo deactivate;
     };
 } StakeInfo;
 

@@ -696,14 +696,38 @@ fn test_vote_update_node() {
         &new_node,
     );
     let message = Message::new(vec![instruction]).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
     assert!(signature.verify(&vote_authority.as_ref(), &message));
 }
 
+// This test requires interactive approval of message signing on the ledger.
+fn test_stake_deactivate() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let stake_account = ledger_base_pubkey;
+    let stake_authority = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let instruction = stake_instruction::deactivate_stake(
+        &stake_account,
+        &stake_authority,
+    );
+    let message = Message::new(vec![instruction]).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&stake_authority.as_ref(), &message));
+}
+
 fn main() {
+    test_stake_deactivate();
     test_vote_update_node();
     test_vote_authorize();
     test_stake_authorize();
