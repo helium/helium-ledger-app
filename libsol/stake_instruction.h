@@ -25,6 +25,7 @@ typedef struct StakeDelegateInfo {
 // which looks like a `Lockup`, but all of the members are wrapped
 // with `Option<>`s
 typedef enum StakeLockupPresent {
+    StakeLockupHasNone      = 0,
     StakeLockupHasTimestamp = 1 << 0,
     StakeLockupHasEpoch     = 1 << 1,
     StakeLockupHasCustodian = 1 << 2,
@@ -73,6 +74,12 @@ typedef struct StakeDeactivateInfo {
     const Pubkey* authority;
 } StakeDeactivateInfo;
 
+typedef struct StakeSetLockupInfo {
+    const Pubkey* account;
+    const Pubkey* custodian;
+    StakeLockup lockup;
+} StakeSetLockupInfo;
+
 typedef struct StakeInfo {
     enum StakeInstructionKind kind;
     union {
@@ -81,6 +88,7 @@ typedef struct StakeInfo {
         StakeWithdrawInfo withdraw;
         StakeAuthorizeInfo authorize;
         StakeDeactivateInfo deactivate;
+        StakeSetLockupInfo set_lockup;
     };
 } StakeInfo;
 

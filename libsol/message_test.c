@@ -696,6 +696,31 @@ void test_process_message_body_stake_deactivate() {
     process_message_body_and_sanity_check(message, sizeof(message), 3);
 }
 
+void test_process_message_body_stake_set_lockup() {
+    uint8_t message[] = {
+        1, 1, 1,
+        3,
+            18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
+            112, 173, 25, 161, 89, 143, 220, 223, 128, 33, 149, 41, 12, 152, 202, 202, 203, 163, 182, 246, 158, 15, 22, 77, 171, 71, 63, 249, 10, 117, 172, 52,
+            6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        1,
+            2,
+            2,
+                1, 0,
+            55,
+                6, 0, 0, 0,
+                1,
+                    1, 0, 0, 0, 0, 0, 0, 0,
+                1,
+                    2, 0, 0, 0, 0, 0, 0, 0,
+                1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    };
+
+    process_message_body_and_sanity_check(message, sizeof(message), 6);
+}
+
 int main() {
     test_process_message_body_ok();
     test_process_message_body_too_few_ix_fail();
@@ -725,6 +750,7 @@ int main() {
     test_process_message_body_vote_update_node_v1_0_7();
     test_process_message_body_vote_update_node_v1_0_8();
     test_process_message_body_stake_deactivate();
+    test_process_message_body_stake_set_lockup();
 
     printf("passed\n");
     return 0;

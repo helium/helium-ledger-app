@@ -159,6 +159,54 @@ static int parse_stake_deactivate_instruction(
     return 0;
 }
 
+static int parse_stake_lockupargs(
+    Parser* parser,
+    StakeLockup* lockup
+) {
+    // LockupArgs
+    enum StakeLockupPresent present = StakeLockupHasNone;
+    enum Option option;
+    BAIL_IF(parse_option(parser, &option));
+    if (option == OptionSome) {
+        BAIL_IF(parse_i64(parser, &lockup->unix_timestamp));
+        present |= StakeLockupHasTimestamp;
+    }
+    BAIL_IF(parse_option(parser, &option));
+    if (option == OptionSome) {
+        BAIL_IF(parse_u64(parser, &lockup->epoch))
+        present |= StakeLockupHasEpoch;
+    }
+    BAIL_IF(parse_option(parser, &option));
+    if (option == OptionSome) {
+        BAIL_IF(parse_pubkey(parser, &lockup->custodian));
+        present |= StakeLockupHasCustodian;
+    }
+    lockup->present = present;
+
+    return 0;
+}
+
+static int parse_stake_set_lockup_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    StakeSetLockupInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 2);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    accounts_index++; // Skip clock sysvar
+
+    pubkeys_index = instruction->accounts[accounts_index++];
+    info->custodian = &header->pubkeys[pubkeys_index];
+
+    BAIL_IF(parse_stake_lockupargs(parser, &info->lockup));
+
+    return 0;
+}
+
 int parse_stake_instructions(const Instruction* instruction, const MessageHeader* header, StakeInfo* info) {
     Parser parser = {instruction->data, instruction->data_length};
 
@@ -185,8 +233,14 @@ int parse_stake_instructions(const Instruction* instruction, const MessageHeader
                 header,
                 &info->deactivate
             );
-        case StakeSplit:
         case StakeSetLockup:
+            return parse_stake_set_lockup_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->set_lockup
+            );
+        case StakeSplit:
             break;
     }
 
@@ -274,6 +328,37 @@ static int print_stake_deactivate_info(
     return 0;
 }
 
+static int print_stake_set_lockup_info(
+    const StakeSetLockupInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Set stake lockup", info->account);
+
+    enum StakeLockupPresent present = info->lockup.present;
+    if (present & StakeLockupHasTimestamp) {
+        item = transaction_summary_general_item();
+        summary_item_set_i64(item, "Lockup time", info->lockup.unix_timestamp);
+    }
+
+    if (present & StakeLockupHasEpoch) {
+        item = transaction_summary_general_item();
+        summary_item_set_u64(item, "Lockup epoch", info->lockup.epoch);
+    }
+
+    if (present & StakeLockupHasCustodian) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Lockup custodian", info->lockup.custodian);
+    }
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Authorized by", info->custodian);
+
+    return 0;
+}
+
 int print_stake_info(const StakeInfo* info, const MessageHeader* header) {
     switch (info->kind) {
         case StakeDelegate:
@@ -286,8 +371,9 @@ int print_stake_info(const StakeInfo* info, const MessageHeader* header) {
             return print_stake_authorize_info(&info->authorize, header);
         case StakeDeactivate:
             return print_stake_deactivate_info(&info->deactivate, header);
-        case StakeSplit:
         case StakeSetLockup:
+            return print_stake_set_lockup_info(&info->set_lockup, header);
+        case StakeSplit:
             break;
     }
 

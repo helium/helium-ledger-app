@@ -178,11 +178,68 @@ void test_parse_stake_authorize_enum() {
     assert(parse_stake_authorize(&parser, &authorize) == 1);
 }
 
+void test_parse_stake_lockup_args() {
+    uint8_t buf[] = {
+        // All None
+        0x00,
+        0x00,
+        0x00,
+        // Just timestamp
+        0x01,
+            0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00,
+        0x00,
+        // Just epoch
+        0x00,
+        0x01,
+            0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00,
+        // Just custodian
+        0x00,
+        0x00,
+        0x01,
+            BYTES32_BS58_1,
+        // All Some
+        0x01,
+            0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x01,
+            0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x01,
+            BYTES32_BS58_2,
+    };
+    Parser parser = { buf, sizeof(buf) };
+    StakeLockup lockup;
+
+    assert(parse_stake_lockupargs(&parser, &lockup) == 0);
+    assert(lockup.present == StakeLockupHasNone);
+
+    assert(parse_stake_lockupargs(&parser, &lockup) == 0);
+    assert(lockup.present == StakeLockupHasTimestamp);
+    assert(lockup.unix_timestamp == 2);
+
+    assert(parse_stake_lockupargs(&parser, &lockup) == 0);
+    assert(lockup.present == StakeLockupHasEpoch);
+    assert(lockup.epoch == 3);
+
+    assert(parse_stake_lockupargs(&parser, &lockup) == 0);
+    assert(lockup.present == StakeLockupHasCustodian);
+    Pubkey custodian1 = {{ BYTES32_BS58_1 }};
+    assert(memcmp(lockup.custodian, &custodian1, sizeof(Pubkey)) == 0);
+
+    assert(parse_stake_lockupargs(&parser, &lockup) == 0);
+    assert(lockup.present == StakeLockupHasAll);
+    assert(lockup.unix_timestamp == 4);
+    assert(lockup.epoch == 5);
+    Pubkey custodian2 = {{ BYTES32_BS58_2 }};
+    assert(memcmp(lockup.custodian, &custodian2, sizeof(Pubkey)) == 0);
+}
+
 int main() {
     test_parse_delegate_stake_instructions();
     test_parse_stake_initialize_instruction();
     test_parse_stake_instruction_kind();
     test_parse_stake_authorize_enum();
+    test_parse_stake_lockup_args();
 
     printf("passed\n");
     return 0;

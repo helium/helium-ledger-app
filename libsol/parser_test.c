@@ -85,6 +85,23 @@ void test_parse_length() {
    assert(value == 1);
 }
 
+void test_parser_option() {
+    uint8_t message[] = { 0x00, 0x01, 0x02, 0xff };
+    Parser parser = { message, sizeof(message) };
+    enum Option value;
+
+    assert(parse_option(&parser, &value) == 0);
+    assert(value == OptionNone);
+    assert(parse_option(&parser, &value) == 0);
+    assert(value == OptionSome);
+    // First bad value
+    assert(parse_option(&parser, &value) == 1);
+    // Last bad value
+    assert(parse_option(&parser, &value) == 1);
+    // Parser empty
+    assert(parse_option(&parser, &value) == 1);
+}
+
 void test_parse_sized_string() {
     SizedString value;
     uint8_t buffer[] = {

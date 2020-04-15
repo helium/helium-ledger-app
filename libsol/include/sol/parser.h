@@ -13,6 +13,11 @@ typedef struct Parser {
     size_t buffer_length;
 } Parser;
 
+enum Option {
+    OptionNone,
+    OptionSome,
+};
+
 typedef struct SizedString {
     uint64_t length;
     // TODO: This can technically contain UTF-8. Need to figure out a
@@ -64,6 +69,8 @@ int parse_u64(Parser* parser, uint64_t* value);
 int parse_i64(Parser* parser, int64_t* value);
 
 int parse_length(Parser* parser, size_t* value);
+
+int parse_option(Parser* parser, enum Option* value);
 
 int parse_sized_string(Parser* parser, SizedString* string);
 

@@ -63,6 +63,20 @@ int parse_length(Parser* parser, size_t* value) {
     return 0;
 }
 
+int parse_option(Parser* parser, enum Option* value) {
+    uint8_t maybe_option;
+    BAIL_IF(parse_u8(parser, &maybe_option));
+    switch (maybe_option) {
+        case OptionNone:
+        case OptionSome:
+            *value = (enum Option) maybe_option;
+            return 0;
+        default:
+            break;
+    }
+    return 1;
+}
+
 int parse_sized_string(Parser* parser, SizedString* string) {
     BAIL_IF(parse_u64(parser, &string->length));
     BAIL_IF(string->length > SIZE_MAX);
