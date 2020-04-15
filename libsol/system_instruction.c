@@ -170,6 +170,59 @@ static int parse_system_authorize_nonce_account_instruction(
     return 0;
 }
 
+static int parse_system_allocate_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SystemAllocateInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 1);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    BAIL_IF(parse_u64(parser, &info->space));
+
+    return 0;
+}
+
+static int parse_system_assign_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SystemAssignInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 1);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    BAIL_IF(parse_pubkey(parser, &info->program_id));
+
+    return 0;
+}
+
+static int parse_system_allocate_with_seed_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SystemAllocateWithSeedInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 2);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    accounts_index++; // Skip base, we have to parse it out of the ix anyway
+
+    BAIL_IF(parse_pubkey(parser, &info->base));
+    BAIL_IF(parse_sized_string(parser, &info->seed));
+    BAIL_IF(parse_u64(parser, &info->space));
+    BAIL_IF(parse_pubkey(parser, &info->program_id));
+
+    return 0;
+}
+
 int parse_system_instructions(const Instruction* instruction, const MessageHeader* header, SystemInfo* info) {
     Parser parser = {instruction->data, instruction->data_length};
 
@@ -221,8 +274,26 @@ int parse_system_instructions(const Instruction* instruction, const MessageHeade
                 &info->authorize_nonce
             );
         case SystemAssign:
+            return parse_system_assign_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->assign
+            );
         case SystemAllocate:
+            return parse_system_allocate_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->allocate
+            );
         case SystemAllocateWithSeed:
+            return parse_system_allocate_with_seed_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->allocate_with_seed
+            );
         case SystemAssignWithSeed:
             break;
     }
@@ -305,6 +376,36 @@ static int print_system_authorize_nonce_info(
     return 0;
 }
 
+static int print_system_allocate_info(
+    const SystemAllocateInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Allocate acct", info->account);
+
+    item = transaction_summary_general_item();
+    summary_item_set_u64(item, "Data size", info->space);
+
+    return 0;
+}
+
+static int print_system_assign_info(
+    const SystemAssignInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Assign acct", info->account);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "To program", info->program_id);
+
+    return 0;
+}
+
 int print_system_info(const SystemInfo* info, const MessageHeader* header) {
     switch (info->kind) {
         case SystemTransfer:
@@ -334,8 +435,15 @@ int print_system_info(const SystemInfo* info, const MessageHeader* header) {
         case SystemAuthorizeNonceAccount:
             return print_system_authorize_nonce_info(&info->authorize_nonce, header);
         case SystemAssign:
+            return print_system_assign_info(&info->assign, header);
         case SystemAllocate:
+            return print_system_allocate_info(&info->allocate, header);
         case SystemAllocateWithSeed:
+            return print_system_allocate_with_seed_info(
+                "Allocate acct",
+                &info->allocate_with_seed,
+                header
+            );
         case SystemAssignWithSeed:
             break;
     }
@@ -415,6 +523,27 @@ int print_system_initialize_nonce_info(
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "New authority", info->authority);
+
+    return 0;
+}
+
+int print_system_allocate_with_seed_info(
+    const char* primary_title,
+    const SystemAllocateWithSeedInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    if (primary_title != NULL) {
+        item = transaction_summary_primary_item();
+        summary_item_set_pubkey(item, "Allocate acct", info->account);
+    }
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Base", info->base);
+
+    item = transaction_summary_general_item();
+    summary_item_set_sized_string(item, "Seed", &info->seed);
 
     return 0;
 }

@@ -80,6 +80,13 @@ typedef struct StakeSetLockupInfo {
     StakeLockup lockup;
 } StakeSetLockupInfo;
 
+typedef struct StakeSplitInfo {
+    const Pubkey* account;
+    const Pubkey* authority;
+    const Pubkey* split_account;
+    uint64_t lamports;
+} StakeSplitInfo;
+
 typedef struct StakeInfo {
     enum StakeInstructionKind kind;
     union {
@@ -89,6 +96,7 @@ typedef struct StakeInfo {
         StakeAuthorizeInfo authorize;
         StakeDeactivateInfo deactivate;
         StakeSetLockupInfo set_lockup;
+        StakeSplitInfo split;
     };
 } StakeInfo;
 
@@ -98,5 +106,15 @@ int print_stake_info(const StakeInfo* info, const MessageHeader* header);
 int print_stake_initialize_info(
     const char* primary_title,
     const StakeInitializeInfo* info,
+    const MessageHeader* header
+);
+
+int print_stake_split_info1(
+    const StakeSplitInfo* info,
+    const MessageHeader* header
+);
+
+int print_stake_split_info2(
+    const StakeSplitInfo* info,
     const MessageHeader* header
 );

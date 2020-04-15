@@ -757,7 +757,69 @@ fn test_stake_set_lockup() {
     assert!(signature.verify(&stake_custodian.as_ref(), &message));
 }
 
+// This test requires interactive approval of message signing on the ledger.
+fn test_stake_split() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let stake_authority = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let stake_account = ledger_base_pubkey;
+    let split_account = Pubkey::new(&[1u8; 32]);
+    let instructions = stake_instruction::split(
+        &stake_account,
+        &stake_authority,
+        42,
+        &split_account,
+    );
+    let message = Message::new(instructions).serialize();
+    println!("seedless: {:?}", message);
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&stake_authority.as_ref(), &message));
+}
+
+// This test requires interactive approval of message signing on the ledger.
+fn test_stake_split_with_seed() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let stake_authority = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let stake_account = ledger_base_pubkey;
+    let base = stake_authority;
+    let seed = "seedseedseedseedseedseedseedseed";
+    let split_account = system_instruction::create_address_with_seed(&base, seed, &solana_stake_program::id()).unwrap();
+    let instructions = stake_instruction::split_with_seed(
+        &stake_account,
+        &stake_authority,
+        42,
+        &split_account,
+        &base,
+        seed,
+    );
+    let message = Message::new(instructions).serialize();
+    println!("seeded: {:?}", message);
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&stake_authority.as_ref(), &message));
+}
+
 fn main() {
+    test_stake_split();
+    test_stake_split_with_seed();
     test_stake_set_lockup();
     test_stake_deactivate();
     test_vote_update_node();

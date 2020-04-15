@@ -26,6 +26,29 @@ const InstructionBrief create_stake_account_with_seed_brief[] = {
         infos_length                                            \
     )
 
+const InstructionBrief stake_split_brief[] = {
+    SYSTEM_IX_BRIEF(SystemAllocate),
+    SYSTEM_IX_BRIEF(SystemAssign),
+    STAKE_IX_BRIEF(StakeSplit),
+};
+#define is_stake_split(infos, infos_length) \
+    instruction_infos_match_briefs(         \
+        infos,                              \
+        stake_split_brief,                  \
+        infos_length                        \
+    )
+
+const InstructionBrief stake_split_with_seed_brief[] = {
+    SYSTEM_IX_BRIEF(SystemAllocateWithSeed),
+    STAKE_IX_BRIEF(StakeSplit),
+};
+#define is_stake_split_with_seed(infos, infos_length)   \
+    instruction_infos_match_briefs(                     \
+        infos,                                          \
+        stake_split_with_seed_brief,                    \
+        infos_length                                    \
+    )
+
 const InstructionBrief stake_authorize_both_brief[] = {
     STAKE_IX_BRIEF(StakeAuthorize),
     STAKE_IX_BRIEF(StakeAuthorize),
@@ -122,6 +145,21 @@ static int print_create_stake_account_with_seed(
 
     BAIL_IF(print_system_create_account_with_seed_info(NULL, cws_info, header));
     BAIL_IF(print_stake_initialize_info(NULL, si_info, header));
+
+    return 0;
+}
+
+static int print_stake_split_with_seed(
+    const MessageHeader* header,
+    const InstructionInfo* infos,
+    size_t infos_length
+) {
+    const SystemAllocateWithSeedInfo* aws_info = &infos[0].system.allocate_with_seed;
+    const StakeSplitInfo* ss_info = &infos[1].stake.split;
+
+    BAIL_IF(print_stake_split_info1(ss_info, header));
+    BAIL_IF(print_system_allocate_with_seed_info(NULL, aws_info, header));
+    BAIL_IF(print_stake_split_info2(ss_info, header));
 
     return 0;
 }
@@ -300,7 +338,18 @@ int print_transaction(const MessageHeader* header, const InstructionInfo* infos,
                 return print_stake_authorize_both(header, infos, infos_length);
             } else if (is_vote_authorize_both(infos, infos_length)) {
                 return print_vote_authorize_both(header, infos, infos_length);
+            } else if (is_stake_split_with_seed(infos, infos_length)) {
+                return print_stake_split_with_seed(header, infos, infos_length);
             }
+            break;
+        }
+        case 3: {
+            if (is_stake_split(infos, infos_length)) {
+                // System allocate/assign have no interesting info, print
+                // stake split as if it were a single instruction
+                return print_stake_info(&infos[2].stake, header);
+            }
+            break;
         }
         default:
             break;

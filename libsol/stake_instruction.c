@@ -207,6 +207,28 @@ static int parse_stake_set_lockup_instruction(
     return 0;
 }
 
+static int parse_stake_split_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    StakeSplitInfo* info
+) {
+    BAIL_IF(instruction->accounts_length < 3);
+    size_t accounts_index = 0;
+    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    info->account = &header->pubkeys[pubkeys_index];
+
+    pubkeys_index = instruction->accounts[accounts_index++];
+    info->split_account = &header->pubkeys[pubkeys_index];
+
+    pubkeys_index = instruction->accounts[accounts_index++];
+    info->authority = &header->pubkeys[pubkeys_index];
+
+    BAIL_IF(parse_u64(parser, &info->lamports));
+
+    return 0;
+}
+
 int parse_stake_instructions(const Instruction* instruction, const MessageHeader* header, StakeInfo* info) {
     Parser parser = {instruction->data, instruction->data_length};
 
@@ -241,6 +263,12 @@ int parse_stake_instructions(const Instruction* instruction, const MessageHeader
                 &info->set_lockup
             );
         case StakeSplit:
+            return parse_stake_split_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->split
+            );
             break;
     }
 
@@ -359,6 +387,11 @@ static int print_stake_set_lockup_info(
     return 0;
 }
 
+static int print_stake_split_info(const StakeSplitInfo* info, const MessageHeader* header) {
+    BAIL_IF(print_stake_split_info1(info, header));
+    return print_stake_split_info2(info, header);
+}
+
 int print_stake_info(const StakeInfo* info, const MessageHeader* header) {
     switch (info->kind) {
         case StakeDelegate:
@@ -374,6 +407,7 @@ int print_stake_info(const StakeInfo* info, const MessageHeader* header) {
         case StakeSetLockup:
             return print_stake_set_lockup_info(&info->set_lockup, header);
         case StakeSplit:
+            return print_stake_split_info(&info->split, header);
             break;
     }
 
@@ -415,6 +449,33 @@ int print_stake_initialize_info(
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Lockup custodian", info->lockup.custodian);
+
+    return 0;
+}
+
+int print_stake_split_info1(
+    const StakeSplitInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_amount(item, "Split stake", info->lamports);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "From", info->account);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "To", info->split_account);
+
+    return 0;
+}
+
+int print_stake_split_info2(const StakeSplitInfo* info, const MessageHeader* header) {
+    SummaryItem* item;
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Authorized by", info->authority);
 
     return 0;
 }
