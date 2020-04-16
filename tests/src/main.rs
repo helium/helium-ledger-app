@@ -758,7 +758,8 @@ fn test_stake_set_lockup() {
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_stake_split() {
+// Add a nonce here to exercise worst case instruction usage
+fn test_stake_split_with_nonce() {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -771,14 +772,15 @@ fn test_stake_split() {
         .expect("get pubkey");
     let stake_account = ledger_base_pubkey;
     let split_account = Pubkey::new(&[1u8; 32]);
+    let nonce_account = Pubkey::new(&[2u8; 32]);
+    let nonce_authority = Pubkey::new(&[3u8; 32]);
     let instructions = stake_instruction::split(
         &stake_account,
         &stake_authority,
         42,
         &split_account,
     );
-    let message = Message::new(instructions).serialize();
-    println!("seedless: {:?}", message);
+    let message = Message::new_with_nonce(instructions, None, &nonce_account, &nonce_authority).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -810,7 +812,6 @@ fn test_stake_split_with_seed() {
         seed,
     );
     let message = Message::new(instructions).serialize();
-    println!("seeded: {:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -818,7 +819,7 @@ fn test_stake_split_with_seed() {
 }
 
 fn main() {
-    test_stake_split();
+    test_stake_split_with_nonce();
     test_stake_split_with_seed();
     test_stake_set_lockup();
     test_stake_deactivate();

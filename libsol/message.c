@@ -8,7 +8,7 @@
 #include "util.h"
 #include <string.h>
 
-#define MAX_INSTRUCTIONS 3
+#define MAX_INSTRUCTIONS 4
 
 int process_message_body(const uint8_t* message_body, int message_body_length, const MessageHeader* header) {
     BAIL_IF(header->instructions_length == 0);

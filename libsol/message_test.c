@@ -721,41 +721,51 @@ void test_process_message_body_stake_set_lockup() {
     process_message_body_and_sanity_check(message, sizeof(message), 6);
 }
 
-void test_process_message_body_stake_split() {
+// Using a nonce here to test worst case instruction usage as well
+void test_process_message_body_stake_split_with_nonce() {
     uint8_t message[] = {
-        2, 1, 2,
-        5,
+        3, 2, 3,
+        8,
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
             18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
             112, 173, 25, 161, 89, 143, 220, 223, 128, 33, 149, 41, 12, 152, 202, 202, 203, 163, 182, 246, 158, 15, 22, 77, 171, 71, 63, 249, 10, 117, 172, 52,
+            6, 167, 213, 23, 25, 44, 86, 142, 224, 138, 132, 95, 115, 210, 151, 136, 207, 3, 92, 49, 69, 178, 26, 179, 68, 216, 6, 46, 169, 64, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        3,
-            // system - allocate
+        4,
+            // system - advance nonce
+            6,
             3,
+                3, 5, 1,
+            4,
+                4, 0, 0, 0,
+            // system - allocate
+            6,
             1,
                 0,
             12,
                 8, 0, 0, 0,
                 200, 0, 0, 0, 0, 0, 0, 0,
             // system - assign
-            3,
+            6,
             1,
                 0,
             36,
                 1, 0, 0, 0,
                 6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
             // stake - split
-            4,
+            7,
             3,
-                2, 0, 1,
+                4, 0, 2,
             12,
                 3, 0, 0, 0,
                 42, 0, 0, 0, 0, 0, 0, 0
     };
 
-    process_message_body_and_sanity_check(message, sizeof(message), 5);
+    process_message_body_and_sanity_check(message, sizeof(message), 7);
 }
 
 void test_process_message_body_stake_split_with_seed() {
@@ -822,7 +832,7 @@ int main() {
     test_process_message_body_vote_update_node_v1_0_8();
     test_process_message_body_stake_deactivate();
     test_process_message_body_stake_set_lockup();
-    test_process_message_body_stake_split();
+    test_process_message_body_stake_split_with_nonce();
     test_process_message_body_stake_split_with_seed();
 
     printf("passed\n");
