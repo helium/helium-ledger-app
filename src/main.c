@@ -77,7 +77,7 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
                     G_io_apdu_buffer[2] = LEDGER_MAJOR_VERSION;
                     G_io_apdu_buffer[3] = LEDGER_MINOR_VERSION;
                     G_io_apdu_buffer[4] = LEDGER_PATCH_VERSION;
-                    *tx = 4;
+                    *tx = 5;
                     THROW(0x9000);
                     break;
 
