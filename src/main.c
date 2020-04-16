@@ -23,16 +23,24 @@
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
 #define CLA 0xE0
-#define INS_GET_APP_CONFIGURATION 0x01
-#define INS_GET_PUBKEY 0x02
-#define INS_SIGN_MESSAGE 0x03
+
+// DEPRECATED - Use non "16" suffixed variants below
+#define INS_GET_APP_CONFIGURATION16 0x01
+#define INS_GET_PUBKEY16            0x02
+#define INS_SIGN_MESSAGE16          0x03
+#define OFFSET_CDATA16 6
+// END DEPRECATED
+
+#define INS_GET_APP_CONFIGURATION   0x04
+#define INS_GET_PUBKEY              0x05
+#define INS_SIGN_MESSAGE            0x06
 
 #define OFFSET_CLA 0
 #define OFFSET_INS 1
 #define OFFSET_P1 2
 #define OFFSET_P2 3
 #define OFFSET_LC 4
-#define OFFSET_CDATA 6
+#define OFFSET_CDATA 5
 
 void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
     unsigned short sw = 0;
@@ -43,11 +51,27 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
             THROW(0x6E00);
             }
 
-            int dataLength = U2BE(G_io_apdu_buffer, OFFSET_LC);
+            int dataLength;
+            uint8_t* dataBuffer;
+            switch (G_io_apdu_buffer[OFFSET_INS]) {
+                // Handle deprecated instructions expecting a 16bit dataLength
+                case INS_GET_APP_CONFIGURATION16:
+                case INS_GET_PUBKEY16:
+                case INS_SIGN_MESSAGE16:
+                    dataLength = U2BE(G_io_apdu_buffer, OFFSET_LC);
+                    dataBuffer = &G_io_apdu_buffer[OFFSET_CDATA16];
+                    break;
+                // Modern instructions use 8bit dataLength as per Ledger convention
+                default:
+                    dataLength = G_io_apdu_buffer[OFFSET_LC];
+                    dataBuffer = &G_io_apdu_buffer[OFFSET_CDATA];
+                    break;
+            }
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
 
                 case INS_GET_APP_CONFIGURATION:
+                case INS_GET_APP_CONFIGURATION16:
                     G_io_apdu_buffer[0] = (N_storage.dummy_setting_1 ? 0x01 : 0x00);
                     G_io_apdu_buffer[1] = (N_storage.dummy_setting_2 ? 0x01 : 0x00);
                     G_io_apdu_buffer[2] = LEDGER_MAJOR_VERSION;
@@ -58,11 +82,15 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
                     break;
 
                 case INS_GET_PUBKEY:
-                    handleGetPubkey(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], G_io_apdu_buffer + OFFSET_CDATA, dataLength, flags, tx);
+                case INS_GET_PUBKEY16:
+                    handleGetPubkey(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], dataBuffer, dataLength, flags, tx);
                     break;
 
+                case INS_SIGN_MESSAGE16:
+                    dataLength |= DATA_HAS_LENGTH_PREFIX;
+                    // Fall through
                 case INS_SIGN_MESSAGE:
-                    handleSignMessage(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], G_io_apdu_buffer + OFFSET_CDATA, dataLength, flags, tx);
+                    handleSignMessage(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], dataBuffer, dataLength, flags, tx);
                     break;
 
                 default:

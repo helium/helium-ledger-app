@@ -74,6 +74,12 @@ ux_flow_step_t const * flow_steps[MAX_FLOW_STEPS];
 Hash UnrecognizedMessageHash;
 
 void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
+    int data_has_length_prefix = (dataLength & DATA_HAS_LENGTH_PREFIX);
+
+    if (data_has_length_prefix) {
+        dataLength &= ~DATA_HAS_LENGTH_PREFIX;
+    }
+
     if ((p2 & P2_EXTEND) == 0) {
         MEMCLEAR(G_derivationPath);
         MEMCLEAR(G_message);
@@ -84,8 +90,13 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
         dataLength -= 1 + G_derivationPathLength * 4;
     }
 
-    int messageLength = U2BE(dataBuffer, 0);
-    dataBuffer += 2;
+    int messageLength;
+    if (data_has_length_prefix) {
+        messageLength = U2BE(dataBuffer, 0);
+        dataBuffer += 2;
+    } else {
+        messageLength = dataLength;
+    }
 
     if (G_messageLength + messageLength > MAX_MESSAGE_LENGTH) {
         THROW(EXCEPTION_OVERFLOW);
