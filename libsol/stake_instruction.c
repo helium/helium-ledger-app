@@ -367,14 +367,14 @@ static int print_stake_authorize_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Set stake auth.", info->account);
+    summary_item_set_pubkey(item, "Set stake auth", info->account);
 
     switch (info->authorize) {
         case StakeAuthorizeStaker:
-            new_authority_title = "New stake auth.";
+            new_authority_title = "New stake auth";
             break;
         case StakeAuthorizeWithdrawer:
-            new_authority_title = "New w/d auth.";
+            new_authority_title = "New withdraw auth";
             break;
     }
 
@@ -454,7 +454,7 @@ int print_stake_info(
             return print_delegate_stake_info(&info->delegate_stake, header);
         case StakeInitialize:
             return print_stake_initialize_info(
-                "Init. stake acct",
+                "Init stake acct",
                 &info->initialize,
                 header
             );

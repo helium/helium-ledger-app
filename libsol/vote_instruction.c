@@ -213,14 +213,14 @@ static int print_vote_authorize_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Set vote auth.", info->account);
+    summary_item_set_pubkey(item, "Set vote auth", info->account);
 
     switch (info->authorize) {
         case VoteAuthorizeVoter:
-            new_authority_title = "New vote auth.";
+            new_authority_title = "New vote auth";
             break;
         case VoteAuthorizeWithdrawer:
-            new_authority_title = "New w/d auth.";
+            new_authority_title = "New withdraw auth";
             break;
     }
 
@@ -255,7 +255,7 @@ int print_vote_info(const VoteInfo* info, const MessageHeader* header) {
     switch (info->kind) {
         case VoteInitialize:
             return print_vote_initialize_info(
-                "Init. vote acct.",
+                "Init vote acct",
                 &info->initialize,
                 header
             );
@@ -298,14 +298,14 @@ int print_vote_initialize_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(
         item,
-        "New vote auth.",
+        "New vote auth",
         info->vote_init.vote_authority
     );
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(
         item,
-        "New withdraw auth.",
+        "New withdraw auth",
         info->vote_init.withdraw_authority
     );
 

@@ -348,7 +348,7 @@ static int print_system_advance_nonce_account(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Advance Nonce", info->account);
+    summary_item_set_pubkey(item, "Advance nonce", info->account);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Authorized by", info->authority);
@@ -389,7 +389,7 @@ static int print_system_authorize_nonce_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Set nonce auth.", info->account);
+    summary_item_set_pubkey(item, "Set nonce auth", info->account);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "New authority", info->new_authority);
@@ -453,7 +453,7 @@ int print_system_info(const SystemInfo* info, const MessageHeader* header) {
             );
         case SystemInitializeNonceAccount:
             return print_system_initialize_nonce_info(
-                "Init. nonce acct.",
+                "Init nonce acct",
                 &info->initialize_nonce,
                 header
             );
@@ -492,10 +492,10 @@ int print_system_nonced_transaction_sentinel(
     SummaryItem* item;
 
     item = transaction_summary_nonce_account_item();
-    summary_item_set_pubkey(item, "Nonce Account", nonce_info->account);
+    summary_item_set_pubkey(item, "Nonce account", nonce_info->account);
 
     item = transaction_summary_nonce_authority_item();
-    summary_item_set_pubkey(item, "Nonce Authority", nonce_info->authority);
+    summary_item_set_pubkey(item, "Nonce authority", nonce_info->authority);
 
     return 0;
 }

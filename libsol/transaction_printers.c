@@ -182,7 +182,7 @@ static int print_stake_authorize_both(
     BAIL_IF(withdrawer_info->authorize != StakeAuthorizeWithdrawer);
 
     item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Set stake auth.", staker_info->account);
+    summary_item_set_pubkey(item, "Set stake auth", staker_info->account);
 
     if (staker_info->new_authority == withdrawer_info->new_authority) {
         item = transaction_summary_general_item();
@@ -195,14 +195,14 @@ static int print_stake_authorize_both(
         item = transaction_summary_general_item();
         summary_item_set_pubkey(
             item,
-            "New stake auth.",
+            "New stake auth",
             staker_info->new_authority
         );
 
         item = transaction_summary_general_item();
         summary_item_set_pubkey(
             item,
-            "New w/d auth.",
+            "New withdraw auth",
             withdrawer_info->new_authority
         );
     }
@@ -299,7 +299,7 @@ static int print_vote_authorize_both(
     BAIL_IF(withdrawer_info->authorize != VoteAuthorizeWithdrawer);
 
     item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Set vote auth.", voter_info->account);
+    summary_item_set_pubkey(item, "Set vote auth", voter_info->account);
 
     if (voter_info->new_authority == withdrawer_info->new_authority) {
         item = transaction_summary_general_item();
@@ -312,14 +312,14 @@ static int print_vote_authorize_both(
         item = transaction_summary_general_item();
         summary_item_set_pubkey(
             item,
-            "New vote auth.",
+            "New vote auth",
             voter_info->new_authority
         );
 
         item = transaction_summary_general_item();
         summary_item_set_pubkey(
             item,
-            "New w/d auth.",
+            "New withdraw auth",
             withdrawer_info->new_authority
         );
     }
