@@ -59,7 +59,11 @@ typedef struct VoteInfo {
     };
 } VoteInfo;
 
-int parse_vote_instructions(const Instruction* instruction, const MessageHeader* header, VoteInfo* info);
+int parse_vote_instructions(
+    const Instruction* instruction,
+    const MessageHeader* header,
+    VoteInfo* info
+);
 int print_vote_info(const VoteInfo* info, const MessageHeader* header);
 int print_vote_initialize_info(
     const char* primary_title,

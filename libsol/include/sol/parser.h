@@ -78,7 +78,11 @@ int parse_pubkey(Parser* parser, const Pubkey** pubkey);
 
 int parse_pubkeys_header(Parser* parser, PubkeysHeader* header);
 
-int parse_pubkeys(Parser* parser, PubkeysHeader* header, const Pubkey** pubkeys);
+int parse_pubkeys(
+    Parser* parser,
+    PubkeysHeader* header,
+    const Pubkey** pubkeys
+);
 
 int parse_blockhash(Parser* parser, const Hash** hash);
 #define parse_blockhash parse_hash

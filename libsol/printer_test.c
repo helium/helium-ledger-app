@@ -50,19 +50,33 @@ void test_print_string() {
 }
 
 void test_print_summary() {
-  char summary[27];
-  assert(print_summary("GADFVW3UXVKDOU626XUPYDJU2BFCGFJHQ6SREYOZ6IJV4XSHOALEQN2I",
-                summary, sizeof(summary), 12, 12) == 0);
-  assert_string_equal(summary, "GADFVW3UXVKD..4XSHOALEQN2I");
-  assert(print_summary("GADFVW3UXVKDOU626XUPYDJU2BFCGFJHQ6SREYOZ6IJV4XSHOALEQN2I",
-                summary, sizeof(summary), 6, 6) == 0);
-  assert_string_equal(summary, "GADFVW..LEQN2I");
+    char summary[27];
+    assert(
+        print_summary(
+            "GADFVW3UXVKDOU626XUPYDJU2BFCGFJHQ6SREYOZ6IJV4XSHOALEQN2I",
+            summary,
+            sizeof(summary),
+            12,
+            12
+        ) == 0
+    );
+    assert_string_equal(summary, "GADFVW3UXVKD..4XSHOALEQN2I");
+    assert(
+        print_summary(
+            "GADFVW3UXVKDOU626XUPYDJU2BFCGFJHQ6SREYOZ6IJV4XSHOALEQN2I",
+            summary,
+            sizeof(summary),
+            6,
+            6
+        ) == 0
+    );
+    assert_string_equal(summary, "GADFVW..LEQN2I");
 
-  const char* test_fits = "short enough";
-  assert(print_summary(test_fits, summary, sizeof(summary), 12, 12) == 0);
-  assert_string_equal(summary, test_fits);
+    const char* test_fits = "short enough";
+    assert(print_summary(test_fits, summary, sizeof(summary), 12, 12) == 0);
+    assert_string_equal(summary, test_fits);
 
-  assert(print_summary("buffer too small", NULL, 0, 12, 12) == 1);
+    assert(print_summary("buffer too small", NULL, 0, 12, 12) == 1);
 }
 
 void test_print_i64() {

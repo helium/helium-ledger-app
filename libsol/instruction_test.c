@@ -61,8 +61,13 @@ void test_instruction_validate_bad_last_account_index_fail() {
 
 void test_static_brief_initializer_macros() {
     InstructionBrief system_test = SYSTEM_IX_BRIEF(SystemTransfer);
-    InstructionBrief system_expect = { ProgramIdSystem, .system = SystemTransfer };
-    assert(memcmp(&system_test, &system_expect, sizeof(InstructionBrief)) == 0);
+    InstructionBrief system_expect = {
+        ProgramIdSystem,
+        .system = SystemTransfer
+    };
+    assert(
+        memcmp(&system_test, &system_expect, sizeof(InstructionBrief)) == 0
+    );
     InstructionBrief stake_test = STAKE_IX_BRIEF(StakeDelegate);
     InstructionBrief stake_expect = { ProgramIdStake, .stake = StakeDelegate };
     assert(memcmp(&stake_test, &stake_expect, sizeof(InstructionBrief)) == 0);

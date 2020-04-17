@@ -7,7 +7,12 @@
 // max amount is max uint64 scaled down: "9223372036.854775807"
 #define AMOUNT_MAX_SIZE 22
 
-int print_amount(uint64_t amount, const char *asset, char *out, size_t out_length) {
+int print_amount(
+    uint64_t amount,
+    const char *asset,
+    char *out,
+    size_t out_length
+) {
     BAIL_IF(out_length > INT_MAX);
     uint64_t dVal = amount;
     int outlen  = (int)out_length;
@@ -55,7 +60,11 @@ int print_amount(uint64_t amount, const char *asset, char *out, size_t out_lengt
     return 0;
 }
 
-int print_sized_string(const SizedString* string, char* out, size_t out_length) {
+int print_sized_string(
+    const SizedString* string,
+    char* out,
+    size_t out_length
+) {
     size_t len = MIN(out_length, string->length);
     strncpy(out, string->string, len);
     if (string->length < out_length) {
@@ -85,14 +94,24 @@ int print_string(const char *in, char *out, size_t out_length){
     return rc;
 }
 
-int print_summary(const char *in, char *out, size_t out_length, size_t left_length, size_t right_length) {
+int print_summary(
+    const char *in,
+    char *out,
+    size_t out_length,
+    size_t left_length,
+    size_t right_length
+) {
     BAIL_IF(out_length <= (left_length + right_length + 2));
     size_t in_length = strlen(in);
     if ((in_length + 1) > out_length) {
         memcpy(out, in, left_length);
         out[left_length] = '.';
         out[left_length + 1] = '.';
-        memcpy(out + left_length + 2, in + in_length - right_length, right_length);
+        memcpy(
+            out + left_length + 2,
+            in + in_length - right_length,
+            right_length
+        );
         out[left_length + right_length + 2] = '\0';
     } else {
         print_string(in, out, out_length);
@@ -101,11 +120,15 @@ int print_summary(const char *in, char *out, size_t out_length, size_t left_leng
     return 0;
 }
 
-static const char BASE58_ALPHABET[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
-                                        'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q',
-                                        'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-                                        'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-                                        'w', 'x', 'y', 'z'};
+static const char BASE58_ALPHABET[] = {
+    '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J',
+    'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T',
+    'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
+    'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm',
+    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+    'w', 'x', 'y', 'z'
+};
 
 int encode_base58(const void *in, size_t length, char *out, size_t maxoutlen) {
     uint8_t tmp[64];

@@ -13,9 +13,22 @@ static int G_messageLength;
 static uint32_t G_derivationPath[BIP32_PATH];
 static int G_derivationPathLength;
 
-void derive_private_key(cx_ecfp_private_key_t *privateKey, uint32_t *derivationPath, uint8_t derivationPathLength) {
+void derive_private_key(
+    cx_ecfp_private_key_t *privateKey,
+    uint32_t *derivationPath,
+    uint8_t derivationPathLength
+) {
     uint8_t privateKeyData[32];
-    os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, derivationPath, derivationPathLength, privateKeyData, NULL, (unsigned char*) "ed25519 seed", 12);
+    os_perso_derive_node_bip32_seed_key(
+        HDW_ED25519_SLIP10,
+        CX_CURVE_Ed25519,
+        derivationPath,
+        derivationPathLength,
+        privateKeyData,
+        NULL,
+        (unsigned char*) "ed25519 seed",
+        12
+    );
     cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, privateKey);
     MEMCLEAR(privateKeyData);
 }
@@ -25,7 +38,18 @@ static uint8_t set_result_sign_message() {
     uint8_t signature[SIGNATURE_LENGTH];
     cx_ecfp_private_key_t privateKey;
     derive_private_key(&privateKey, G_derivationPath, G_derivationPathLength);
-    cx_eddsa_sign(&privateKey, CX_LAST, CX_SHA512, G_message, G_messageLength, NULL, 0, signature, SIGNATURE_LENGTH, NULL);
+    cx_eddsa_sign(
+        &privateKey,
+        CX_LAST,
+        CX_SHA512,
+        G_message,
+        G_messageLength,
+        NULL,
+        0,
+        signature,
+        SIGNATURE_LENGTH,
+        NULL
+    );
     os_memmove(G_io_apdu_buffer, signature, 64);
     return tx;
 }
@@ -37,16 +61,16 @@ UX_STEP_VALID(
     pb,
     sendResponse(set_result_sign_message(), true),
     {
-      &C_icon_validate_14,
-      "Approve",
+        &C_icon_validate_14,
+        "Approve",
     });
 UX_STEP_VALID(
     ux_reject_step,
     pb,
     sendResponse(0, false),
     {
-      &C_icon_crossmark,
-      "Reject",
+        &C_icon_crossmark,
+        "Reject",
     });
 UX_STEP_NOCB_INIT(
     ux_summary_step,
@@ -73,7 +97,14 @@ ux_flow_step_t const * flow_steps[MAX_FLOW_STEPS];
 
 Hash UnrecognizedMessageHash;
 
-void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
+void handleSignMessage(
+    uint8_t p1,
+    uint8_t p2,
+    uint8_t *dataBuffer,
+    uint16_t dataLength,
+    volatile unsigned int *flags,
+    volatile unsigned int *tx
+) {
     int data_has_length_prefix = (dataLength & DATA_HAS_LENGTH_PREFIX);
 
     if (data_has_length_prefix) {
@@ -83,9 +114,13 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
     if ((p2 & P2_EXTEND) == 0) {
         MEMCLEAR(G_derivationPath);
         MEMCLEAR(G_message);
-	G_messageLength = 0;
+	    G_messageLength = 0;
 
-        G_derivationPathLength = read_derivation_path(dataBuffer, dataLength, G_derivationPath);
+        G_derivationPathLength = read_derivation_path(
+            dataBuffer,
+            dataLength,
+            G_derivationPath
+        );
         dataBuffer += 1 + G_derivationPathLength * 4;
         dataLength -= 1 + G_derivationPathLength * 4;
     }
@@ -129,7 +164,12 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
         SummaryItem* item = transaction_summary_primary_item();
         summary_item_set_string(item, "Unrecognized", "format");
 
-        cx_hash_sha256(dataBuffer, dataLength, (uint8_t*) &UnrecognizedMessageHash, HASH_LENGTH);
+        cx_hash_sha256(
+            dataBuffer,
+            dataLength,
+            (uint8_t*) &UnrecognizedMessageHash,
+            HASH_LENGTH
+        );
 
         item = transaction_summary_general_item();
         summary_item_set_hash(item, "Message Hash", &UnrecognizedMessageHash);
@@ -141,7 +181,11 @@ void handleSignMessage(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dat
 
     enum SummaryItemKind summary_step_kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_summary_steps = 0;
-    if (transaction_summary_finalize(summary_step_kinds, &num_summary_steps) == 0) {
+    if (transaction_summary_finalize(
+            summary_step_kinds,
+            &num_summary_steps
+        ) == 0
+    ) {
         size_t num_flow_steps = 0;
 
         for (size_t i = 0; i < num_summary_steps; i++) {

@@ -137,13 +137,16 @@ static int print_create_stake_account_with_seed(
     const InstructionInfo* infos,
     size_t infos_length
 ) {
-    const SystemCreateAccountWithSeedInfo* cws_info = &infos[0].system.create_account_with_seed;
+    const SystemCreateAccountWithSeedInfo* cws_info =
+        &infos[0].system.create_account_with_seed;
     const StakeInitializeInfo* si_info = &infos[1].stake.initialize;
 
     SummaryItem* item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Create stake acct", cws_info->to);
 
-    BAIL_IF(print_system_create_account_with_seed_info(NULL, cws_info, header));
+    BAIL_IF(
+        print_system_create_account_with_seed_info(NULL, cws_info, header)
+    );
     BAIL_IF(print_stake_initialize_info(NULL, si_info, header));
 
     return 0;
@@ -154,7 +157,8 @@ static int print_stake_split_with_seed(
     const InstructionInfo* infos,
     size_t infos_length
 ) {
-    const SystemAllocateWithSeedInfo* aws_info = &infos[0].system.allocate_with_seed;
+    const SystemAllocateWithSeedInfo* aws_info =
+        &infos[0].system.allocate_with_seed;
     const StakeSplitInfo* ss_info = &infos[1].stake.split;
 
     BAIL_IF(print_stake_split_info1(ss_info, header));
@@ -182,13 +186,25 @@ static int print_stake_authorize_both(
 
     if (staker_info->new_authority == withdrawer_info->new_authority) {
         item = transaction_summary_general_item();
-        summary_item_set_pubkey(item, "New authorities", staker_info->new_authority);
+        summary_item_set_pubkey(
+            item,
+            "New authorities",
+            staker_info->new_authority
+        );
     } else {
         item = transaction_summary_general_item();
-        summary_item_set_pubkey(item, "New stake auth.", staker_info->new_authority);
+        summary_item_set_pubkey(
+            item,
+            "New stake auth.",
+            staker_info->new_authority
+        );
 
         item = transaction_summary_general_item();
-        summary_item_set_pubkey(item, "New w/d auth.", withdrawer_info->new_authority);
+        summary_item_set_pubkey(
+            item,
+            "New w/d auth.",
+            withdrawer_info->new_authority
+        );
     }
 
     item = transaction_summary_general_item();
@@ -203,7 +219,8 @@ static int print_create_nonce_account(
     size_t infos_length
 ) {
     const SystemCreateAccountInfo* ca_info = &infos[0].system.create_account;
-    const SystemInitializeNonceInfo* ni_info = &infos[1].system.initialize_nonce;
+    const SystemInitializeNonceInfo* ni_info =
+        &infos[1].system.initialize_nonce;
 
     SummaryItem* item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Create nonce acct", ca_info->to);
@@ -219,8 +236,10 @@ static int print_create_nonce_account_with_seed(
     const InstructionInfo* infos,
     size_t infos_length
 ) {
-    const SystemCreateAccountWithSeedInfo* ca_info = &infos[0].system.create_account_with_seed;
-    const SystemInitializeNonceInfo* ni_info = &infos[1].system.initialize_nonce;
+    const SystemCreateAccountWithSeedInfo* ca_info =
+        &infos[0].system.create_account_with_seed;
+    const SystemInitializeNonceInfo* ni_info =
+        &infos[1].system.initialize_nonce;
 
     SummaryItem* item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Create nonce acct", ca_info->to);
@@ -253,7 +272,8 @@ static int print_create_vote_account_with_seed(
     const InstructionInfo* infos,
     size_t infos_length
 ) {
-    const SystemCreateAccountWithSeedInfo* ca_info = &infos[0].system.create_account_with_seed;
+    const SystemCreateAccountWithSeedInfo* ca_info =
+        &infos[0].system.create_account_with_seed;
     const VoteInitializeInfo* vi_info = &infos[1].vote.initialize;
 
     SummaryItem* item = transaction_summary_primary_item();
@@ -283,13 +303,25 @@ static int print_vote_authorize_both(
 
     if (voter_info->new_authority == withdrawer_info->new_authority) {
         item = transaction_summary_general_item();
-        summary_item_set_pubkey(item, "New authorities", voter_info->new_authority);
+        summary_item_set_pubkey(
+            item,
+            "New authorities",
+            voter_info->new_authority
+        );
     } else {
         item = transaction_summary_general_item();
-        summary_item_set_pubkey(item, "New vote auth.", voter_info->new_authority);
+        summary_item_set_pubkey(
+            item,
+            "New vote auth.",
+            voter_info->new_authority
+        );
 
         item = transaction_summary_general_item();
-        summary_item_set_pubkey(item, "New w/d auth.", withdrawer_info->new_authority);
+        summary_item_set_pubkey(
+            item,
+            "New w/d auth.",
+            withdrawer_info->new_authority
+        );
     }
 
     item = transaction_summary_general_item();
@@ -298,9 +330,14 @@ static int print_vote_authorize_both(
     return 0;
 }
 
-int print_transaction(const MessageHeader* header, const InstructionInfo* infos, size_t infos_length) {
+int print_transaction(
+    const MessageHeader* header,
+    const InstructionInfo* infos,
+    size_t infos_length
+) {
     if (infos_length > 1) {
-        InstructionBrief nonce_brief = SYSTEM_IX_BRIEF(SystemAdvanceNonceAccount);
+        InstructionBrief nonce_brief =
+            SYSTEM_IX_BRIEF(SystemAdvanceNonceAccount);
         if (instruction_info_matches_brief(infos, &nonce_brief)) {
             print_system_nonced_transaction_sentinel(&infos->system, header);
             infos++;
@@ -325,21 +362,37 @@ int print_transaction(const MessageHeader* header, const InstructionInfo* infos,
             if (is_create_stake_account(infos, infos_length)) {
                 return print_create_stake_account(header, infos, infos_length);
             } else if (is_create_stake_account_with_seed(infos, infos_length)) {
-                return print_create_stake_account_with_seed(header, infos, infos_length);
+                return print_create_stake_account_with_seed(
+                    header,
+                    infos,
+                    infos_length
+                );
             } else if (is_create_nonce_account(infos, infos_length)) {
                 return print_create_nonce_account(header, infos, infos_length);
             } else if (is_create_nonce_account_with_seed(infos, infos_length)) {
-                return print_create_nonce_account_with_seed(header, infos, infos_length);
+                return print_create_nonce_account_with_seed(
+                    header,
+                    infos,
+                    infos_length
+                );
             } else if (is_create_vote_account(infos, infos_length)) {
                 return print_create_vote_account(header, infos, infos_length);
             } else if (is_create_vote_account_with_seed(infos, infos_length)) {
-                return print_create_vote_account_with_seed(header, infos, infos_length);
+                return print_create_vote_account_with_seed(
+                    header,
+                    infos,
+                    infos_length
+                );
             } else if (is_stake_authorize_both(infos, infos_length)) {
                 return print_stake_authorize_both(header, infos, infos_length);
             } else if (is_vote_authorize_both(infos, infos_length)) {
                 return print_vote_authorize_both(header, infos, infos_length);
             } else if (is_stake_split_with_seed(infos, infos_length)) {
-                return print_stake_split_with_seed(header, infos, infos_length);
+                return print_stake_split_with_seed(
+                    header,
+                    infos,
+                    infos_length
+                );
             }
             break;
         }

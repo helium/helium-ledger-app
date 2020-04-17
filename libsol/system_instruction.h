@@ -95,9 +95,19 @@ typedef struct SystemInfo {
     };
 } SystemInfo;
 
-int parse_system_instructions(const Instruction* instruction, const MessageHeader* header, SystemInfo* info);
-int print_system_info(const SystemInfo* info, const MessageHeader* header);
-int print_system_nonced_transaction_sentinel(const SystemInfo* info, const MessageHeader* header);
+int parse_system_instructions(
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SystemInfo* info
+);
+int print_system_info(
+    const SystemInfo* info,
+    const MessageHeader* header
+);
+int print_system_nonced_transaction_sentinel(
+    const SystemInfo* info,
+    const MessageHeader* header
+);
 int print_system_create_account_info(
     const char* primary_title,
     const SystemCreateAccountInfo* info,

@@ -16,8 +16,8 @@ void settings_submenu_selector(unsigned int idx);
 // Enable contract data submenu:
 
 void dummy_setting_1_data_change(unsigned int enabled) {
-    nvm_write((void *)&N_storage.dummy_setting_1, &enabled, 1);
-    ui_idle();
+  nvm_write((void *)&N_storage.dummy_setting_1, &enabled, 1);
+  ui_idle();
 }
 
 const char* const dummy_setting_1_data_getter_values[] = {
@@ -111,13 +111,13 @@ void settings_submenu_selector(unsigned int idx) {
 
 //////////////////////////////////////////////////////////////////////
 UX_STEP_NOCB(
-    ux_idle_flow_1_step, 
-    pnn, 
-    {
-      &C_solana_logo,
-      "Application",
-      "is ready",
-    });
+  ux_idle_flow_1_step,
+  pnn,
+  {
+    &C_solana_logo,
+    "Application",
+    "is ready",
+  });
 //UX_STEP_VALID(
 //    ux_idle_flow_2_step,
 //    pb,
@@ -127,20 +127,20 @@ UX_STEP_NOCB(
 //      "Settings",
 //    });
 UX_STEP_NOCB(
-    ux_idle_flow_3_step, 
-    bn, 
-    {
-      "Version",
-      APPVERSION,
-    });
+  ux_idle_flow_3_step,
+  bn,
+  {
+    "Version",
+    APPVERSION,
+  });
 UX_STEP_VALID(
-    ux_idle_flow_4_step,
-    pb,
-    os_sched_exit(-1),
-    {
-      &C_icon_dashboard_x,
-      "Quit",
-    });
+  ux_idle_flow_4_step,
+  pb,
+  os_sched_exit(-1),
+  {
+    &C_icon_dashboard_x,
+    "Quit",
+  });
 UX_FLOW(ux_idle_flow,
   &ux_idle_flow_1_step,
   //&ux_idle_flow_2_step,
@@ -150,9 +150,9 @@ UX_FLOW(ux_idle_flow,
 );
 
 void ui_idle(void) {
-    // reserve a display stack slot if none yet
-    if(G_ux.stack_count == 0) {
-        ux_stack_push();
-    }
-    ux_flow_init(0, ux_idle_flow, NULL);
+  // reserve a display stack slot if none yet
+  if(G_ux.stack_count == 0) {
+    ux_stack_push();
+  }
+  ux_flow_init(0, ux_idle_flow, NULL);
 }

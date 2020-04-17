@@ -7,11 +7,12 @@
 
 #define CREATE_ACCOUNT_TITLE "Create account"
 
-const Pubkey system_program_id = {{
-    PROGRAM_ID_SYSTEM
-}};
+const Pubkey system_program_id = {{ PROGRAM_ID_SYSTEM }};
 
-static int parse_system_instruction_kind(Parser* parser, enum SystemInstructionKind* kind) {
+static int parse_system_instruction_kind(
+    Parser* parser,
+    enum SystemInstructionKind* kind
+) {
     uint32_t maybe_kind;
     BAIL_IF(parse_u32(parser, &maybe_kind));
     switch (maybe_kind) {
@@ -32,9 +33,14 @@ static int parse_system_instruction_kind(Parser* parser, enum SystemInstructionK
     return 1;
 }
 
-// Returns 0 and populates SystemTransferInfo if provided a MessageHeader and a transfer
-// instruction, otherwise non-zero.
-static int parse_system_transfer_instruction(Parser* parser, const Instruction* instruction, const MessageHeader* header, SystemTransferInfo* info) {
+// Returns 0 and populates SystemTransferInfo if provided a MessageHeader
+// and a transfer instruction, otherwise non-zero.
+static int parse_system_transfer_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SystemTransferInfo* info
+) {
     BAIL_IF(parse_u64(parser, &info->lamports));
     size_t pubkeys_length = header->pubkeys_header.pubkeys_length;
 
@@ -223,14 +229,23 @@ static int parse_system_allocate_with_seed_instruction(
     return 0;
 }
 
-int parse_system_instructions(const Instruction* instruction, const MessageHeader* header, SystemInfo* info) {
+int parse_system_instructions(
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SystemInfo* info
+) {
     Parser parser = {instruction->data, instruction->data_length};
 
     BAIL_IF(parse_system_instruction_kind(&parser, &info->kind));
 
     switch (info->kind) {
         case SystemTransfer:
-            return parse_system_transfer_instruction(&parser, instruction, header, &info->transfer);
+            return parse_system_transfer_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->transfer
+            );
         case SystemAdvanceNonceAccount:
             return parse_system_advance_nonce_account_instruction(
                 &parser,
@@ -301,7 +316,10 @@ int parse_system_instructions(const Instruction* instruction, const MessageHeade
     return 1;
 }
 
-static int print_system_transfer_info(const SystemTransferInfo* info, const MessageHeader* header) {
+static int print_system_transfer_info(
+    const SystemTransferInfo* info,
+    const MessageHeader* header
+) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -323,7 +341,10 @@ static int print_system_transfer_info(const SystemTransferInfo* info, const Mess
     return 0;
 }
 
-static int print_system_advance_nonce_account(const SystemAdvanceNonceInfo* info, const MessageHeader* header) {
+static int print_system_advance_nonce_account(
+    const SystemAdvanceNonceInfo* info,
+    const MessageHeader* header
+) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -340,7 +361,10 @@ static int print_system_advance_nonce_account(const SystemAdvanceNonceInfo* info
     return 0;
 }
 
-static int print_system_withdraw_nonce_info(const SystemWithdrawNonceInfo* info, const MessageHeader* header) {
+static int print_system_withdraw_nonce_info(
+    const SystemWithdrawNonceInfo* info,
+    const MessageHeader* header
+) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -411,7 +435,10 @@ int print_system_info(const SystemInfo* info, const MessageHeader* header) {
         case SystemTransfer:
             return print_system_transfer_info(&info->transfer, header);
         case SystemAdvanceNonceAccount:
-            return print_system_advance_nonce_account(&info->advance_nonce, header);
+            return print_system_advance_nonce_account(
+                &info->advance_nonce,
+                header
+            );
         case SystemCreateAccount:
             return print_system_create_account_info(
                 CREATE_ACCOUNT_TITLE,
@@ -431,9 +458,15 @@ int print_system_info(const SystemInfo* info, const MessageHeader* header) {
                 header
             );
         case SystemWithdrawNonceAccount:
-            return print_system_withdraw_nonce_info(&info->withdraw_nonce, header);
+            return print_system_withdraw_nonce_info(
+                &info->withdraw_nonce,
+                header
+            );
         case SystemAuthorizeNonceAccount:
-            return print_system_authorize_nonce_info(&info->authorize_nonce, header);
+            return print_system_authorize_nonce_info(
+                &info->authorize_nonce,
+                header
+            );
         case SystemAssign:
             return print_system_assign_info(&info->assign, header);
         case SystemAllocate:
@@ -451,7 +484,10 @@ int print_system_info(const SystemInfo* info, const MessageHeader* header) {
     return 1;
 }
 
-int print_system_nonced_transaction_sentinel(const SystemInfo* info, const MessageHeader* header) {
+int print_system_nonced_transaction_sentinel(
+    const SystemInfo* info,
+    const MessageHeader* header
+) {
     const SystemAdvanceNonceInfo* nonce_info = &info->advance_nonce;
     SummaryItem* item;
 

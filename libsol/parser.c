@@ -102,7 +102,11 @@ int parse_pubkeys_header(Parser* parser, PubkeysHeader* header) {
     return 0;
 }
 
-int parse_pubkeys(Parser* parser, PubkeysHeader* header, const Pubkey** pubkeys) {
+int parse_pubkeys(
+    Parser* parser,
+    PubkeysHeader* header,
+    const Pubkey** pubkeys
+) {
     BAIL_IF(parse_pubkeys_header(parser, header));
     size_t pubkeys_size = header->pubkeys_length * PUBKEY_SIZE;
     BAIL_IF(check_buffer_length(parser, pubkeys_size));
@@ -125,7 +129,11 @@ int parse_message_header(Parser* parser, MessageHeader* header) {
     return 0;
 }
 
-static int parse_data(Parser* parser, const uint8_t** data, size_t* data_length) {
+static int parse_data(
+    Parser* parser,
+    const uint8_t** data,
+    size_t* data_length
+) {
     BAIL_IF(parse_length(parser, data_length));
     BAIL_IF(check_buffer_length(parser, *data_length));
     *data = parser->buffer;
@@ -135,7 +143,12 @@ static int parse_data(Parser* parser, const uint8_t** data, size_t* data_length)
 
 int parse_instruction(Parser* parser, Instruction* instruction) {
     BAIL_IF(parse_u8(parser, &instruction->program_id_index));
-    BAIL_IF(parse_data(parser, &instruction->accounts, &instruction->accounts_length));
+    BAIL_IF(
+        parse_data(
+            parser,
+            &instruction->accounts,
+            &instruction->accounts_length
+    ));
     BAIL_IF(parse_data(parser, &instruction->data, &instruction->data_length));
     return 0;
 }

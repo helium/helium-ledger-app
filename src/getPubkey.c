@@ -7,18 +7,25 @@
 static uint8_t publicKey[PUBKEY_LENGTH];
 static char publicKeyStr[BASE58_PUBKEY_LENGTH];
 
-int read_derivation_path(const uint8_t *dataBuffer, size_t size, uint32_t *derivationPath) {
+int read_derivation_path(
+    const uint8_t *dataBuffer,
+    size_t size,
+    uint32_t *derivationPath
+) {
     size_t len = dataBuffer[0];
     dataBuffer += 1;
     if (len < 0x01 || len > BIP32_PATH) {
         THROW(0x6a80);
     }
     if (1 + 4 * len > size) {
-      THROW(0x6a80);
+        THROW(0x6a80);
     }
 
     for (unsigned int i = 0; i < len; i++) {
-        derivationPath[i] = (dataBuffer[0] << 24u) | (dataBuffer[1] << 16u) | (dataBuffer[2] << 8u) | (dataBuffer[3]);
+        derivationPath[i] = (
+            (dataBuffer[0] << 24u) | (dataBuffer[1] << 16u) |
+            (dataBuffer[2] << 8u) | (dataBuffer[3])
+        );
         dataBuffer += 4;
     }
     return len;
@@ -37,40 +44,56 @@ UX_STEP_NOCB(
     ux_display_public_flow_5_step,
     bnnn_paging,
     {
-      .title = "Pubkey",
-      .text = publicKeyStr,
+        .title = "Pubkey",
+        .text = publicKeyStr,
     });
 UX_STEP_VALID(
     ux_display_public_flow_6_step,
     pb,
     sendResponse(set_result_get_pubkey(), true),
     {
-      &C_icon_validate_14,
-      "Approve",
+        &C_icon_validate_14,
+        "Approve",
     });
 UX_STEP_VALID(
     ux_display_public_flow_7_step,
     pb,
     sendResponse(0, false),
     {
-      &C_icon_crossmark,
-      "Reject",
+        &C_icon_crossmark,
+        "Reject",
     });
 
 UX_FLOW(ux_display_public_flow,
-  &ux_display_public_flow_5_step,
-  &ux_display_public_flow_6_step,
-  &ux_display_public_flow_7_step
+    &ux_display_public_flow_5_step,
+    &ux_display_public_flow_6_step,
+    &ux_display_public_flow_7_step
 );
 
-void handleGetPubkey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
+void handleGetPubkey(
+    uint8_t p1,
+    uint8_t p2,
+    uint8_t *dataBuffer,
+    uint16_t dataLength,
+    volatile unsigned int *flags,
+    volatile unsigned int *tx
+) {
     UNUSED(p2);
 
     uint32_t derivationPath[BIP32_PATH];
-    int pathLength = read_derivation_path(dataBuffer, dataLength, derivationPath);
+    int pathLength = read_derivation_path(
+        dataBuffer,
+        dataLength,
+        derivationPath
+    );
 
     getPublicKey(derivationPath, publicKey, pathLength);
-    encode_base58(publicKey, PUBKEY_LENGTH, publicKeyStr, BASE58_PUBKEY_LENGTH);
+    encode_base58(
+        publicKey,
+        PUBKEY_LENGTH,
+        publicKeyStr,
+        BASE58_PUBKEY_LENGTH
+    );
 
     if (p1 == P1_NON_CONFIRM) {
         *tx = set_result_get_pubkey();

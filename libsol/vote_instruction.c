@@ -122,7 +122,9 @@ static int parse_vote_update_node_instruction(
         // https://github.com/solana-labs/solana/pull/8947
         pubkeys_index = instruction->accounts[accounts_index++];
         info->node_identity = &header->pubkeys[pubkeys_index];
-    } else if (instruction->data_length == (sizeof(uint32_t) + sizeof(Pubkey))) {
+    } else if (
+        instruction->data_length == (sizeof(uint32_t) + sizeof(Pubkey))
+    ) {
         // Before 1.0.8 and 1.1.3, the node identity was passed as an
         // instruction arg
         BAIL_IF(parse_pubkey(parser, &info->node_identity));
@@ -231,7 +233,10 @@ static int print_vote_authorize_info(
     return 0;
 }
 
-static int print_vote_update_node_info(const VoteUpdateNodeInfo* info, const MessageHeader* header) {
+static int print_vote_update_node_info(
+    const VoteUpdateNodeInfo* info,
+    const MessageHeader* header
+) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -291,10 +296,18 @@ int print_vote_initialize_info(
     summary_item_set_pubkey(item, "Node", info->vote_init.node);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "New vote auth.", info->vote_init.vote_authority);
+    summary_item_set_pubkey(
+        item,
+        "New vote auth.",
+        info->vote_init.vote_authority
+    );
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "New withdraw auth.", info->vote_init.withdraw_authority);
+    summary_item_set_pubkey(
+        item,
+        "New withdraw auth.",
+        info->vote_init.withdraw_authority
+    );
 
     item = transaction_summary_general_item();
     summary_item_set_u64(item, "Commission", info->vote_init.commission);

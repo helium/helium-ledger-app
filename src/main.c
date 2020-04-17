@@ -48,7 +48,7 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
     BEGIN_TRY {
         TRY {
             if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
-            THROW(0x6E00);
+                THROW(0x6E00);
             }
 
             int dataLength;
@@ -61,7 +61,8 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
                     dataLength = U2BE(G_io_apdu_buffer, OFFSET_LC);
                     dataBuffer = &G_io_apdu_buffer[OFFSET_CDATA16];
                     break;
-                // Modern instructions use 8bit dataLength as per Ledger convention
+                // Modern instructions use 8bit dataLength
+                // as per Ledger convention
                 default:
                     dataLength = G_io_apdu_buffer[OFFSET_LC];
                     dataBuffer = &G_io_apdu_buffer[OFFSET_CDATA];
@@ -69,7 +70,6 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
             }
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
-
                 case INS_GET_APP_CONFIGURATION:
                 case INS_GET_APP_CONFIGURATION16:
                     G_io_apdu_buffer[0] = (N_storage.dummy_setting_1 ? 0x01 : 0x00);
@@ -83,14 +83,27 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
 
                 case INS_GET_PUBKEY:
                 case INS_GET_PUBKEY16:
-                    handleGetPubkey(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], dataBuffer, dataLength, flags, tx);
+                    handleGetPubkey(
+                        G_io_apdu_buffer[OFFSET_P1],
+                        G_io_apdu_buffer[OFFSET_P2],
+                        dataBuffer,
+                        dataLength,
+                        flags,
+                        tx
+                    );
                     break;
 
                 case INS_SIGN_MESSAGE16:
                     dataLength |= DATA_HAS_LENGTH_PREFIX;
                     // Fall through
                 case INS_SIGN_MESSAGE:
-                    handleSignMessage(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], dataBuffer, dataLength, flags, tx);
+                    handleSignMessage(
+                        G_io_apdu_buffer[OFFSET_P1],
+                        G_io_apdu_buffer[OFFSET_P2],
+                        dataBuffer,
+                        dataLength,
+                        flags,tx
+                    );
                     break;
 
                 default:
@@ -102,24 +115,24 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
             THROW(EXCEPTION_IO_RESET);
         }
         CATCH_OTHER(e) {
-        switch (e & 0xF000) {
-            case 0x6000:
-                sw = e;
-                break;
-            case 0x9000:
-                // All is well
-                sw = e;
-                break;
-            default:
-                // Internal error
-                sw = 0x6800 | (e & 0x7FF);
-                break;
+            switch (e & 0xF000) {
+                case 0x6000:
+                    sw = e;
+                    break;
+                case 0x9000:
+                    // All is well
+                    sw = e;
+                    break;
+                default:
+                    // Internal error
+                    sw = 0x6800 | (e & 0x7FF);
+                    break;
+                }
+                // Unexpected exception => report
+                G_io_apdu_buffer[*tx] = sw >> 8;
+                G_io_apdu_buffer[*tx + 1] = sw;
+                *tx += 2;
             }
-            // Unexpected exception => report
-            G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx + 1] = sw;
-            *tx += 2;
-        }
         FINALLY {
         }
     }
@@ -159,7 +172,7 @@ void app_main(void) {
                 handleApdu(&flags, &tx);
             }
             CATCH(EXCEPTION_IO_RESET) {
-              THROW(EXCEPTION_IO_RESET);
+                THROW(EXCEPTION_IO_RESET);
             }
             CATCH_OTHER(e) {
                 switch (e & 0xF000) {
@@ -213,7 +226,10 @@ unsigned char io_event(unsigned char channel) {
             break;
 
         case SEPROXYHAL_TAG_STATUS_EVENT:
-            if (G_io_apdu_media == IO_APDU_MEDIA_USB_HID && !(U4BE(G_io_seproxyhal_spi_buffer, 3) & SEPROXYHAL_TAG_STATUS_EVENT_FLAG_USB_POWERED)) {
+            if (G_io_apdu_media == IO_APDU_MEDIA_USB_HID &&
+                !(U4BE(G_io_seproxyhal_spi_buffer, 3) &
+                    SEPROXYHAL_TAG_STATUS_EVENT_FLAG_USB_POWERED)
+            ) {
                 THROW(EXCEPTION_IO_RESET);
             }
             // no break is intentional
@@ -257,7 +273,8 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
         case CHANNEL_KEYBOARD:
             break;
 
-        // multiplexed io exchange over a SPI channel and TLV encapsulated protocol
+        // multiplexed io exchange over a SPI channel and
+        // TLV encapsulated protocol
         case CHANNEL_SPI:
             if (tx_len) {
                 io_seproxyhal_spi_send(G_io_apdu_buffer, tx_len);
@@ -265,11 +282,11 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
                 if (channel & IO_RESET_AFTER_REPLIED) {
                     reset();
                 }
-                return 0; // nothing received from the master so far (it's a tx
-                        // transaction)
+                return 0;   // nothing received from the master so far
+                            // (it's a tx transaction)
             } else {
                 return io_seproxyhal_spi_recv(G_io_apdu_buffer,
-                                            sizeof(G_io_apdu_buffer), 0);
+                    sizeof(G_io_apdu_buffer), 0);
             }
 
         default:
@@ -298,7 +315,11 @@ void nv_app_state_init(){
         storage.dummy_setting_1 = 0x00;
         storage.dummy_setting_2 = 0x00;
         storage.initialized = 0x01;
-        nvm_write((internalStorage_t*)&N_storage, (void*)&storage, sizeof(internalStorage_t));
+        nvm_write(
+            (internalStorage_t*)&N_storage,
+            (void*)&storage,
+            sizeof(internalStorage_t)
+        );
     }
     dummy_setting_1 = N_storage.dummy_setting_1;
     dummy_setting_2 = N_storage.dummy_setting_2;

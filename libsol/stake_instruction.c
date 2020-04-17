@@ -10,7 +10,10 @@ const Pubkey stake_program_id = {{
     PROGRAM_ID_STAKE
 }};
 
-static int parse_stake_instruction_kind(Parser* parser, enum StakeInstructionKind* kind) {
+static int parse_stake_instruction_kind(
+    Parser* parser,
+    enum StakeInstructionKind* kind
+) {
     uint32_t maybe_kind;
     BAIL_IF(parse_u32(parser, &maybe_kind));
     switch (maybe_kind) {
@@ -42,9 +45,13 @@ static int parse_stake_authorize(
     return 1;
 }
 
-// Returns 0 and populates StakeDelegateInfo if provided a MessageHeader and a delegate
-// instruction, otherwise non-zero.
-static int parse_delegate_stake_instruction(const Instruction* instruction, const MessageHeader* header, StakeDelegateInfo* info) {
+// Returns 0 and populates StakeDelegateInfo if provided a MessageHeader
+// and a delegate instruction, otherwise non-zero.
+static int parse_delegate_stake_instruction(
+    const Instruction* instruction,
+    const MessageHeader* header,
+    StakeDelegateInfo* info
+) {
     BAIL_IF(instruction->accounts_length < 6);
     size_t pubkeys_length = header->pubkeys_header.pubkeys_length;
     uint8_t accounts_index = 0;
@@ -78,7 +85,12 @@ static int parse_delegate_stake_instruction(const Instruction* instruction, cons
     return 0;
 }
 
-static int parse_stake_initialize_instruction(Parser* parser, const Instruction* instruction, const MessageHeader* header, StakeInitializeInfo* info) {
+static int parse_stake_initialize_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    StakeInitializeInfo* info
+) {
     BAIL_IF(instruction->accounts_length < 2);
     size_t accounts_index = 0;
     uint8_t pubkeys_index = instruction->accounts[accounts_index++];
@@ -98,7 +110,12 @@ static int parse_stake_initialize_instruction(Parser* parser, const Instruction*
     return 0;
 }
 
-static int parse_stake_withdraw_instruction(Parser* parser, const Instruction* instruction, const MessageHeader* header, StakeWithdrawInfo* info) {
+static int parse_stake_withdraw_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    StakeWithdrawInfo* info
+) {
     BAIL_IF(instruction->accounts_length < 5);
     size_t accounts_index = 0;
     size_t pubkeys_index = instruction->accounts[accounts_index++];
@@ -229,18 +246,36 @@ static int parse_stake_split_instruction(
     return 0;
 }
 
-int parse_stake_instructions(const Instruction* instruction, const MessageHeader* header, StakeInfo* info) {
+int parse_stake_instructions(
+    const Instruction* instruction,
+    const MessageHeader* header,
+    StakeInfo* info
+) {
     Parser parser = {instruction->data, instruction->data_length};
 
     BAIL_IF(parse_stake_instruction_kind(&parser, &info->kind));
 
     switch (info->kind) {
         case StakeDelegate:
-            return parse_delegate_stake_instruction(instruction, header, &info->delegate_stake);
+            return parse_delegate_stake_instruction(
+                instruction,
+                header,
+                &info->delegate_stake
+            );
         case StakeInitialize:
-            return parse_stake_initialize_instruction(&parser, instruction, header, &info->initialize);
+            return parse_stake_initialize_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->initialize
+            );
         case StakeWithdraw:
-            return parse_stake_withdraw_instruction(&parser, instruction, header, &info->withdraw);
+            return parse_stake_withdraw_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->withdraw
+            );
         case StakeAuthorize:
             return parse_stake_authorize_instruction(
                 &parser,
@@ -275,7 +310,10 @@ int parse_stake_instructions(const Instruction* instruction, const MessageHeader
     return 1;
 }
 
-static int print_delegate_stake_info(const StakeDelegateInfo* info, const MessageHeader* header) {
+static int print_delegate_stake_info(
+    const StakeDelegateInfo* info,
+    const MessageHeader* header
+) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -288,14 +326,22 @@ static int print_delegate_stake_info(const StakeDelegateInfo* info, const Messag
     summary_item_set_pubkey(item, "Vote account", info->vote_pubkey);
 
     item = transaction_summary_fee_payer_item();
-    if (memcmp(&header->pubkeys[0], info->authorized_pubkey, PUBKEY_SIZE) == 0) {
+    if (memcmp(
+            &header->pubkeys[0],
+            info->authorized_pubkey,
+            PUBKEY_SIZE
+        ) == 0
+    ) {
         transaction_summary_set_fee_payer_string("authorizer");
     }
 
     return 0;
 }
 
-static int print_stake_withdraw_info(const StakeWithdrawInfo* info, const MessageHeader* header) {
+static int print_stake_withdraw_info(
+    const StakeWithdrawInfo* info,
+    const MessageHeader* header
+) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -378,7 +424,11 @@ static int print_stake_set_lockup_info(
 
     if (present & StakeLockupHasCustodian) {
         item = transaction_summary_general_item();
-        summary_item_set_pubkey(item, "Lockup custodian", info->lockup.custodian);
+        summary_item_set_pubkey(
+            item,
+            "Lockup custodian",
+            info->lockup.custodian
+        );
     }
 
     item = transaction_summary_general_item();
@@ -387,17 +437,27 @@ static int print_stake_set_lockup_info(
     return 0;
 }
 
-static int print_stake_split_info(const StakeSplitInfo* info, const MessageHeader* header) {
+static int print_stake_split_info(
+    const StakeSplitInfo* info,
+    const MessageHeader* header
+) {
     BAIL_IF(print_stake_split_info1(info, header));
     return print_stake_split_info2(info, header);
 }
 
-int print_stake_info(const StakeInfo* info, const MessageHeader* header) {
+int print_stake_info(
+    const StakeInfo* info,
+    const MessageHeader* header
+) {
     switch (info->kind) {
         case StakeDelegate:
             return print_delegate_stake_info(&info->delegate_stake, header);
         case StakeInitialize:
-            return print_stake_initialize_info("Init. stake acct", &info->initialize, header);
+            return print_stake_initialize_info(
+                "Init. stake acct",
+                &info->initialize,
+                header
+            );
         case StakeWithdraw:
             return print_stake_withdraw_info(&info->withdraw, header);
         case StakeAuthorize:
@@ -438,7 +498,11 @@ int print_stake_initialize_info(
         summary_item_set_pubkey(item, "New stake auth", info->stake_authority);
 
         item = transaction_summary_general_item();
-        summary_item_set_pubkey(item, "New withdraw auth", info->withdraw_authority);
+        summary_item_set_pubkey(
+            item,
+            "New withdraw auth",
+            info->withdraw_authority
+        );
     }
 
     item = transaction_summary_general_item();
@@ -471,7 +535,10 @@ int print_stake_split_info1(
     return 0;
 }
 
-int print_stake_split_info2(const StakeSplitInfo* info, const MessageHeader* header) {
+int print_stake_split_info2(
+    const StakeSplitInfo* info,
+    const MessageHeader* header
+) {
     SummaryItem* item;
 
     item = transaction_summary_general_item();

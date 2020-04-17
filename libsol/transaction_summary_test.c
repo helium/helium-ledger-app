@@ -49,7 +49,9 @@ void test_summary_item_setters() {
     assert(item.kind == SummaryItemSizedString);
     assert_string_equal(item.title, "sizedString");
     assert(item.sized_string.length == sizeof(string_data));
-    assert(strncmp("test", item.sized_string.string, item.sized_string.length) == 0);
+    assert(
+        strncmp("test", item.sized_string.string, item.sized_string.length) == 0
+    );
 }
 
 void test_summary_item_as_unused() {
@@ -170,7 +172,10 @@ void test_transaction_summary_update_display_for_item() {
     memset(&hash, 0, sizeof(Hash));
     summary_item_set_hash(&item, "hash", &hash);
     assert(transaction_summary_update_display_for_item(&item) == 0);
-    assert_transaction_summary_display("hash", "11111111111111111111111111111111");
+    assert_transaction_summary_display(
+        "hash",
+        "11111111111111111111111111111111"
+    );
 
     uint8_t string_data[] = { 0x74, 0x65, 0x73, 0x74 };
     SizedString sized_string = { sizeof(string_data), (char*)string_data };
@@ -218,7 +223,10 @@ void test_transaction_summary_display_item() {
 }
 
 #define zero_kinds_array(kinds) \
-    memset(kinds, 0, MAX_TRANSACTION_SUMMARY_ITEMS * sizeof(enum SummaryItemKind))
+    memset(                     \
+        kinds,                  \
+        0,                      \
+        MAX_TRANSACTION_SUMMARY_ITEMS * sizeof(enum SummaryItemKind))
 
 #define assert_kinds_array(kinds, num_kinds)                            \
     do {                                                                \

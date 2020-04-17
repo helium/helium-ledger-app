@@ -5,7 +5,11 @@
 #include "utils.h"
 #include "menu.h"
 
-void getPublicKey(uint32_t *derivationPath, uint8_t *publicKeyArray, uint8_t pathLength) {
+void getPublicKey(
+    uint32_t *derivationPath,
+    uint8_t *publicKeyArray,
+    uint8_t pathLength
+) {
     cx_ecfp_private_key_t privateKey;
     cx_ecfp_public_key_t publicKey;
 
@@ -22,13 +26,29 @@ void getPublicKey(uint32_t *derivationPath, uint8_t *publicKeyArray, uint8_t pat
 }
 
 uint32_t readUint32BE(uint8_t *buffer) {
-  return (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | (buffer[3]);
+    return (
+        (buffer[0] << 24) | (buffer[1] << 16) |
+        (buffer[2] << 8) | (buffer[3])
+    );
 }
 
-void getPrivateKey(uint32_t *derivationPath, cx_ecfp_private_key_t *privateKey, uint8_t pathLength) {
+void getPrivateKey(
+    uint32_t *derivationPath,
+    cx_ecfp_private_key_t *privateKey,
+    uint8_t pathLength
+) {
     uint8_t privateKeyData[32];
 
-    os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, derivationPath, pathLength, privateKeyData, NULL, NULL, 0);
+    os_perso_derive_node_bip32_seed_key(
+        HDW_ED25519_SLIP10,
+        CX_CURVE_Ed25519,
+        derivationPath,
+        pathLength,
+        privateKeyData,
+        NULL,
+        NULL,
+        0
+    );
     cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, privateKey);
     os_memset(privateKeyData, 0, sizeof(privateKeyData));
 }
@@ -51,7 +71,11 @@ unsigned int ui_prepro(const bagl_element_t *element) {
                 UX_CALLBACK_SET_INTERVAL(2000);
             }
             else {
-                UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7)));
+                UX_CALLBACK_SET_INTERVAL(
+                    MAX(
+                        3000,
+                        1000 + bagl_label_roundtrip_duration_ms(element, 7)
+                ));
             }
         }
     }

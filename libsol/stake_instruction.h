@@ -100,8 +100,15 @@ typedef struct StakeInfo {
     };
 } StakeInfo;
 
-int parse_stake_instructions(const Instruction* instruction, const MessageHeader* header, StakeInfo* info);
-int print_stake_info(const StakeInfo* info, const MessageHeader* header);
+int parse_stake_instructions(
+    const Instruction* instruction,
+    const MessageHeader* header,
+    StakeInfo* info
+);
+int print_stake_info(
+    const StakeInfo* info,
+    const MessageHeader* header
+);
 
 int print_stake_initialize_info(
     const char* primary_title,
