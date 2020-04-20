@@ -1,9 +1,9 @@
 use crate::pubkeybin::PubKeyBin;
+use base64;
 use helium_api::Hnt;
 use helium_proto::BlockchainTxnPaymentV1;
 use prost::Message;
 use sha2::{Digest, Sha256};
-use base64;
 
 pub struct PaymentTxn {
     pub payer: PubKeyBin,

@@ -1,9 +1,10 @@
-use helium_api::{Client, Hnt};
-use ledger::*;
-
-use crate::{payment_txn::PaymentTxn, pubkeybin::PubKeyBin, pubkeybin::B58, Result};
+use crate::{
+    payment_txn::PaymentTxn, pubkeybin::PubKeyBin, pubkeybin::B58, Result, HELIUM_API_BASE_URL,
+};
 use byteorder::{LittleEndian as LE, WriteBytesExt};
+use helium_api::{Client, Hnt};
 use helium_proto::{blockchain_txn::Txn, BlockchainTxnPaymentV1};
+use ledger::*;
 use prost::Message;
 use std::error;
 use std::fmt;
@@ -52,7 +53,7 @@ pub enum PayResponse {
 
 pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     let ledger = LedgerApp::new()?;
-    let client = Client::new_with_base_url("https://api.helium.io/v1/".to_string());
+    let client = Client::new_with_base_url(HELIUM_API_BASE_URL.to_string());
     let fee: u64 = 0;
     let mut data: Vec<u8> = Vec::new();
 
