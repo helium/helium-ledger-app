@@ -93,7 +93,7 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
         return Ok(PayResponse::UserDeniedTransaction);
     }
 
-    let txn = BlockchainTxnPaymentV1::decode(exchange_pay_tx_result.data.clone().as_slice())?;
+    let txn = BlockchainTxnPaymentV1::decode(exchange_pay_tx_result.data.as_slice())?;
 
     // submit the signed tansaction to the API
     let _response = client.submit_txn(Txn::Payment(txn.clone()))?;
