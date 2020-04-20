@@ -12,6 +12,7 @@ helium-proto = { git = "https://github.com/helium/proto" }
 prettytable-rs = "0.6"
 ledger = { git = "https://github.com/helium/ledger-rs" }
 bs58 = {version = "0.3.0", features=["check"]}
+base64 = "0.12"
 rust_decimal = "1.0.3"
 prost = "0.6"
 sha2 = "0.8.0"

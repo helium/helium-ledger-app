@@ -100,7 +100,7 @@ use helium_api::Client;
 use prettytable::{format, Table};
 
 fn print_balance(pubkey: &PubKeyBin) -> Result {
-    let client = Client::new_with_base_url("https://api.helium.wtf/v1/".to_string());
+    let client = Client::new_with_base_url("https://api.helium.io/v1/".to_string());
     let address = pubkey.to_b58()?;
     let result = client.get_account(&address);
 

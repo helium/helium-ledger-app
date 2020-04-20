@@ -52,14 +52,14 @@ pub enum PayResponse {
 
 pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     let ledger = LedgerApp::new()?;
-    let client = Client::new_with_base_url("https://api.helium.wtf/v1/".to_string());
+    let client = Client::new_with_base_url("https://api.helium.io/v1/".to_string());
     let fee: u64 = 0;
     let mut data: Vec<u8> = Vec::new();
 
     // get nonce
     let keypair = exchange_get_pubkey(&ledger, PubkeyDisplay::Off)?;
     let account = client.get_account(&keypair.to_b58()?)?;
-    let nonce: u64 = account.nonce + 1;
+    let nonce: u64 = account.speculative_nonce + 1;
 
     if account.balance < amount.to_bones() {
         return Ok(PayResponse::InsufficientBalance(
@@ -94,7 +94,9 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
 
     let txn = BlockchainTxnPaymentV1::decode(exchange_pay_tx_result.data.clone().as_slice())?;
 
-    let _hash = client.submit_txn(Txn::Payment(txn.clone()))?;
+    // submit the signed tansaction to the API
+    let _response = client.submit_txn(Txn::Payment(txn.clone()))?;
+
     Ok(PayResponse::Txn(txn.into()))
 }
 

@@ -3,6 +3,7 @@ use helium_api::Hnt;
 use helium_proto::BlockchainTxnPaymentV1;
 use prost::Message;
 use sha2::{Digest, Sha256};
+use base64;
 
 pub struct PaymentTxn {
     pub payer: PubKeyBin,
@@ -14,11 +15,11 @@ pub struct PaymentTxn {
     pub hash: Hash,
 }
 
-pub struct Hash([u8; 33]);
+pub struct Hash([u8; 32]);
 
 impl ToString for Hash {
     fn to_string(&self) -> String {
-        bs58::encode(self.0.as_ref()).with_check().into_string()
+        base64::encode_config(self.0.as_ref(), base64::URL_SAFE)
     }
 }
 
@@ -41,8 +42,8 @@ impl From<BlockchainTxnPaymentV1> for PaymentTxn {
         hasher.input(buf.as_slice());
         let result = hasher.result();
 
-        let mut hash = [0u8; 33];
-        hash[1..].copy_from_slice(&result);
+        let mut hash = [0u8; 32];
+        hash.copy_from_slice(&result);
 
         PaymentTxn {
             payer,
