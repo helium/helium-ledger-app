@@ -58,7 +58,6 @@ matrix:
     script: 
       - pushd companion-app
       - cargo fmt -- --check
-      - cargo clippy -- --deny=clippy::all
       - cargo build --release --target $TARGET --locked
       - popd
     <<: *DEPLOY_TO_GITHUB
