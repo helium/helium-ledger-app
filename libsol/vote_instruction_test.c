@@ -31,7 +31,7 @@ void test_parse_vote_instruction_kind() {
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_vote_instruction_kind(&parser, &kind) == 0);
-    assert(kind == VoteUpdateNode);
+    assert(kind == VoteUpdateValidatorId);
 
     // Fail the first unused enum value to be sure this test gets updated
     buf[0] = 5;

@@ -9,11 +9,11 @@ enum VoteInstructionKind {
     VoteAuthorize,
     VoteVote,
     VoteWithdraw,
-    VoteUpdateNode,
+    VoteUpdateValidatorId,
 };
 
 typedef struct VoteInitData {
-    const Pubkey* node;
+    const Pubkey* validator_id;
     const Pubkey* vote_authority;
     const Pubkey* withdraw_authority;
     uint64_t commission;
@@ -43,11 +43,11 @@ typedef struct VoteAuthorizeInfo {
     enum VoteAuthorize authorize;
 } VoteAuthorizeInfo;
 
-typedef struct VoteUpdateNodeInfo {
+typedef struct VoteUpdateValidatorIdInfo {
     const Pubkey* account;
     const Pubkey* authority;
-    const Pubkey* node_identity;
-} VoteUpdateNodeInfo;
+    const Pubkey* new_validator_id;
+} VoteUpdateValidatorIdInfo;
 
 typedef struct VoteInfo {
     enum VoteInstructionKind kind;
@@ -55,7 +55,7 @@ typedef struct VoteInfo {
         VoteInitializeInfo initialize;
         VoteWithdrawInfo withdraw;
         VoteAuthorizeInfo authorize;
-        VoteUpdateNodeInfo update_node;
+        VoteUpdateValidatorIdInfo update_validator_id;
     };
 } VoteInfo;
 

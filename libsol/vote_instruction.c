@@ -16,7 +16,7 @@ static int parse_vote_instruction_kind(
         case VoteAuthorize:
         case VoteVote:
         case VoteWithdraw:
-        case VoteUpdateNode:
+        case VoteUpdateValidatorId:
             *kind = (enum VoteInstructionKind) maybe_kind;
             return 0;
     }
@@ -52,7 +52,7 @@ static int parse_vote_initialize_instruction(
     accounts_index++; // Skip rent sysvar
     accounts_index++; // Skip clock sysvar
 
-    BAIL_IF(parse_pubkey(parser, &info->vote_init.node));
+    BAIL_IF(parse_pubkey(parser, &info->vote_init.validator_id));
     BAIL_IF(parse_pubkey(parser, &info->vote_init.vote_authority));
     BAIL_IF(parse_pubkey(parser, &info->vote_init.withdraw_authority));
     uint8_t commission;
@@ -106,11 +106,11 @@ static int parse_vote_authorize_instruction(
     return 0;
 }
 
-static int parse_vote_update_node_instruction(
+static int parse_vote_update_validator_id_instruction(
     Parser* parser,
     const Instruction* instruction,
     const MessageHeader* header,
-    VoteUpdateNodeInfo* info
+    VoteUpdateValidatorIdInfo* info
 ) {
     BAIL_IF(instruction->accounts_length < 3);
     size_t accounts_index = 0;
@@ -121,13 +121,13 @@ static int parse_vote_update_node_instruction(
         // 1.0.8+, 1.1.3+ format
         // https://github.com/solana-labs/solana/pull/8947
         pubkeys_index = instruction->accounts[accounts_index++];
-        info->node_identity = &header->pubkeys[pubkeys_index];
+        info->new_validator_id = &header->pubkeys[pubkeys_index];
     } else if (
         instruction->data_length == (sizeof(uint32_t) + sizeof(Pubkey))
     ) {
-        // Before 1.0.8 and 1.1.3, the node identity was passed as an
-        // instruction arg
-        BAIL_IF(parse_pubkey(parser, &info->node_identity));
+        // Before 1.0.8 and 1.1.3, the validaotr identity was passed
+        // as an instruction arg
+        BAIL_IF(parse_pubkey(parser, &info->new_validator_id));
         accounts_index++; // Skip clock sysvar
     } else {
         return 1;
@@ -170,12 +170,12 @@ int parse_vote_instructions(
                 header,
                 &info->authorize
             );
-        case VoteUpdateNode:
-            return parse_vote_update_node_instruction(
+        case VoteUpdateValidatorId:
+            return parse_vote_update_validator_id_instruction(
                 &parser,
                 instruction,
                 header,
-                &info->update_node
+                &info->update_validator_id
             );
         case VoteVote:
             break;
@@ -233,17 +233,17 @@ static int print_vote_authorize_info(
     return 0;
 }
 
-static int print_vote_update_node_info(
-    const VoteUpdateNodeInfo* info,
+static int print_vote_update_validator_id_info(
+    const VoteUpdateValidatorIdInfo* info,
     const MessageHeader* header
 ) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Update vote node", info->account);
+    summary_item_set_pubkey(item, "Update validator", info->account);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "New node ID", info->node_identity);
+    summary_item_set_pubkey(item, "New validator ID", info->new_validator_id);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Authorized by", info->authority);
@@ -269,9 +269,9 @@ int print_vote_info(const VoteInfo* info, const MessageHeader* header) {
                 &info->authorize,
                 header
             );
-        case VoteUpdateNode:
-            return print_vote_update_node_info(
-                &info->update_node,
+        case VoteUpdateValidatorId:
+            return print_vote_update_validator_id_info(
+                &info->update_validator_id,
                 header
             );
         case VoteVote:
@@ -293,7 +293,7 @@ int print_vote_initialize_info(
     }
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Node", info->vote_init.node);
+    summary_item_set_pubkey(item, "Validator ID", info->vote_init.validator_id);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(
