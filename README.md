@@ -82,6 +82,6 @@ cargo run
 
 ## Documentation
 
-This follows the specification available in the [`api.md`](api.md).
+This follows the specification available in the [`api.md`](doc/api.md).
 In this project we'll create a Linux virtual machine capable of cross-compiling the
 Ledger Wallet boilerplate application and then loading it onto Ledger Nano S.
