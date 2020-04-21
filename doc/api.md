@@ -23,7 +23,7 @@ _This command returns specific application configuration_
 
 | *CLA*         | *INS*         | *P1*  | *P2*          | *Lc*          | *Le*   |
 | ------------- |:-------------:| -----:| ------------- |:-------------:| -----: |
-| E0            | 01            | 00    | 00            | 00            | 04     |
+| E0            | 04            | 00    | 00            | 00            | 04     |
 
 ##### Input data
 
@@ -51,7 +51,7 @@ _This command returns a Solana pubkey for the given BIP 32 path_
 
 | *CLA*         | *INS*         | *P1*  | *P2*          | *Lc*          | *Le*   |
 | ------------- |:-------------:| -----:| ------------- |:-------------:| -----: |
-| E0            | 02            | 00    | 00            | variable          | variable     |
+| E0            | 05            | 00    | 00            | variable          | variable     |
 
 
 
@@ -73,23 +73,18 @@ _This command returns a Solana pubkey for the given BIP 32 path_
 | Pubkey                                                                            | 32
 
 
-### SIGN SOLANA TRANSFER
+### SIGN SOLANA TRANSACTION
 
 #### Description
 
-_This command signs a Solana System transfer after having the user validate the following parameters:_
-
-  * Amount
-  * Sender pubkey
-  * Recipient pubkey
-  * Fee payer
+_This command signs a Solana Transaction after having the user validate the transaction-specific parameters:_
 
 ##### Command
 
 
 | *CLA* | *INS*  | *P1*               | *P2*       | *Lc*     | *Le*
 | ------------- |:-------------:| -----:| ------------- |:-------------:| -----: |
-|   E0  |   03   |  01                |   00       | variable | variable
+|   E0  |   06   |  01                |   00       | variable | variable
 
 
 ##### Input data
@@ -97,7 +92,8 @@ _This command signs a Solana System transfer after having the user validate the 
 
 | *Description*                                                                     | *Length*
 | ------------- |:-------------:|
-| Number of BIP 32 derivations to perform (3 or 4)                                  | 1
+| Number of signers (derivation paths) (always 1)                                   | 1
+| Number of BIP 32 derivations to perform (2, 3 or 4)                               | 1
 | First derivation index (big endian)                                               | 4
 | ...                                                                               | 4
 | Last derivation index (big endian)                                                | 4
@@ -146,7 +142,7 @@ APDU Command payloads are encoded as follows :
 | APDU INS                                                                          | 1
 | APDU P1                                                                           | 1
 | APDU P2                                                                           | 1
-| APDU data length                                                                  | 2
+| APDU data length                                                                  | 1
 | Optional APDU data                                                                | var
 
 APDU payload is encoded according to the APDU case
@@ -159,6 +155,13 @@ APDU payload is encoded according to the APDU case
 |   3          |  !0  |  0   | Output Data present, no Input Data - L is set to Le
 |   4          |  !0  |  !0  | Both Input and Output Data are present - L is set to Lc
 
+#### Deprecation notice
+
+The `ADPU data length` field was formerly serialized as a 16bit unsigned big endian integer. As of version 0.2.0, this has been changed to an 8bit unsigned integer to improve compatibility with client libraries. In doing so, the following instructions have been deprecated.
+
+- 0x01 - GET_APP_CONFIGURATION
+- 0x02 - GET_PUBKEY
+- 0x03 - SIGN_MESSAGE
 
 ### APDU Response payload encoding
 
