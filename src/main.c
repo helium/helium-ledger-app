@@ -72,8 +72,8 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
             switch (G_io_apdu_buffer[OFFSET_INS]) {
                 case INS_GET_APP_CONFIGURATION:
                 case INS_GET_APP_CONFIGURATION16:
-                    G_io_apdu_buffer[0] = (N_storage.dummy_setting_1 ? 0x01 : 0x00);
-                    G_io_apdu_buffer[1] = (N_storage.dummy_setting_2 ? 0x01 : 0x00);
+                    G_io_apdu_buffer[0] = N_storage.settings.allow_blind_sign;
+                    G_io_apdu_buffer[1] = N_storage.settings.pubkey_display;
                     G_io_apdu_buffer[2] = LEDGER_MAJOR_VERSION;
                     G_io_apdu_buffer[3] = LEDGER_MINOR_VERSION;
                     G_io_apdu_buffer[4] = LEDGER_PATCH_VERSION;
@@ -312,8 +312,8 @@ void app_exit(void) {
 void nv_app_state_init(){
     if (N_storage.initialized != 0x01) {
         internalStorage_t storage;
-        storage.dummy_setting_1 = 0x00;
-        storage.dummy_setting_2 = 0x00;
+        storage.settings.allow_blind_sign = BlindSignDisabled;
+        storage.settings.pubkey_display = PubkeyDisplayLong;
         storage.initialized = 0x01;
         nvm_write(
             (internalStorage_t*)&N_storage,
@@ -321,8 +321,6 @@ void nv_app_state_init(){
             sizeof(internalStorage_t)
         );
     }
-    dummy_setting_1 = N_storage.dummy_setting_1;
-    dummy_setting_2 = N_storage.dummy_setting_2;
 }
 
 __attribute__((section(".boot"))) int main(void) {

@@ -160,7 +160,8 @@ int transaction_summary_set_fee_payer_string(const char* string) {
 }
 
 static int transaction_summary_update_display_for_item(
-    const SummaryItem* item
+    const SummaryItem* item,
+    enum DisplayFlags flags
 ) {
     switch (item->kind) {
         case SummaryItemNone:
@@ -198,14 +199,23 @@ static int transaction_summary_update_display_for_item(
                 tmp_buf,
                 sizeof(tmp_buf)
             ));
-            BAIL_IF(
-                print_summary(
-                    tmp_buf,
-                    G_transaction_summary_text,
-                    BASE58_PUBKEY_SHORT,
-                    SUMMARY_LENGTH,
-                    SUMMARY_LENGTH
-            ));
+            if (flags & DisplayFlagLongPubkeys) {
+                BAIL_IF(
+                    print_string(
+                        tmp_buf,
+                        G_transaction_summary_text,
+                        TEXT_BUFFER_LENGTH
+                ));
+            } else {
+                BAIL_IF(
+                    print_summary(
+                        tmp_buf,
+                        G_transaction_summary_text,
+                        BASE58_PUBKEY_SHORT,
+                        SUMMARY_LENGTH,
+                        SUMMARY_LENGTH
+                ));
+            }
             break;
         }
         case SummaryItemHash:
@@ -236,7 +246,7 @@ static int transaction_summary_update_display_for_item(
     return 0;
 }
 
-int transaction_summary_display_item(size_t item_index) {
+int transaction_summary_display_item(size_t item_index, enum DisplayFlags flags) {
     struct TransactionSummary* summary = &G_transaction_summary;
     SummaryItem* item = NULL;
     SummaryItem* maybe_item = &summary->primary;
@@ -284,7 +294,7 @@ int transaction_summary_display_item(size_t item_index) {
         return 1;
     }
 
-    return transaction_summary_update_display_for_item(item);
+    return transaction_summary_update_display_for_item(item, flags);
 }
 
 #define SET_IF_USED(item, item_kinds, index)    \

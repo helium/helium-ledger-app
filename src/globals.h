@@ -28,9 +28,23 @@ extern ux_state_t ux;
 extern unsigned int ux_step;
 extern unsigned int ux_step_count;
 
+enum BlindSign {
+    BlindSignDisabled = 0,
+    BlindSignEnabled = 1,
+};
+
+enum PubkeyDisplay {
+    PubkeyDisplayLong = 0,
+    PubkeyDisplayShort = 1,
+};
+
+typedef struct AppSettings {
+    uint8_t allow_blind_sign;
+    uint8_t pubkey_display;
+} AppSettings;
+
 typedef struct internalStorage_t {
-    unsigned char dummy_setting_1;
-    unsigned char dummy_setting_2;
+    AppSettings settings;
     uint8_t initialized;
 } internalStorage_t;
 

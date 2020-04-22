@@ -46,7 +46,14 @@ extern char G_transaction_summary_title[TITLE_SIZE];
 extern char G_transaction_summary_text[TEXT_BUFFER_LENGTH];
 
 void transaction_summary_reset();
-int transaction_summary_display_item(size_t item_index);
+enum DisplayFlags {
+    DisplayFlagNone         = 0,
+    DisplayFlagLongPubkeys  = 1 << 0,
+    DisplayFlagAll          = (
+        DisplayFlagLongPubkeys
+    ),
+};
+int transaction_summary_display_item(size_t item_index, enum DisplayFlags flags);
 int transaction_summary_finalize(
     enum SummaryItemKind* item_kinds,
     size_t* item_kinds_len

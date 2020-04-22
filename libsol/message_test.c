@@ -136,7 +136,7 @@ static void process_message_body_and_sanity_check(const uint8_t* message, size_t
     assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
     assert(num_kinds == expected_fields);
     for (size_t i = 0; i < num_kinds; i++) {
-        assert(transaction_summary_display_item(i) == 0);
+        assert(transaction_summary_display_item(i, DisplayFlagNone) == 0);
     }
 }
 
@@ -639,7 +639,7 @@ void test_process_message_body_vote_update_node_v1_0_7() {
     char expected[SUMMARY_LENGTH + 2 + SUMMARY_LENGTH + 1];
     print_summary(bs58_expected, expected, sizeof(expected), SUMMARY_LENGTH, SUMMARY_LENGTH);
 
-    transaction_summary_display_item(1); // node id
+    transaction_summary_display_item(1, DisplayFlagNone); // node id
     assert_string_equal(G_transaction_summary_text, expected);
 }
 
@@ -672,7 +672,7 @@ void test_process_message_body_vote_update_node_v1_0_8() {
     char expected[SUMMARY_LENGTH + 2 + SUMMARY_LENGTH + 1];
     print_summary(bs58_expected, expected, sizeof(expected), SUMMARY_LENGTH, SUMMARY_LENGTH);
 
-    transaction_summary_display_item(1); // node id
+    transaction_summary_display_item(1, DisplayFlagNone); // node id
     assert_string_equal(G_transaction_summary_text, expected);
 }
 

@@ -273,11 +273,11 @@ void test_process_system_transfer() {
     assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
     assert(num_kinds == 4);
 
-    transaction_summary_display_item(0);
+    transaction_summary_display_item(0, DisplayFlagNone);
     assert_string_equal(G_transaction_summary_text, "0.000000042 SOL");
 
     // Fee-payer is sender
-    transaction_summary_display_item(3);
+    transaction_summary_display_item(3, DisplayFlagNone);
     assert_string_equal(G_transaction_summary_text, "sender");
 }
 
