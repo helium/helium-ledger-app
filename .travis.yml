@@ -32,7 +32,14 @@ matrix:
     before_script:
       - sudo apt-get install libudev-dev
       - rustup target add $TARGET
-    script: (cd companion-app && cargo build --release --target $TARGET --locked)
+      - rustup component add rustfmt
+      - rustup component add clippy
+    script: 
+      - pushd companion-app
+      - cargo fmt -- --check
+      - cargo clippy -- --deny=clippy::all
+      - cargo build --release --target $TARGET --locked
+      - popd
     addons:
       apt:
         packages:
@@ -44,13 +51,28 @@ matrix:
     env: MACOSX_DEPLOYMENT_TARGET=10.7 TARGET=x86_64-apple-darwin
     os: osx
     rust: stable
-    script: (cd companion-app && cargo build --release --target $TARGET --locked)
-    install: true
+    before_script:
+      - rustup target add $TARGET
+      - rustup component add rustfmt
+      - rustup component add clippy
+    script: 
+      - pushd companion-app
+      - cargo fmt -- --check
+      - cargo clippy -- --deny=clippy::all
+      - cargo build --release --target $TARGET --locked
+      - popd
     <<: *DEPLOY_TO_GITHUB
 
   - name: Windows Binary
     env: TARGET=x86_64-pc-windows-gnu EXE=.exe
     rust: stable
-    before_script: rustup target add $TARGET
-    script: (cd companion-app && cargo build --release --target $TARGET --locked)
+    before_script:
+      - rustup target add $TARGET
+      - rustup component add rustfmt
+      - rustup component add clippy
+    script:
+      - pushd companion-app
+      - cargo fmt -- --check
+      - cargo build --release --target $TARGET --locked
+      - popd
     <<: *DEPLOY_TO_GITHUB

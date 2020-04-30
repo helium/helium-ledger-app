@@ -1,12 +1,10 @@
 #[macro_use]
 extern crate prettytable;
-
-mod hnt;
 mod ledger_api;
-mod pubkeybin;
 mod payment_txn;
+mod pubkeybin;
 
-use hnt::Hnt;
+use helium_api::Hnt;
 use ledger_api::*;
 use pubkeybin::{PubKeyBin, B58};
 use qr2term::print_qr;
@@ -14,16 +12,14 @@ use std::process;
 use structopt::StructOpt;
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
+static HELIUM_API_BASE_URL: &str = "https://api.helium.io/v1/";
+
 #[derive(StructOpt, Debug)]
 enum Units {
     /// Pay using Bones as units (must be integer)
-    Bones {
-        bones: u64
-    },
+    Bones { bones: u64 },
     /// Pay using HNT as units (up to 8 decimals are tolerated)
-    Hnt {
-        hnt: Hnt
-    }
+    Hnt { hnt: Hnt },
 }
 
 /// Interact with Ledger Nano S for hardware wallet management
@@ -42,11 +38,10 @@ enum Cli {
         /// Address of the payee
         address: String,
         /// Select HNT or Bones
-        #[structopt(subcommand)] 
+        #[structopt(subcommand)]
         units: Units,
-    }
+    },
 }
-
 fn main() {
     println!("Communicating with Ledger - follow prompts on screen");
 
@@ -70,12 +65,11 @@ fn run(cli: Cli) -> Result {
             Ok(())
         }
         Cli::Pay { address, units } => {
-
             let amount = match units {
-                Units::Hnt { hnt }  => hnt,
-                Units::Bones { bones }  => Hnt::from_bones(bones),
+                Units::Hnt { hnt } => hnt,
+                Units::Bones { bones } => Hnt::from_bones(bones),
             };
-            
+
             println!("Creating transaction for:");
             println!("      {:0.*} HNT", 8, amount.get_decimal());
             println!("        =");
@@ -103,7 +97,7 @@ use helium_api::Client;
 use prettytable::{format, Table};
 
 fn print_balance(pubkey: &PubKeyBin) -> Result {
-    let client = Client::new();
+    let client = Client::new_with_base_url(HELIUM_API_BASE_URL.to_string());
     let address = pubkey.to_b58()?;
     let result = client.get_account(&address);
 
@@ -121,7 +115,7 @@ fn print_balance(pubkey: &PubKeyBin) -> Result {
             address,
             Hnt::from_bones(account.balance),
             account.dc_balance,
-            account.security_balance
+            account.sec_balance
         ]),
         Err(err) => table.add_row(row![address, H3 -> err.to_string()]),
     };
@@ -135,11 +129,6 @@ use payment_txn::PaymentTxn;
 pub fn print_txn(txn: &PaymentTxn) {
     let mut table = Table::new();
     table.add_row(row!["Payee", "Amount HNT", "Nonce", "Hash"]);
-    table.add_row(row![
-        txn.payee,
-        txn.amount,
-        txn.nonce,
-        txn.hash
-    ]);
+    table.add_row(row![txn.payee, txn.amount, txn.nonce, txn.hash]);
     table.printstd();
 }

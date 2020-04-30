@@ -1,9 +1,10 @@
-use helium_api::Client;
-use ledger::*;
-
-use crate::{hnt::Hnt, pubkeybin::PubKeyBin, pubkeybin::B58, Result, payment_txn::PaymentTxn};
+use crate::{
+    payment_txn::PaymentTxn, pubkeybin::PubKeyBin, pubkeybin::B58, Result, HELIUM_API_BASE_URL,
+};
 use byteorder::{LittleEndian as LE, WriteBytesExt};
-use helium_proto::txn::{TxnPaymentV1, Wrapper};
+use helium_api::{Client, Hnt};
+use helium_proto::{blockchain_txn::Txn, BlockchainTxnPaymentV1};
+use ledger::*;
 use prost::Message;
 use std::error;
 use std::fmt;
@@ -52,14 +53,14 @@ pub enum PayResponse {
 
 pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     let ledger = LedgerApp::new()?;
-    let client = Client::new();
+    let client = Client::new_with_base_url(HELIUM_API_BASE_URL.to_string());
     let fee: u64 = 0;
     let mut data: Vec<u8> = Vec::new();
 
     // get nonce
     let keypair = exchange_get_pubkey(&ledger, PubkeyDisplay::Off)?;
     let account = client.get_account(&keypair.to_b58()?)?;
-    let nonce: u64 = account.nonce + 1;
+    let nonce: u64 = account.speculative_nonce + 1;
 
     if account.balance < amount.to_bones() {
         return Ok(PayResponse::InsufficientBalance(
@@ -92,9 +93,11 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
         return Ok(PayResponse::UserDeniedTransaction);
     }
 
-    let txn = TxnPaymentV1::decode(exchange_pay_tx_result.data.clone())?;
+    let txn = BlockchainTxnPaymentV1::decode(exchange_pay_tx_result.data.as_slice())?;
 
-    client.submit_txn(Wrapper::Payment(txn.clone()))?;
+    // submit the signed tansaction to the API
+    let _response = client.submit_txn(Txn::Payment(txn.clone()))?;
+
     Ok(PayResponse::Txn(txn.into()))
 }
 

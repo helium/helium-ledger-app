@@ -1,6 +1,7 @@
-use crate::hnt::Hnt;
 use crate::pubkeybin::PubKeyBin;
-use helium_proto::txn::TxnPaymentV1;
+use base64;
+use helium_api::Hnt;
+use helium_proto::BlockchainTxnPaymentV1;
 use prost::Message;
 use sha2::{Digest, Sha256};
 
@@ -14,16 +15,16 @@ pub struct PaymentTxn {
     pub hash: Hash,
 }
 
-pub struct Hash([u8; 33]);
+pub struct Hash([u8; 32]);
 
 impl ToString for Hash {
     fn to_string(&self) -> String {
-        bs58::encode(self.0.as_ref()).with_check().into_string()
+        base64::encode_config(self.0.as_ref(), base64::URL_SAFE)
     }
 }
 
-impl From<TxnPaymentV1> for PaymentTxn {
-    fn from(txn: TxnPaymentV1) -> Self {
+impl From<BlockchainTxnPaymentV1> for PaymentTxn {
+    fn from(txn: BlockchainTxnPaymentV1) -> Self {
         let payer = PubKeyBin::copy_from_slice(&txn.payer.as_slice());
         let payee = PubKeyBin::copy_from_slice(&txn.payee.as_slice());
         let mut signature: [u8; 64] = [0; 64];
@@ -41,8 +42,8 @@ impl From<TxnPaymentV1> for PaymentTxn {
         hasher.input(buf.as_slice());
         let result = hasher.result();
 
-        let mut hash = [0u8; 33];
-        hash[1..].copy_from_slice(&result);
+        let mut hash = [0u8; 32];
+        hash.copy_from_slice(&result);
 
         PaymentTxn {
             payer,
