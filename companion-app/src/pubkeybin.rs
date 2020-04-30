@@ -1,4 +1,3 @@
-use bs58;
 use io::{Read, Write};
 use std::io;
 
