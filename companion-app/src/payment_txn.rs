@@ -1,5 +1,4 @@
 use crate::pubkeybin::PubKeyBin;
-use base64;
 use helium_api::Hnt;
 use helium_proto::BlockchainTxnPaymentV1;
 use prost::Message;
