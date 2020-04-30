@@ -214,8 +214,6 @@ static int parse_stake_set_lockup_instruction(
     size_t pubkeys_index = instruction->accounts[accounts_index++];
     info->account = &header->pubkeys[pubkeys_index];
 
-    accounts_index++; // Skip clock sysvar
-
     pubkeys_index = instruction->accounts[accounts_index++];
     info->custodian = &header->pubkeys[pubkeys_index];
 
