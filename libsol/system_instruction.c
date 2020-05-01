@@ -1,4 +1,5 @@
 #include "common_byte_strings.h"
+#include "instruction.h"
 #include "sol/parser.h"
 #include "sol/transaction_summary.h"
 #include "system_instruction.h"
@@ -41,17 +42,13 @@ static int parse_system_transfer_instruction(
     const MessageHeader* header,
     SystemTransferInfo* info
 ) {
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->from));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->to));
+
     BAIL_IF(parse_u64(parser, &info->lamports));
-    size_t pubkeys_length = header->pubkeys_header.pubkeys_length;
-
-    BAIL_IF(instruction->accounts_length < 2);
-    uint8_t from_index = instruction->accounts[0];
-    BAIL_IF(from_index >= pubkeys_length);
-    info->from = &header->pubkeys[from_index];
-
-    uint8_t to_index = instruction->accounts[1];
-    BAIL_IF(to_index >= pubkeys_length);
-    info->to = &header->pubkeys[to_index];
 
     return 0;
 }
@@ -62,12 +59,11 @@ static int parse_system_create_account_instruction(
     const MessageHeader* header,
     SystemCreateAccountInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 2);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    info->from = &header->pubkeys[pubkeys_index++];
-    info->to = &header->pubkeys[pubkeys_index++];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->from));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->to));
 
     BAIL_IF(parse_u64(parser, &info->lamports));
 
@@ -80,12 +76,11 @@ static int parse_system_create_account_with_seed_instruction(
     const MessageHeader* header,
     SystemCreateAccountWithSeedInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 2);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    info->from = &header->pubkeys[pubkeys_index++];
-    info->to = &header->pubkeys[pubkeys_index++];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->from));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->to));
 
     BAIL_IF(parse_pubkey(parser, &info->base));
     BAIL_IF(parse_sized_string(parser, &info->seed));
@@ -100,15 +95,13 @@ static int parse_system_advance_nonce_account_instruction(
     const MessageHeader* header,
     SystemAdvanceNonceInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 3);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    accounts_index++; // Skip recent blockhashes sysvar
-
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->authority = &header->pubkeys[pubkeys_index];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    // Skip recent blockhashes sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
 
     return 0;
 }
@@ -119,13 +112,14 @@ static int parse_system_initialize_nonce_account_instruction(
     const MessageHeader* header,
     SystemInitializeNonceInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 3);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    accounts_index++; // Skip recent blockhashes sysvar
-    accounts_index++; // Skip rent blockhashes sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    // Skip recent blockhashes sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    // Skip rent blockhashes sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
 
     BAIL_IF(parse_pubkey(parser, &info->authority));
 
@@ -138,19 +132,16 @@ static int parse_system_withdraw_nonce_account_instruction(
     const MessageHeader* header,
     SystemWithdrawNonceInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 5);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->to = &header->pubkeys[pubkeys_index];
-
-    accounts_index++; // Skip recent blockhashes sysvar
-    accounts_index++; // Skip rent sysvar
-
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->authority = &header->pubkeys[pubkeys_index];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->to));
+    // Skip recent blockhashes sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    // Skip rent sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
 
     BAIL_IF(parse_u64(parser, &info->lamports));
 
@@ -163,13 +154,11 @@ static int parse_system_authorize_nonce_account_instruction(
     const MessageHeader* header,
     SystemAuthorizeNonceInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 2);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->authority = &header->pubkeys[pubkeys_index];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
 
     BAIL_IF(parse_pubkey(parser, &info->new_authority));
 
@@ -182,10 +171,10 @@ static int parse_system_allocate_instruction(
     const MessageHeader* header,
     SystemAllocateInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 1);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
 
     BAIL_IF(parse_u64(parser, &info->space));
 
@@ -198,10 +187,10 @@ static int parse_system_assign_instruction(
     const MessageHeader* header,
     SystemAssignInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 1);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
 
     BAIL_IF(parse_pubkey(parser, &info->program_id));
 
@@ -214,12 +203,12 @@ static int parse_system_allocate_with_seed_instruction(
     const MessageHeader* header,
     SystemAllocateWithSeedInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 2);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    accounts_index++; // Skip base, we have to parse it out of the ix anyway
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    // Skip base, we have to parse it out of the ix anyway
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
 
     BAIL_IF(parse_pubkey(parser, &info->base));
     BAIL_IF(parse_sized_string(parser, &info->seed));

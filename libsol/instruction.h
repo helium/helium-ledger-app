@@ -54,3 +54,22 @@ bool instruction_infos_match_briefs(
     const InstructionBrief* briefs,
     size_t len
 );
+
+
+typedef struct InstructionAccountsIterator {
+    const Pubkey* message_header_pubkeys;
+    uint8_t instruction_accounts_length;
+    const uint8_t* instruction_accounts;
+    size_t current_instruction_account;
+} InstructionAccountsIterator;
+
+void instruction_accounts_iterator_init(
+    InstructionAccountsIterator* it,
+    const MessageHeader* header,
+    const Instruction* instruction
+);
+
+int instruction_accounts_iterator_next(
+    InstructionAccountsIterator* it,
+    const Pubkey** next_account
+);

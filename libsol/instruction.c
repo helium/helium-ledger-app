@@ -63,3 +63,29 @@ bool instruction_infos_match_briefs(
     }
     return (i == len);
 }
+
+void instruction_accounts_iterator_init(
+    InstructionAccountsIterator* it,
+    const MessageHeader* header,
+    const Instruction* instruction
+) {
+    it->message_header_pubkeys = header->pubkeys;
+    it->instruction_accounts_length = instruction->accounts_length;
+    it->instruction_accounts = instruction->accounts;
+    it->current_instruction_account = 0;
+}
+
+int instruction_accounts_iterator_next(
+    InstructionAccountsIterator* it,
+    const Pubkey** next_account
+) {
+    if (it->current_instruction_account < it->instruction_accounts_length) {
+        size_t pubkeys_index =
+            it->instruction_accounts[it->current_instruction_account++];
+        if (next_account) {
+            *next_account = &it->message_header_pubkeys[pubkeys_index];
+        }
+        return 0;
+    }
+    return 1;
+}

@@ -1,3 +1,4 @@
+#include "common_byte_strings.h"
 #include "instruction.h"
 #include "sol/parser.h"
 #include "stake_instruction.h"
@@ -119,6 +120,45 @@ void test_instruction_infos_match_briefs() {
     assert(!instruction_infos_match_briefs(infos, bad_briefs, infos_len));
 }
 
+void test_instruction_accounts_iterator_next() {
+    uint8_t instruction_accounts[] = {0, 1, 2};
+    Instruction instruction = {
+        2,
+        instruction_accounts,
+        ARRAY_LEN(instruction_accounts),
+        NULL,
+        0,
+    };
+    Pubkey header_pubkeys[] = {
+        {{ BYTES32_BS58_2 }},
+        {{ BYTES32_BS58_3 }},
+        {{ BYTES32_BS58_4 }},
+        {{ BYTES32_BS58_5 }},
+    };
+    MessageHeader header = {
+      {0, 0, 0, ARRAY_LEN(header_pubkeys)},
+      header_pubkeys,
+      NULL,
+      1,
+    };
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, &header, &instruction);
+    const Pubkey* pubkey;
+
+    Pubkey expected1 = {{ BYTES32_BS58_2 }};
+    assert(instruction_accounts_iterator_next(&it, &pubkey) == 0);
+    assert(memcmp(pubkey, &expected1, PUBKEY_SIZE) == 0);
+
+    // Test skipping a pubkey
+    assert(instruction_accounts_iterator_next(&it, NULL) == 0);
+
+    Pubkey expected3 = {{ BYTES32_BS58_4 }};
+    assert(instruction_accounts_iterator_next(&it, &pubkey) == 0);
+    assert(memcmp(pubkey, &expected3, PUBKEY_SIZE) == 0);
+
+    assert(instruction_accounts_iterator_next(&it, &pubkey) == 1);
+}
+
 int main() {
     test_instruction_validate_ok();
     test_instruction_validate_bad_program_id_index_fail();
@@ -130,6 +170,7 @@ int main() {
     test_static_brief_initializer_macros();
     test_instruction_info_matches_brief();
     test_instruction_infos_match_briefs();
+    test_instruction_accounts_iterator_next();
 
     printf("passed\n");
     return 0;

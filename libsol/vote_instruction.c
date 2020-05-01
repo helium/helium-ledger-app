@@ -1,4 +1,5 @@
 #include "common_byte_strings.h"
+#include "instruction.h"
 #include "sol/transaction_summary.h"
 #include "util.h"
 #include "vote_instruction.h"
@@ -44,13 +45,14 @@ static int parse_vote_initialize_instruction(
     const MessageHeader* header,
     VoteInitializeInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 3);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    accounts_index++; // Skip rent sysvar
-    accounts_index++; // Skip clock sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    // Skip rent sysvat
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    // Skip clock sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
 
     BAIL_IF(parse_pubkey(parser, &info->vote_init.validator_id));
     BAIL_IF(parse_pubkey(parser, &info->vote_init.vote_authority));
@@ -68,16 +70,12 @@ static int parse_vote_withdraw_instruction(
     const MessageHeader* header,
     VoteWithdrawInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 3);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->to = &header->pubkeys[pubkeys_index];
-
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->authority = &header->pubkeys[pubkeys_index];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->to));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
 
     BAIL_IF(parse_u64(parser, &info->lamports));
 
@@ -90,15 +88,13 @@ static int parse_vote_authorize_instruction(
     const MessageHeader* header,
     VoteAuthorizeInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 3);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    accounts_index++; // Skip clock sysvar
-
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->authority = &header->pubkeys[pubkeys_index];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    // Skip clock sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
 
     BAIL_IF(parse_pubkey(parser, &info->new_authority));
     BAIL_IF(parse_vote_authorize(parser, &info->authorize));
@@ -112,29 +108,27 @@ static int parse_vote_update_validator_id_instruction(
     const MessageHeader* header,
     VoteUpdateValidatorIdInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 3);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
     if (instruction->data_length == sizeof(uint32_t)) {
         // 1.0.8+, 1.1.3+ format
         // https://github.com/solana-labs/solana/pull/8947
-        pubkeys_index = instruction->accounts[accounts_index++];
-        info->new_validator_id = &header->pubkeys[pubkeys_index];
+        BAIL_IF(instruction_accounts_iterator_next(&it, &info->new_validator_id))
     } else if (
         instruction->data_length == (sizeof(uint32_t) + sizeof(Pubkey))
     ) {
         // Before 1.0.8 and 1.1.3, the validaotr identity was passed
         // as an instruction arg
         BAIL_IF(parse_pubkey(parser, &info->new_validator_id));
-        accounts_index++; // Skip clock sysvar
+        // Skip clock sysvar
+        BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
     } else {
         return 1;
     }
 
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->authority = &header->pubkeys[pubkeys_index];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
 
     return 0;
 }

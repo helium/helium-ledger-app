@@ -1,4 +1,5 @@
 #include "common_byte_strings.h"
+#include "instruction.h"
 #include "sol/parser.h"
 #include "sol/transaction_summary.h"
 #include "stake_instruction.h"
@@ -52,35 +53,18 @@ static int parse_delegate_stake_instruction(
     const MessageHeader* header,
     StakeDelegateInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 6);
-    size_t pubkeys_length = header->pubkeys_header.pubkeys_length;
-    uint8_t accounts_index = 0;
-    uint8_t pubkeys_index = instruction->accounts[accounts_index++];
-    BAIL_IF(pubkeys_index >= pubkeys_length);
-    info->stake_pubkey = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    pubkeys_index = instruction->accounts[accounts_index++];
-    BAIL_IF(pubkeys_index >= pubkeys_length);
-    info->vote_pubkey = &header->pubkeys[pubkeys_index];
-
-    pubkeys_index = instruction->accounts[accounts_index++];
-    BAIL_IF(pubkeys_index >= pubkeys_length);
-    //const Pubkey* pubkey = &header->pubkeys[pubkeys_index];
-    //BAIL_IF(memcmp(pubkey, &clock_pubkey, PUBKEY_SIZE));
-
-    pubkeys_index = instruction->accounts[accounts_index++];
-    BAIL_IF(pubkeys_index >= pubkeys_length);
-    //pubkey = &header->pubkeys[pubkeys_index];
-    //BAIL_IF(memcmp(pubkey, &stake_history_pubkey, PUBKEY_SIZE));
-
-    pubkeys_index = instruction->accounts[accounts_index++];
-    BAIL_IF(pubkeys_index >= pubkeys_length);
-    //pubkey = &header-:pubkeys[pubkeys_index];
-    //BAIL_IF(memcmp(pubkey, &config_pubkey, PUBKEY_SIZE));
-
-    pubkeys_index = instruction->accounts[accounts_index++];
-    BAIL_IF(pubkeys_index >= pubkeys_length);
-    info->authorized_pubkey = &header->pubkeys[pubkeys_index];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->stake_pubkey));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->vote_pubkey));
+    // Skip clock sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    // Skip stake history sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    // Skip stake config account
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authorized_pubkey));
 
     return 0;
 }
@@ -91,16 +75,15 @@ static int parse_stake_initialize_instruction(
     const MessageHeader* header,
     StakeInitializeInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 2);
-    size_t accounts_index = 0;
-    uint8_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    accounts_index++; // Skip rent sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    // Skip rent sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
 
     BAIL_IF(parse_pubkey(parser, &info->stake_authority));
     BAIL_IF(parse_pubkey(parser, &info->withdraw_authority));
-
     // Lockup
     BAIL_IF(parse_i64(parser, &info->lockup.unix_timestamp));
     BAIL_IF(parse_u64(parser, &info->lockup.epoch));
@@ -116,19 +99,16 @@ static int parse_stake_withdraw_instruction(
     const MessageHeader* header,
     StakeWithdrawInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 5);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->to = &header->pubkeys[pubkeys_index];
-
-    accounts_index++; // Skip clock sysvar
-    accounts_index++; // Skip stake history sysvar
-
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->authority = &header->pubkeys[pubkeys_index];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->to));
+    // Skip clock sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    // Skip stake history sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
 
     BAIL_IF(parse_u64(parser, &info->lamports));
 
@@ -141,15 +121,13 @@ static int parse_stake_authorize_instruction(
     const MessageHeader* header,
     StakeAuthorizeInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 3);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    accounts_index++; // Skip clock sysvar
-
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->authority = &header->pubkeys[pubkeys_index];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    // Skip clock sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
 
     BAIL_IF(parse_pubkey(parser, &info->new_authority));
     BAIL_IF(parse_stake_authorize(parser, &info->authorize));
@@ -163,15 +141,13 @@ static int parse_stake_deactivate_instruction(
     const MessageHeader* header,
     StakeDeactivateInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 3);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    accounts_index++; // Skip clock sysvar
-
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->authority = &header->pubkeys[pubkeys_index];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    // Skip clock sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
 
     return 0;
 }
@@ -209,13 +185,11 @@ static int parse_stake_set_lockup_instruction(
     const MessageHeader* header,
     StakeSetLockupInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 2);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->custodian = &header->pubkeys[pubkeys_index];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->custodian));
 
     BAIL_IF(parse_stake_lockupargs(parser, &info->lockup));
 
@@ -228,16 +202,12 @@ static int parse_stake_split_instruction(
     const MessageHeader* header,
     StakeSplitInfo* info
 ) {
-    BAIL_IF(instruction->accounts_length < 3);
-    size_t accounts_index = 0;
-    size_t pubkeys_index = instruction->accounts[accounts_index++];
-    info->account = &header->pubkeys[pubkeys_index];
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
 
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->split_account = &header->pubkeys[pubkeys_index];
-
-    pubkeys_index = instruction->accounts[accounts_index++];
-    info->authority = &header->pubkeys[pubkeys_index];
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->split_account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
 
     BAIL_IF(parse_u64(parser, &info->lamports));
 
