@@ -1,6 +1,7 @@
 #include <string.h>
 #include <limits.h>
 #include "os_error.h"
+#include "rfc3339.h"
 #include "sol/printer.h"
 #include "util.h"
 
@@ -216,4 +217,8 @@ int print_u64(uint64_t u64, char* out, size_t out_length) {
     }
 
     return 0;
+}
+
+int print_timestamp(int64_t timestamp, char* out, size_t out_length) {
+    return rfc3339_format(out, out_length, timestamp);
 }

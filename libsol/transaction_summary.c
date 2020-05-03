@@ -88,6 +88,16 @@ void summary_item_set_string(
     item->string = value;
 }
 
+void summary_item_set_timestamp(
+    SummaryItem* item,
+    const char* title,
+    int64_t value
+) {
+    item->kind = SummaryItemTimestamp;
+    item->title = title;
+    item->i64 = value;
+}
+
 typedef struct TransactionSummary {
     SummaryItem primary;
     SummaryItem fee_payer;
@@ -240,6 +250,13 @@ static int transaction_summary_update_display_for_item(
                 G_transaction_summary_text,
                 TEXT_BUFFER_LENGTH
             );
+            break;
+        case SummaryItemTimestamp:
+            BAIL_IF(print_timestamp(
+                item->i64,
+                G_transaction_summary_text,
+                TEXT_BUFFER_LENGTH
+            ));
             break;
     }
     print_string(item->title, G_transaction_summary_title, TITLE_SIZE);

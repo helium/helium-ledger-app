@@ -382,7 +382,11 @@ static int print_stake_set_lockup_info(
     enum StakeLockupPresent present = info->lockup.present;
     if (present & StakeLockupHasTimestamp) {
         item = transaction_summary_general_item();
-        summary_item_set_i64(item, "Lockup time", info->lockup.unix_timestamp);
+        summary_item_set_timestamp(
+            item,
+            "Lockup time",
+            info->lockup.unix_timestamp
+        );
     }
 
     if (present & StakeLockupHasEpoch) {
@@ -474,7 +478,11 @@ int print_stake_initialize_info(
     }
 
     item = transaction_summary_general_item();
-    summary_item_set_i64(item, "Lockup time", info->lockup.unix_timestamp);
+    summary_item_set_timestamp(
+        item,
+        "Lockup time",
+        info->lockup.unix_timestamp
+    );
 
     item = transaction_summary_general_item();
     summary_item_set_u64(item, "Lockup epoch", info->lockup.epoch);

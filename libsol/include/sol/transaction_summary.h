@@ -37,6 +37,7 @@ enum SummaryItemKind {
     SummaryItemHash,
     SummaryItemSizedString,
     SummaryItemString,
+    SummaryItemTimestamp,
 };
 
 typedef struct SummaryItem SummaryItem;
@@ -104,4 +105,9 @@ void summary_item_set_string(
     SummaryItem* item,
     const char* title,
     const char* value
+);
+void summary_item_set_timestamp(
+    SummaryItem* item,
+    const char* title,
+    int64_t value
 );
