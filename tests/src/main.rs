@@ -818,7 +818,22 @@ fn test_stake_split_with_seed() {
     assert!(signature.verify(&stake_authority.as_ref(), &message));
 }
 
+fn test_ledger_reject_unexpected_signer() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345),
+        change: None,
+    };
+
+    let from = Pubkey::new(&[1u8; 32]);
+    let instruction = system_instruction::transfer(&from, &ledger_base_pubkey, 42);
+    let message = Message::new(&vec![instruction]).serialize();
+    assert!(ledger.sign_message(&derivation_path, &message).is_err());
+}
+
 fn main() {
+    test_ledger_reject_unexpected_signer();
     test_stake_split_with_nonce();
     test_stake_split_with_seed();
     test_stake_set_lockup();

@@ -166,6 +166,20 @@ void handleSignMessage(
         // This is not a valid Solana message
         THROW(0x6a80);
         return;
+    } else {
+        uint8_t signer_pubkey[32];
+        getPublicKey(G_derivationPath, signer_pubkey, G_derivationPathLength);
+        size_t signer_count = header.pubkeys_header.num_required_signatures;
+        size_t i;
+        for (i = 0; i < signer_count; i++) {
+            const Pubkey* pubkey = &header.pubkeys[i];
+            if (memcmp(pubkey, signer_pubkey, PUBKEY_SIZE) == 0) {
+                break;
+            }
+        }
+        if (i >= signer_count) {
+            THROW(INVALID_PARAMETER);
+        }
     }
 
     if (p1 == P1_NON_CONFIRM) {
