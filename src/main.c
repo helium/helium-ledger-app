@@ -342,6 +342,12 @@ __attribute__((section(".boot"))) int main(void) {
                 USB_power(0);
                 USB_power(1);
 
+#ifdef TARGET_NANOX                            
+                // Grab the current plane mode setting. os_settings_get() is enabled by 
+                // appFlags bit #9 set to 1 in Makefile (i.e. "--appFlags 0x2xx")
+                G_io_app.plane_mode = os_setting_get(OS_SETTING_PLANEMODE, NULL, 0);
+#endif // TARGET_NANOX
+
                 ui_idle();
 
 #ifdef HAVE_BLE
