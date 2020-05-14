@@ -84,7 +84,7 @@ UX_STEP_NOCB_INIT(
             flags |=  DisplayFlagLongPubkeys;
         }
         if (transaction_summary_display_item(step_index, flags)) {
-            THROW(0x6f01);
+            THROW(ApduReplySolanaSummaryUpdateFailed);
         }
     },
     {
@@ -129,7 +129,7 @@ void handleSignMessage(
             dataLength--;
             // We only support one derivation path ATM
             if (G_numDerivationPaths != 1) {
-                THROW(EXCEPTION_OVERFLOW);
+                THROW(ApduReplySdkExceptionOverflow);
             }
         }
 
@@ -151,20 +151,20 @@ void handleSignMessage(
     }
 
     if (G_messageLength + messageLength > MAX_MESSAGE_LENGTH) {
-        THROW(EXCEPTION_OVERFLOW);
+        THROW(ApduReplySdkExceptionOverflow);
     }
     os_memmove(G_message + G_messageLength, dataBuffer, messageLength);
     G_messageLength += messageLength;
 
     if (p2 & P2_MORE) {
-        THROW(0x9000);
+        THROW(ApduReplySuccess);
     }
 
     Parser parser = {G_message, G_messageLength};
     MessageHeader header;
     if (parse_message_header(&parser, &header)) {
         // This is not a valid Solana message
-        THROW(0x6a80);
+        THROW(ApduReplySolanaInvalidMessage);
         return;
     } else {
         uint8_t signer_pubkey[32];
@@ -178,14 +178,14 @@ void handleSignMessage(
             }
         }
         if (i >= signer_count) {
-            THROW(INVALID_PARAMETER);
+            THROW(ApduReplySdkInvalidParameter);
         }
     }
 
     if (p1 == P1_NON_CONFIRM) {
         // Uncomment this to allow blind signing.
         //*tx = set_result_sign_message();
-        //THROW(0x9000);
+        //THROW(ApduReplySuccess);
 
         sendResponse(0, false);
     }
@@ -206,7 +206,7 @@ void handleSignMessage(
             item = transaction_summary_general_item();
             summary_item_set_hash(item, "Message Hash", &UnrecognizedMessageHash);
         } else {
-            THROW(NOT_SUPPORTED);
+            THROW(ApduReplySdkNotSupported);
         }
     }
 
@@ -233,7 +233,7 @@ void handleSignMessage(
 
         ux_flow_init(0, flow_steps, NULL);
     } else {
-        THROW(0x6f00);
+        THROW(ApduReplySolanaSummaryFinalizeFailed);
         return;
     }
 
