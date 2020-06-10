@@ -722,7 +722,7 @@ void test_process_message_body_stake_set_lockup() {
 }
 
 // Using a nonce here to test worst case instruction usage as well
-void test_process_message_body_stake_split_with_nonce() {
+void test_process_message_body_stake_split_with_nonce_v1_1() {
     uint8_t message[] = {
         3, 2, 3,
         8,
@@ -768,7 +768,7 @@ void test_process_message_body_stake_split_with_nonce() {
     process_message_body_and_sanity_check(message, sizeof(message), 7);
 }
 
-void test_process_message_body_stake_split_with_seed() {
+void test_process_message_body_stake_split_with_seed_v1_1() {
     uint8_t message[] = {
         1, 1, 2,
         5,
@@ -832,8 +832,8 @@ int main() {
     test_process_message_body_vote_update_node_v1_0_8();
     test_process_message_body_stake_deactivate();
     test_process_message_body_stake_set_lockup();
-    test_process_message_body_stake_split_with_nonce();
-    test_process_message_body_stake_split_with_seed();
+    test_process_message_body_stake_split_with_nonce_v1_1();
+    test_process_message_body_stake_split_with_seed_v1_1();
 
     printf("passed\n");
     return 0;
