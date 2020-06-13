@@ -3,6 +3,8 @@
 This is the official Helium wallet app for the Ledger Nano S. It is built for
 the Blockain Open Ledger Operating System.
 
+*This application has not been tested or validated on the Nano X.*
+
 When installed on a Nano S, the app allows you to view your Helium address,
 check your balance, and submit transactions while using the companion app, also
 included in this repository.
