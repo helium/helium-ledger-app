@@ -833,32 +833,38 @@ fn test_ledger_reject_unexpected_signer() {
     assert!(ledger.sign_message(&derivation_path, &message).is_err());
 }
 
+macro_rules! run {
+    ($test:ident) => {
+        println!(" >>> Running {} <<<", stringify!($test));
+        $test();
+    };
+}
 fn main() {
-    test_ledger_reject_unexpected_signer();
-    test_stake_split_with_nonce();
-    test_stake_split_with_seed();
-    test_stake_set_lockup();
-    test_stake_deactivate();
-    test_vote_update_validator_identity();
-    test_vote_authorize();
-    test_stake_authorize();
-    test_nonce_authorize();
-    test_vote_withdraw();
-    test_stake_withdraw();
-    test_nonce_withdraw();
-    test_create_vote_account();
-    test_create_vote_account_with_seed();
-    test_create_nonce_account();
-    test_create_nonce_account_with_seed();
-    test_create_stake_account();
-    test_ledger_pubkey();
-    test_ledger_sign_transaction();
-    test_ledger_sign_transaction_too_big();
-    test_ledger_delegate_stake();
-    test_ledger_advance_nonce_account();
-    test_ledger_advance_nonce_account_separate_fee_payer();
-    test_ledger_delegate_stake_with_nonce();
-    test_ledger_transfer_with_nonce();
-    test_create_stake_account_with_seed_and_nonce();
-    test_sign_full_shred_of_garbage_tx();
+    run!(test_ledger_reject_unexpected_signer);
+    run!(test_stake_split_with_nonce);
+    run!(test_stake_split_with_seed);
+    run!(test_stake_set_lockup);
+    run!(test_stake_deactivate);
+    run!(test_vote_update_validator_identity);
+    run!(test_vote_authorize);
+    run!(test_stake_authorize);
+    run!(test_nonce_authorize);
+    run!(test_vote_withdraw);
+    run!(test_stake_withdraw);
+    run!(test_nonce_withdraw);
+    run!(test_create_vote_account);
+    run!(test_create_vote_account_with_seed);
+    run!(test_create_nonce_account);
+    run!(test_create_nonce_account_with_seed);
+    run!(test_create_stake_account);
+    run!(test_ledger_pubkey);
+    run!(test_ledger_sign_transaction);
+    run!(test_ledger_sign_transaction_too_big);
+    run!(test_ledger_delegate_stake);
+    run!(test_ledger_advance_nonce_account);
+    run!(test_ledger_advance_nonce_account_separate_fee_payer);
+    run!(test_ledger_delegate_stake_with_nonce);
+    run!(test_ledger_transfer_with_nonce);
+    run!(test_create_stake_account_with_seed_and_nonce);
+    run!(test_sign_full_shred_of_garbage_tx);
 }
