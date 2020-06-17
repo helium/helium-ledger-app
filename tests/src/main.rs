@@ -96,7 +96,7 @@ fn test_ledger_sign_transaction() {
         .get_pubkey(&derivation_path, false)
         .expect("get pubkey");
     let instruction = system_instruction::transfer(&from, &ledger_base_pubkey, 42);
-    let message = Message::new(&vec![instruction]).serialize();
+    let message = Message::new_with_payer(&vec![instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -105,7 +105,7 @@ fn test_ledger_sign_transaction() {
     // Test large transaction
     let recipients: Vec<(Pubkey, u64)> = (0..10).map(|_| (Pubkey::new_rand(), 42)).collect();
     let instructions = system_instruction::transfer_many(&from, &recipients);
-    let message = Message::new(&instructions).serialize();
+    let message = Message::new_with_payer(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -114,7 +114,7 @@ fn test_ledger_sign_transaction() {
 
 fn test_ledger_sign_transaction_too_big() {
     // Test too big of a transaction
-    let (ledger, _ledger_base_pubkey) = get_ledger();
+    let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345),
@@ -126,7 +126,7 @@ fn test_ledger_sign_transaction_too_big() {
         .expect("get pubkey");
     let recipients: Vec<(Pubkey, u64)> = (0..100).map(|_| (Pubkey::new_rand(), 42)).collect();
     let instructions = system_instruction::transfer_many(&from, &recipients);
-    let message = Message::new(&instructions).serialize();
+    let message = Message::new_with_payer(&instructions, Some(&ledger_base_pubkey)).serialize();
     ledger.sign_message(&derivation_path, &message).unwrap_err();
 }
 
@@ -146,7 +146,7 @@ fn test_ledger_delegate_stake() {
     let vote_pubkey = Pubkey::default();
     let instruction =
         stake_instruction::delegate_stake(&stake_pubkey, &authorized_pubkey, &vote_pubkey);
-    let message = Message::new(&vec![instruction]).serialize();
+    let message = Message::new_with_payer(&vec![instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -179,7 +179,7 @@ fn test_ledger_delegate_stake_with_nonce() {
 
 /// This test requires interactive approval of message signing on the ledger.
 fn test_ledger_advance_nonce_account() {
-    let (ledger, _ledger_base_pubkey) = get_ledger();
+    let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345),
@@ -192,7 +192,7 @@ fn test_ledger_advance_nonce_account() {
     let nonce_account = Pubkey::new(&[1u8; 32]);
     let instruction =
         system_instruction::advance_nonce_account(&nonce_account, &authorized_pubkey);
-    let message = Message::new(&vec![instruction]).serialize();
+    let message = Message::new_with_payer(&vec![instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -305,7 +305,7 @@ fn test_create_stake_account() {
         &stake_state::Lockup::default(),
         42,
     );
-    let message = Message::new(&instructions).serialize();
+    let message = Message::new_with_payer(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -314,7 +314,7 @@ fn test_create_stake_account() {
 
 // This test requires interactive approval of message signing on the ledger.
 fn test_create_nonce_account_with_seed() {
-    let (ledger, _ledger_base_pubkey) = get_ledger();
+    let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345),
@@ -335,7 +335,7 @@ fn test_create_nonce_account_with_seed() {
         &Pubkey::new(&[1u8; 32]),
         42,
     );
-    let message = Message::new(&instructions).serialize();
+    let message = Message::new_with_payer(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -361,7 +361,7 @@ fn test_create_nonce_account() {
         &Pubkey::new(&[1u8; 32]),
         42,
     );
-    let message = Message::new(&instructions).serialize();
+    let message = Message::new_with_payer(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -370,7 +370,7 @@ fn test_create_nonce_account() {
 
 // This test requires interactive approval of message signing on the ledger.
 fn test_sign_full_shred_of_garbage_tx() {
-    let (ledger, _ledger_base_pubkey) = get_ledger();
+    let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345),
@@ -390,7 +390,7 @@ fn test_sign_full_shred_of_garbage_tx() {
         accounts: Vec::new().with_signer(&from),
         data,
     };
-    let message = Message::new(&vec![instruction]).serialize();
+    let message = Message::new_with_payer(&vec![instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -422,7 +422,7 @@ fn test_create_vote_account() {
         &vote_init,
         42,
     );
-    let message = Message::new(&instructions).serialize();
+    let message = Message::new_with_payer(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -431,7 +431,7 @@ fn test_create_vote_account() {
 
 // This test requires interactive approval of message signing on the ledger.
 fn test_create_vote_account_with_seed() {
-    let (ledger, _ledger_base_pubkey) = get_ledger();
+    let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345),
@@ -458,7 +458,7 @@ fn test_create_vote_account_with_seed() {
         &vote_init,
         42,
     );
-    let message = Message::new(&instructions).serialize();
+    let message = Message::new_with_payer(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -485,7 +485,7 @@ fn test_nonce_withdraw() {
         &to,
         42,
     );
-    let message = Message::new(&vec![instruction]).serialize();
+    let message = Message::new_with_payer(&vec![instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -511,8 +511,9 @@ fn test_stake_withdraw() {
         &stake_authority,
         &to,
         42,
+        None,
     );
-    let message = Message::new(&vec![instruction]).serialize();
+    let message = Message::new_with_payer(&vec![instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -539,7 +540,7 @@ fn test_vote_withdraw() {
         42,
         &to,
     );
-    let message = Message::new(&vec![instruction]).serialize();
+    let message = Message::new_with_payer(&vec![instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -565,7 +566,7 @@ fn test_nonce_authorize() {
         &nonce_authority,
         &new_authority,
     );
-    let message = Message::new(&vec![instruction]).serialize();
+    let message = Message::new_with_payer(&vec![instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -594,7 +595,7 @@ fn test_stake_authorize() {
     );
 
     // Authorize staker
-    let message = Message::new(&vec![stake_auth.clone()]).serialize();
+    let message = Message::new_with_payer(&vec![stake_auth.clone()], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -609,7 +610,7 @@ fn test_stake_authorize() {
     );
 
     // Authorize withdrawer
-    let message = Message::new(&vec![withdraw_auth.clone()]).serialize();
+    let message = Message::new_with_payer(&vec![withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -617,7 +618,7 @@ fn test_stake_authorize() {
 
     // Authorize both
     // Note: Instruction order must match CLI; staker first, withdrawer second
-    let message = Message::new(&vec![stake_auth, withdraw_auth]).serialize();
+    let message = Message::new_with_payer(&vec![stake_auth, withdraw_auth], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -646,7 +647,7 @@ fn test_vote_authorize() {
     );
 
     // Authorize voter
-    let message = Message::new(&vec![vote_auth.clone()]).serialize();
+    let message = Message::new_with_payer(&vec![vote_auth.clone()], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -661,7 +662,7 @@ fn test_vote_authorize() {
     );
 
     // Authorize withdrawer
-    let message = Message::new(&vec![withdraw_auth.clone()]).serialize();
+    let message = Message::new_with_payer(&vec![withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -669,7 +670,7 @@ fn test_vote_authorize() {
 
     // Authorize both
     // Note: Instruction order must match CLI; voter first, withdrawer second
-    let message = Message::new(&vec![vote_auth, withdraw_auth]).serialize();
+    let message = Message::new_with_payer(&vec![vote_auth, withdraw_auth], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -695,7 +696,7 @@ fn test_vote_update_validator_identity() {
         &vote_authority,
         &new_node,
     );
-    let message = Message::new(&vec![instruction]).serialize();
+    let message = Message::new_with_payer(&vec![instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -719,7 +720,7 @@ fn test_stake_deactivate() {
         &stake_account,
         &stake_authority,
     );
-    let message = Message::new(&vec![instruction]).serialize();
+    let message = Message::new_with_payer(&vec![instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -750,7 +751,7 @@ fn test_stake_set_lockup() {
         &lockup,
         &stake_custodian,
     );
-    let message = Message::new(&vec![instruction]).serialize();
+    let message = Message::new_with_payer(&vec![instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -811,7 +812,7 @@ fn test_stake_split_with_seed() {
         &base,
         seed,
     );
-    let message = Message::new(&instructions).serialize();
+    let message = Message::new_with_payer(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -828,7 +829,7 @@ fn test_ledger_reject_unexpected_signer() {
 
     let from = Pubkey::new(&[1u8; 32]);
     let instruction = system_instruction::transfer(&from, &ledger_base_pubkey, 42);
-    let message = Message::new(&vec![instruction]).serialize();
+    let message = Message::new_with_payer(&vec![instruction], Some(&ledger_base_pubkey)).serialize();
     assert!(ledger.sign_message(&derivation_path, &message).is_err());
 }
 
