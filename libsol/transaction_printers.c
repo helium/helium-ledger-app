@@ -49,6 +49,28 @@ const InstructionBrief stake_split_with_seed_brief_v1_1[] = {
         infos_length                                        \
     )
 
+const InstructionBrief stake_split_brief_v1_2[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccount),
+    STAKE_IX_BRIEF(StakeSplit),
+};
+#define is_stake_split_v1_2(infos, infos_length)\
+    instruction_infos_match_briefs(             \
+        infos,                                  \
+        stake_split_brief_v1_2,                 \
+        infos_length                            \
+    )
+
+const InstructionBrief stake_split_with_seed_brief_v1_2[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
+    STAKE_IX_BRIEF(StakeSplit),
+};
+#define is_stake_split_with_seed_v1_2(infos, infos_length)  \
+    instruction_infos_match_briefs(                         \
+        infos,                                              \
+        stake_split_with_seed_brief_v1_2,                   \
+        infos_length                                        \
+    )
+
 const InstructionBrief stake_authorize_both_brief[] = {
     STAKE_IX_BRIEF(StakeAuthorize),
     STAKE_IX_BRIEF(StakeAuthorize),
@@ -163,6 +185,22 @@ static int print_stake_split_with_seed_v1_1(
 
     BAIL_IF(print_stake_split_info1(ss_info, header));
     BAIL_IF(print_system_allocate_with_seed_info(NULL, aws_info, header));
+    BAIL_IF(print_stake_split_info2(ss_info, header));
+
+    return 0;
+}
+
+static int print_stake_split_with_seed_v1_2(
+    const MessageHeader* header,
+    const InstructionInfo* infos,
+    size_t infos_length
+) {
+    const SystemCreateAccountWithSeedInfo* cws_info =
+        &infos[0].system.create_account_with_seed;
+    const StakeSplitInfo* ss_info = &infos[1].stake.split;
+
+    BAIL_IF(print_stake_split_info1(ss_info, header));
+    BAIL_IF(print_system_create_account_with_seed_info(NULL, cws_info, header));
     BAIL_IF(print_stake_split_info2(ss_info, header));
 
     return 0;
@@ -389,6 +427,17 @@ int print_transaction(
                 return print_vote_authorize_both(header, infos, infos_length);
             } else if (is_stake_split_with_seed_v1_1(infos, infos_length)) {
                 return print_stake_split_with_seed_v1_1(
+                    header,
+                    infos,
+                    infos_length
+                );
+            } else if (is_stake_split_v1_2(infos, infos_length)) {
+                // System create account is issued with zero lamports in this
+                // case, so it has no interesting info to add. Print stake
+                // split as if it were a single instruction
+                return print_stake_info(&infos[1].stake, header);
+            } else if (is_stake_split_with_seed_v1_2(infos, infos_length)) {
+                return print_stake_split_with_seed_v1_2(
                     header,
                     infos,
                     infos_length
