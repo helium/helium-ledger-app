@@ -4,8 +4,12 @@
 
 ## Overview
 
-This app is for a Nano S Ledger Wallet. It currently does very little, and just
-exposes a minimal API (`get_pubkey`, `sign_message`).
+This app adds support for the Solana native token to Ledger Nano S hardware wallet.
+
+Current Features:
+- Pubkey queries
+- Parse, display and sign all Solana CLI generated transaction formats
+- Blind sign arbitrary transactions (Enabled via settings)
 
 ## Prerequisites
 
