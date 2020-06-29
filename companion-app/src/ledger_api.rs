@@ -1,9 +1,6 @@
-use crate::{
-    payment_txn::PaymentTxn, pubkeybin::PubKeyBin, pubkeybin::B58, Result, HELIUM_API_BASE_URL,
-};
+use crate::{payment_txn::Fee, pubkeybin::PubKeyBin, pubkeybin::B58, Result, HELIUM_API_BASE_URL};
 use byteorder::{LittleEndian as LE, WriteBytesExt};
-use helium_api::{Client, Hnt};
-use helium_proto::{blockchain_txn::Txn, BlockchainTxnPaymentV1};
+use helium_api::{blockchain_txn::Txn, BlockchainTxn, BlockchainTxnPaymentV1, Client, Hnt};
 use ledger::*;
 use prost::Message;
 use std::error;
@@ -46,7 +43,7 @@ fn exchange_get_pubkey(ledger: &LedgerApp, display: PubkeyDisplay) -> Result<Pub
 }
 
 pub enum PayResponse {
-    Txn(PaymentTxn),
+    Txn(BlockchainTxnPaymentV1, String),
     InsufficientBalance(u64, u64), // provides balance and send request
     UserDeniedTransaction,
 }
@@ -54,7 +51,6 @@ pub enum PayResponse {
 pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     let ledger = LedgerApp::new()?;
     let client = Client::new_with_base_url(HELIUM_API_BASE_URL.to_string());
-    let fee: u64 = 0;
     let mut data: Vec<u8> = Vec::new();
 
     // get nonce
@@ -69,8 +65,23 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
         ));
     }
 
-    // serlialize payee
+    // serialize payee
     let payee_bin = PubKeyBin::from_b58(payee)?;
+    let payer_bin = PubKeyBin::from_b58(account.address)?;
+
+    // calculate fee
+    let fee = BlockchainTxnPaymentV1 {
+        payee: payee_bin.0.to_vec(),
+        payer: payer_bin.0.to_vec(),
+        amount: amount.to_bones(),
+        nonce,
+        fee: 0,
+        signature: vec![],
+    }.fee()?;
+
+    println!("Transaction fee: {} DC (1 DC = $.00001)", fee);
+    println!("If account has no DCs, HNT will be burned automatically to fund transaction based on current oracle price");
+
     data.write_u64::<LE>(amount.to_bones())?;
     data.write_u64::<LE>(fee)?;
     data.write_u64::<LE>(nonce)?;
@@ -95,10 +106,14 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
 
     let txn = BlockchainTxnPaymentV1::decode(exchange_pay_tx_result.data.as_slice())?;
 
-    // submit the signed tansaction to the API
-    let _response = client.submit_txn(Txn::Payment(txn.clone()))?;
+    let txn_wrapper = BlockchainTxn {
+        txn: Some(Txn::Payment(txn.clone())),
+    };
 
-    Ok(PayResponse::Txn(txn.into()))
+    // submit the signed tansaction to the API
+    let pending_txn_status = client.submit_txn(&txn_wrapper)?;
+
+    Ok(PayResponse::Txn(txn, pending_txn_status.hash))
 }
 
 impl error::Error for Error {

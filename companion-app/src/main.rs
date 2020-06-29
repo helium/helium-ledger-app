@@ -76,7 +76,7 @@ fn run(cli: Cli) -> Result {
             println!("      {:} Bones", amount.to_bones());
 
             match ledger_api::pay(address, amount)? {
-                PayResponse::Txn(txn) => print_txn(&txn),
+                PayResponse::Txn(txn, hash) => print_txn(&txn, &hash).unwrap(),
                 PayResponse::InsufficientBalance(balance, send_request) => {
                     println!(
                         "Account balance insufficient. {} Bones on account but attempting to send {}",
@@ -124,11 +124,15 @@ fn print_balance(pubkey: &PubKeyBin) -> Result {
     Ok(())
 }
 
-use payment_txn::PaymentTxn;
+use helium_api::BlockchainTxnPaymentV1;
 
-pub fn print_txn(txn: &PaymentTxn) {
+pub fn print_txn(txn: &BlockchainTxnPaymentV1, hash: &str) -> Result<()> {
     let mut table = Table::new();
     table.add_row(row!["Payee", "Amount HNT", "Nonce", "Hash"]);
-    table.add_row(row![txn.payee, txn.amount, txn.nonce, txn.hash]);
+
+    let payee = PubKeyBin::copy_from_slice(txn.payee.as_slice()).to_b58()?;
+
+    table.add_row(row![payee, Hnt::from_bones(txn.amount), txn.nonce, hash]);
     table.printstd();
+    Ok(())
 }
