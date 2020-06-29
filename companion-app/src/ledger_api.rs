@@ -1,6 +1,6 @@
 use crate::{payment_txn::Fee, pubkeybin::PubKeyBin, pubkeybin::B58, Result, HELIUM_API_BASE_URL};
 use byteorder::{LittleEndian as LE, WriteBytesExt};
-use helium_api::{blockchain_txn::Txn, BlockchainTxn, BlockchainTxnPaymentV1, Client, Hnt};
+use helium_api::{BlockchainTxnPaymentV1, Client, Hnt};
 use ledger::*;
 use prost::Message;
 use std::error;
@@ -106,12 +106,8 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
 
     let txn = BlockchainTxnPaymentV1::decode(exchange_pay_tx_result.data.as_slice())?;
 
-    let txn_wrapper = BlockchainTxn {
-        txn: Some(Txn::Payment(txn.clone())),
-    };
-
     // submit the signed tansaction to the API
-    let pending_txn_status = client.submit_txn(&txn_wrapper)?;
+    let pending_txn_status = client.submit_txn(&txn.in_envelope())?;
 
     Ok(PayResponse::Txn(txn, pending_txn_status.hash))
 }
