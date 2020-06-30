@@ -75,7 +75,6 @@ matrix:
     script:
       - pushd companion-app
       - cargo fmt -- --check
-      - cargo test
       - cargo build --release --target $TARGET --locked
       - popd
     <<: *DEPLOY_TO_GITHUB
