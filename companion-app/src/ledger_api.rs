@@ -77,7 +77,8 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
         nonce,
         fee: 0,
         signature: vec![],
-    }.fee()?;
+    }
+    .fee()?;
 
     println!("Transaction fee: {} DC (1 DC = $.00001)", fee);
     println!("If account has no DCs, HNT will be burned automatically to fund transaction based on current oracle price");
