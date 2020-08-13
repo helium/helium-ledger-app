@@ -392,6 +392,8 @@ int print_transaction(
                     return print_stake_info(&infos->stake, header);
                 case ProgramIdVote:
                     return print_vote_info(&infos->vote, header);
+                case ProgramIdSplToken:
+                    return print_spl_token_info(&infos->spl_token, header);
                 case ProgramIdUnknown:
                     break;
             }

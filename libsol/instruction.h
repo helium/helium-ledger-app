@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sol/parser.h"
+#include "spl_token_instruction.h"
 #include "stake_instruction.h"
 #include "system_instruction.h"
 #include "vote_instruction.h"
@@ -11,11 +12,13 @@ enum ProgramId {
     ProgramIdStake,
     ProgramIdSystem,
     ProgramIdVote,
+    ProgramIdSplToken,
 };
 
 typedef struct InstructionInfo {
     enum ProgramId kind;
     union {
+        SplTokenInfo spl_token;
         StakeInfo stake;
         SystemInfo system;
         VoteInfo vote;
@@ -35,12 +38,14 @@ int instruction_validate(
 typedef struct InstructionBrief {
     enum ProgramId program_id;
     union {
+        SplTokenInstructionKind spl_token;
         enum SystemInstructionKind system;
         enum StakeInstructionKind stake;
         enum VoteInstructionKind vote;
     };
 } InstructionBrief;
 
+#define SPL_TOKEN_IX_BRIEF(system_ix) { ProgramIdSystem, .system = (system_ix) }
 #define SYSTEM_IX_BRIEF(system_ix) { ProgramIdSystem, .system = (system_ix) }
 #define STAKE_IX_BRIEF(stake_ix) { ProgramIdStake, .stake = (stake_ix) }
 #define VOTE_IX_BRIEF(vote_ix) { ProgramIdVote, .vote = (vote_ix) }

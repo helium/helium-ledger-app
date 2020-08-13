@@ -38,6 +38,15 @@ int process_message_body(
             header
         );
         switch (program_id) {
+            case ProgramIdSplToken:
+                if (parse_spl_token_instructions(
+                        &instruction, header,
+                        &info->spl_token
+                    ) == 0
+                ) {
+                    info->kind = program_id;
+                }
+                break;
             case ProgramIdSystem:
             {
                 if (parse_system_instructions(
