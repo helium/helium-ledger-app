@@ -78,3 +78,7 @@ int instruction_accounts_iterator_next(
     InstructionAccountsIterator* it,
     const Pubkey** next_account
 );
+
+size_t instruction_accounts_iterator_remaining(
+    const InstructionAccountsIterator* it
+);

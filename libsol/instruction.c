@@ -93,3 +93,12 @@ int instruction_accounts_iterator_next(
     }
     return 1;
 }
+
+size_t instruction_accounts_iterator_remaining(
+    const InstructionAccountsIterator* it
+) {
+    if (it->current_instruction_account < it->instruction_accounts_length) {
+        return it->instruction_accounts_length - it->current_instruction_account;
+    }
+    return 0;
+}
