@@ -10,6 +10,13 @@ void test_summary_item_setters() {
     assert_string_equal(item.title, "amount");
     assert(item.u64 == 42);
 
+    summary_item_set_token_amount(&item, "token", 42, "TST", 2);
+    assert(item.kind == SummaryItemTokenAmount);
+    assert_string_equal(item.title, "token");
+    assert(item.token_amount.value == 42);
+    assert_string_equal(item.token_amount.symbol, "TST");
+    assert(item.token_amount.decimals == 2);
+
     summary_item_set_i64(&item, "i64", -42);
     assert(item.kind == SummaryItemI64);
     assert_string_equal(item.title, "i64");
@@ -66,6 +73,9 @@ void test_summary_item_as_unused() {
     assert(summary_item_as_unused(&item) != NULL);
 
     item.kind = SummaryItemAmount;
+    assert(summary_item_as_unused(&item) == NULL);
+
+    item.kind = SummaryItemTokenAmount;
     assert(summary_item_as_unused(&item) == NULL);
 
     item.kind = SummaryItemI64;
@@ -161,6 +171,10 @@ void test_transaction_summary_update_display_for_item() {
     summary_item_set_amount(&item, "amount", 42);
     assert(transaction_summary_update_display_for_item(&item, DisplayFlagNone) == 0);
     assert_transaction_summary_display("amount", "0.000000042 SOL");
+
+    summary_item_set_token_amount(&item, "token", 42, "TST", 2);
+    assert(transaction_summary_update_display_for_item(&item, DisplayFlagNone) == 0);
+    assert_transaction_summary_display("token", "0.42 TST");
 
     summary_item_set_i64(&item, "i64", -42);
     assert(transaction_summary_update_display_for_item(&item, DisplayFlagNone) == 0);

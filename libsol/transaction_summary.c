@@ -14,6 +14,7 @@ struct SummaryItem {
         const Hash* hash;
         const char* string;
         SizedString sized_string;
+        TokenAmount token_amount;
     };
 };
 
@@ -25,6 +26,20 @@ void summary_item_set_amount(
     item->kind = SummaryItemAmount;
     item->title = title;
     item->u64 = value;
+}
+
+void summary_item_set_token_amount(
+    SummaryItem* item,
+    const char* title,
+    uint64_t value,
+    const char* symbol,
+    uint8_t decimals
+) {
+    item->kind = SummaryItemTokenAmount;
+    item->title = title;
+    item->token_amount.value = value;
+    item->token_amount.symbol = symbol;
+    item->token_amount.decimals = decimals;
 }
 
 void summary_item_set_i64(
@@ -182,6 +197,16 @@ static int transaction_summary_update_display_for_item(
                     item->u64,
                     G_transaction_summary_text,
                     BASE58_PUBKEY_LENGTH
+            ));
+            break;
+        case SummaryItemTokenAmount:
+            BAIL_IF(
+                print_token_amount(
+                    item->token_amount.value,
+                    item->token_amount.symbol,
+                    item->token_amount.decimals,
+                    G_transaction_summary_text,
+                    TEXT_BUFFER_LENGTH
             ));
             break;
         case SummaryItemI64:

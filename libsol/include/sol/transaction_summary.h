@@ -28,9 +28,16 @@
     + 1     /* fee_payer */             \
 )
 
+typedef struct TokenAmount {
+    uint64_t value;
+    const char* symbol;
+    uint8_t decimals;
+} TokenAmount;
+
 enum SummaryItemKind {
     SummaryItemNone = 0, // SummaryItemNone always zero
     SummaryItemAmount,
+    SummaryItemTokenAmount,
     SummaryItemI64,
     SummaryItemU64,
     SummaryItemPubkey,
@@ -75,6 +82,13 @@ void summary_item_set_amount(
     SummaryItem* item,
     const char* title,
     uint64_t value
+);
+void summary_item_set_token_amount(
+    SummaryItem* item,
+    const char* title,
+    uint64_t value,
+    const char* symbol,
+    uint8_t decimals
 );
 void summary_item_set_i64(
     SummaryItem* item,
