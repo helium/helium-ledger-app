@@ -180,7 +180,6 @@ static int transaction_summary_update_display_for_item(
             BAIL_IF(
                 print_amount(
                     item->u64,
-                    "SOL",
                     G_transaction_summary_text,
                     BASE58_PUBKEY_LENGTH
             ));

@@ -9,9 +9,16 @@
 #define BASE58_PUBKEY_LENGTH 45
 #define BASE58_PUBKEY_SHORT (SUMMARY_LENGTH + 2 + SUMMARY_LENGTH + 1)
 
-int print_amount(
+int print_token_amount(
     uint64_t amount,
     const char *asset,
+    uint8_t decimals,
+    char *out,
+    size_t out_length
+);
+
+int print_amount(
+    uint64_t amount,
     char *out,
     size_t out_length
 );

@@ -5,12 +5,13 @@
 #include "sol/printer.h"
 #include "util.h"
 
-// max amount is max uint64 scaled down: "9223372036.854775807"
+// max amount is max uint64 scaled down: "18446744073.709551615"
 #define AMOUNT_MAX_SIZE 22
 
-int print_amount(
+int print_token_amount(
     uint64_t amount,
     const char *asset,
+    uint8_t decimals,
     char *out,
     size_t out_length
 ) {
@@ -18,17 +19,18 @@ int print_amount(
     uint64_t dVal = amount;
     int outlen  = (int)out_length;
     int i = 0;
+    int min_chars = decimals + 1;
 
     if (i < (outlen - 1)) {
         do {
+            if (i == decimals) {
+                out[i] = '.';
+                i += 1;
+            }
             out[i] = (dVal % 10) + '0';
             dVal /= 10;
-            if (i == 8) { // lamports to SOL: 1 SOL = 1,000,000,000 lamports
-                i += 1;
-                out[i] = '.';
-            }
             i += 1;
-        } while ((dVal > 0 || i < 11) && i < outlen);
+        } while ((dVal > 0 || i < min_chars) && i < outlen);
     }
     BAIL_IF(i >= outlen);
     // Reverse order
@@ -59,6 +61,15 @@ int print_amount(
     }
 
     return 0;
+}
+
+#define SOL_DECIMALS 9
+int print_amount(
+    uint64_t amount,
+    char *out,
+    size_t out_length
+) {
+    return print_token_amount(amount, "SOL", SOL_DECIMALS, out, out_length);
 }
 
 int print_sized_string(
