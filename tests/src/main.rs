@@ -940,6 +940,126 @@ fn test_spl_token_create_multisig() {
     assert!(signature.verify(&owner.as_ref(), &message));
 }
 
+fn test_spl_token_create_mint_with_seed() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let owner = ledger.get_pubkey(&derivation_path, false).expect("ledger get pubkey");
+    let base = owner;
+    let seed = "seedseedseedseedseedseedseedseed";
+    let mint = Pubkey::create_with_seed(&base, seed, &spl_token::id()).unwrap();
+
+    let instructions = vec![
+        system_instruction::create_account_with_seed(
+            &owner,
+            &mint,
+            &base,
+            &seed,
+            501,
+            std::mem::size_of::<spl_token::state::Mint>() as u64,
+            &spl_token::id(),
+        ),
+        spl_token::instruction::initialize_mint(
+            &spl_token::id(),
+            &mint,
+            None,
+            Some(&owner),
+            0,
+            2,
+        ).unwrap(),
+    ];
+    let message = Message::new(&instructions, Some(&owner)).serialize();
+    println!("{:?}", message);
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&owner.as_ref(), &message));
+}
+
+fn test_spl_token_create_account_with_seed() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let owner = ledger.get_pubkey(&derivation_path, false).expect("ledger get pubkey");
+    let base = owner;
+    let seed = "seedseedseedseedseedseedseedseed";
+    let mint = Pubkey::new(&[1u8; 32]);
+    let account = Pubkey::create_with_seed(&base, seed, &spl_token::id()).unwrap();
+
+    let instructions = vec![
+        system_instruction::create_account_with_seed(
+            &owner,
+            &mint,
+            &base,
+            &seed,
+            501,
+            std::mem::size_of::<spl_token::state::Mint>() as u64,
+            &spl_token::id(),
+        ),
+        spl_token::instruction::initialize_account(
+            &spl_token::id(),
+            &account,
+            &mint,
+            &owner,
+        ).unwrap(),
+    ];
+    let message = Message::new(&instructions, Some(&owner)).serialize();
+    println!("{:?}", message);
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&owner.as_ref(), &message));
+}
+
+fn test_spl_token_create_multisig_with_seed() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let owner = ledger.get_pubkey(&derivation_path, false).expect("ledger get pubkey");
+    let base = owner;
+    let seed = "seedseedseedseedseedseedseedseed";
+    let mint = Pubkey::new(&[1u8; 32]);
+    let account = Pubkey::create_with_seed(&base, seed, &spl_token::id()).unwrap();
+    let signers = [
+        Pubkey::new(&[2u8; 32]),
+        Pubkey::new(&[3u8; 32]),
+        Pubkey::new(&[4u8; 32]),
+    ];
+
+    let instructions = vec![
+        system_instruction::create_account_with_seed(
+            &owner,
+            &mint,
+            &base,
+            &seed,
+            501,
+            std::mem::size_of::<spl_token::state::Mint>() as u64,
+            &spl_token::id(),
+        ),
+        spl_token::instruction::initialize_multisig(
+            &spl_token::id(),
+            &account,
+            &signers.iter().collect::<Vec<_>>(),
+            2,
+        ).unwrap(),
+    ];
+    let message = Message::new(&instructions, Some(&owner)).serialize();
+    println!("{:?}", message);
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&owner.as_ref(), &message));
+}
+
 fn test_spl_token_transfer() {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
@@ -1129,6 +1249,9 @@ macro_rules! run {
     };
 }
 fn main() {
+    run!(test_spl_token_create_mint_with_seed);
+    run!(test_spl_token_create_account_with_seed);
+    run!(test_spl_token_create_multisig_with_seed);
     run!(test_spl_token_create_mint);
     run!(test_spl_token_create_account);
     run!(test_spl_token_create_multisig);
