@@ -878,6 +878,32 @@ void test_process_message_body_stake_split_with_seed_v1_2() {
     process_message_body_and_sanity_check(message, sizeof(message), 9);
 }
 
+void test_process_message_body_spl_token_transfer() {
+    uint8_t message[] = {
+        1, 0, 1,
+        4,
+            10, 197, 71, 166, 84, 143, 238, 106, 60, 71, 210, 140, 50, 46, 5, 64,
+                197, 233, 184, 185, 240, 1, 189, 60, 85, 208, 255, 255, 23, 193, 128, 222,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            6, 221, 246, 225, 184, 247, 138, 134, 222, 155, 148, 231, 93, 80, 227, 74,
+                129, 1, 199, 34, 198, 187, 150, 187, 221, 211, 20, 46, 142, 46, 111, 170,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        1,
+            3,
+                3, 1, 2,
+            0,
+            9,
+                3,
+                42, 0, 0, 0, 0, 0, 0, 0
+    };
+
+    process_message_body_and_sanity_check(message, sizeof(message), 4);
+}
+
 int main() {
     test_process_message_body_ok();
     test_process_message_body_too_few_ix_fail();
