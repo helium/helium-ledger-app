@@ -386,23 +386,6 @@ static int print_spl_token_initialize_account_info(
     return 0;
 }
 
-static char multisig_m_of_n_string[9]; // worst case "11 of 11"
-static int set_multisig_m_of_n_string(uint8_t m, uint8_t n) {
-    BAIL_IF(m > Token_MAX_SIGNERS);
-    BAIL_IF(n > Token_MAX_SIGNERS);
-
-    size_t i = 0;
-    if (m > 9) multisig_m_of_n_string[i++] = '1';
-    multisig_m_of_n_string[i++] = '0' + (m % 10);
-    strncpy(&multisig_m_of_n_string[i], " of ", 5);
-    i += 4;
-    if (n > 9) multisig_m_of_n_string[i++] = '1';
-    multisig_m_of_n_string[i++] = '0' + (n % 10);
-    multisig_m_of_n_string[i++] = '\0';
-
-    return 0;
-}
-
 static int print_spl_token_initialize_multisig_info(
     const char* primary_title,
     const SplTokenInitializeMultisigInfo* info,
@@ -415,9 +398,8 @@ static int print_spl_token_initialize_multisig_info(
         summary_item_set_pubkey(item, primary_title, info->multisig_account);
     }
 
-    set_multisig_m_of_n_string(info->body.m, info->signers.count);
     item = transaction_summary_general_item();
-    summary_item_set_string(item, "Required Signers", multisig_m_of_n_string);
+    summary_item_set_multisig_m_of_n(item, info->body.m, info->signers.count);
 
     return 0;
 }
@@ -587,4 +569,21 @@ int print_spl_token_info(
     }
 
     return 1;
+}
+
+static char multisig_m_of_n_string[9]; // worst case "11 of 11"
+void summary_item_set_multisig_m_of_n(SummaryItem* item, uint8_t m, uint8_t n) {
+    if (n > Token_MAX_SIGNERS) return;
+    if (m > n) return;
+
+    size_t i = 0;
+    if (m > 9) multisig_m_of_n_string[i++] = '1';
+    multisig_m_of_n_string[i++] = '0' + (m % 10);
+    strncpy(&multisig_m_of_n_string[i], " of ", 5);
+    i += 4;
+    if (n > 9) multisig_m_of_n_string[i++] = '1';
+    multisig_m_of_n_string[i++] = '0' + (n % 10);
+    multisig_m_of_n_string[i++] = '\0';
+
+    summary_item_set_string(item, "Required signers", multisig_m_of_n_string);
 }

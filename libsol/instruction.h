@@ -45,7 +45,7 @@ typedef struct InstructionBrief {
     };
 } InstructionBrief;
 
-#define SPL_TOKEN_IX_BRIEF(system_ix) { ProgramIdSystem, .system = (system_ix) }
+#define SPL_TOKEN_IX_BRIEF(spl_token_ix) { ProgramIdSplToken, .spl_token = (spl_token_ix) }
 #define SYSTEM_IX_BRIEF(system_ix) { ProgramIdSystem, .system = (system_ix) }
 #define STAKE_IX_BRIEF(stake_ix) { ProgramIdStake, .stake = (stake_ix) }
 #define VOTE_IX_BRIEF(vote_ix) { ProgramIdVote, .vote = (vote_ix) }

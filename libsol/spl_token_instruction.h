@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sol/transaction_summary.h"
 #include "spl/token.h"
 
 #define SplTokenBody(b) Token_ ## b ## _Body
@@ -119,4 +120,9 @@ int parse_spl_token_instructions(
 int print_spl_token_info(
     const SplTokenInfo* info,
     const MessageHeader* header
+);
+void summary_item_set_multisig_m_of_n(
+    SummaryItem* item,
+    uint8_t m,
+    uint8_t n
 );
