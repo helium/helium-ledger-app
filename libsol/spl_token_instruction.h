@@ -7,7 +7,11 @@
 
 #define SplTokenInstructionKind Token_TokenInstruction_Tag
 
-typedef Pubkey const * SplTokenMultiSigners[Token_MAX_SIGNERS + 1];
+typedef struct SplTokenMultisigners {
+    const Pubkey* first;
+    uint8_t count;
+} SplTokenMultisigners;
+
 typedef enum {
     SplTokenSignKindSingle,
     SplTokenSignKindMulti,
@@ -21,7 +25,7 @@ typedef struct {
         } single;
         struct {
             const Pubkey* account;
-            SplTokenMultiSigners signers;
+            SplTokenMultisigners signers;
         } multi;
     };
 } SplTokenSign;
@@ -43,7 +47,7 @@ typedef struct SplTokenInitializeAccountInfo {
 
 typedef struct SplTokenInitializeMultisigInfo {
     const Pubkey* multisig_account;
-    SplTokenMultiSigners signers;
+    SplTokenMultisigners signers;
     SplTokenBody(InitializeMultisig) body;
 } SplTokenInitializeMultisigInfo;
 

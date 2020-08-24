@@ -70,6 +70,18 @@ static int parse_initialize_account_spl_token_instruction(
     return 0;
 }
 
+static int parse_spl_token_multisigners(
+    InstructionAccountsIterator* it,
+    SplTokenMultisigners* signers
+) {
+    size_t n = instruction_accounts_iterator_remaining(it);
+    BAIL_IF(n > Token_MAX_SIGNERS);
+    BAIL_IF(instruction_accounts_iterator_next(it, &signers->first));
+    signers->count = n;
+
+    return 0;
+}
+
 static int parse_initialize_multisig_spl_token_instruction(
     Parser* parser,
     const Instruction* instruction,
@@ -83,13 +95,7 @@ static int parse_initialize_multisig_spl_token_instruction(
     BAIL_IF(info->body.m > Token_MAX_SIGNERS);
 
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->multisig_account));
-
-    size_t n = instruction_accounts_iterator_remaining(&it);
-    BAIL_IF(n > Token_MAX_SIGNERS);
-    for (size_t i = 0; i < n; i++) {
-        BAIL_IF(instruction_accounts_iterator_next(&it, &info->signers[i]));
-    }
-    info->signers[n] = NULL;
+    BAIL_IF(parse_spl_token_multisigners(&it, &info->signers))
 
     return 0;
 }
@@ -107,10 +113,7 @@ static int parse_spl_token_sign(
     } else {
         sign->kind = SplTokenSignKindMulti;
         BAIL_IF(instruction_accounts_iterator_next(it, &sign->multi.account));
-        for (size_t i = 0; i < n; i++) {
-            BAIL_IF(instruction_accounts_iterator_next(it, &sign->multi.signers[i]));
-        }
-        sign->multi.signers[n] = NULL;
+        BAIL_IF(parse_spl_token_multisigners(it, &sign->multi.signers))
     }
     return 0;
 }
@@ -400,12 +403,6 @@ static int set_multisig_m_of_n_string(uint8_t m, uint8_t n) {
     return 0;
 }
 
-static uint8_t spl_token_multisigners_length(const SplTokenMultiSigners* multi_signers) {
-    uint8_t length = 0;
-    for (; length <= Token_MAX_SIGNERS && multi_signers[length]; length++);
-    return length;
-}
-
 static int print_spl_token_initialize_multisig_info(
     const char* primary_title,
     const SplTokenInitializeMultisigInfo* info,
@@ -418,8 +415,7 @@ static int print_spl_token_initialize_multisig_info(
         summary_item_set_pubkey(item, primary_title, info->multisig_account);
     }
 
-    uint8_t n = spl_token_multisigners_length(&info->signers);
-    set_multisig_m_of_n_string(info->body.m, n);
+    set_multisig_m_of_n_string(info->body.m, info->signers.count);
     item = transaction_summary_general_item();
     summary_item_set_string(item, "Required Signers", multisig_m_of_n_string);
 
