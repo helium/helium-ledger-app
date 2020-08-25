@@ -323,15 +323,14 @@ int parse_spl_token_instructions(
 static int print_spl_token_sign(const SplTokenSign* sign) {
     SummaryItem* item;
 
-    const Pubkey* owner;
-    if (sign->kind == SplTokenSignKindSingle) {
-        owner = sign->single.signer;
-    } else {
-        owner = sign->multi.account;
-    }
-
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Owner", owner);
+    if (sign->kind == SplTokenSignKindSingle) {
+        summary_item_set_pubkey(item, "Owner", sign->single.signer);
+    } else {
+        summary_item_set_pubkey(item, "Owner", sign->multi.account);
+        item = transaction_summary_general_item();
+        summary_item_set_u64(item, "Signers", sign->multi.signers.count);
+    }
 
     return 0;
 }
