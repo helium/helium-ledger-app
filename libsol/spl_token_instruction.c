@@ -570,19 +570,28 @@ int print_spl_token_info(
     return 1;
 }
 
-static char multisig_m_of_n_string[9]; // worst case "11 of 11"
-void summary_item_set_multisig_m_of_n(SummaryItem* item, uint8_t m, uint8_t n) {
-    if (n > Token_MAX_SIGNERS) return;
-    if (m > n) return;
+#define M_OF_N_MAX_LEN 9 // "11 of 11" + NUL
+static int print_m_of_n_string(uint8_t m, uint8_t n, char* buf, size_t buflen) {
+    BAIL_IF(n > Token_MAX_SIGNERS);
+    BAIL_IF(m > n);
+    BAIL_IF(buflen < M_OF_N_MAX_LEN);
 
     size_t i = 0;
-    if (m > 9) multisig_m_of_n_string[i++] = '1';
-    multisig_m_of_n_string[i++] = '0' + (m % 10);
-    strncpy(&multisig_m_of_n_string[i], " of ", 5);
+    if (m > 9) buf[i++] = '1';
+    buf[i++] = '0' + (m % 10);
+    strncpy(&buf[i], " of ", 5);
     i += 4;
-    if (n > 9) multisig_m_of_n_string[i++] = '1';
-    multisig_m_of_n_string[i++] = '0' + (n % 10);
-    multisig_m_of_n_string[i++] = '\0';
+    if (n > 9) buf[i++] = '1';
+    buf[i++] = '0' + (n % 10);
+    buf[i] = '\0';
 
-    summary_item_set_string(item, "Required signers", multisig_m_of_n_string);
+    return 0;
+}
+
+void summary_item_set_multisig_m_of_n(SummaryItem* item, uint8_t m, uint8_t n) {
+    static char m_of_n[M_OF_N_MAX_LEN];
+
+    if (print_m_of_n_string(m, n, m_of_n, sizeof(m_of_n))) {
+        summary_item_set_string(item, "Required signers", m_of_n);
+    }
 }
