@@ -410,7 +410,7 @@ static int print_spl_token_transfer_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_u64(item, "SPL Token transfer", info->body.amount);
+    summary_item_set_u64(item, "Transfer tokens", info->body.amount);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "From", info->src_account);
@@ -535,19 +535,19 @@ int print_spl_token_info(
     switch (info->kind) {
         case SplTokenKind(InitializeMint):
             return print_spl_token_initialize_mint_info(
-                "Init SPL Token mint",
+                "Init token mint",
                 &info->initialize_mint,
                 header
             );
         case SplTokenKind(InitializeAccount):
             return print_spl_token_initialize_account_info(
-                "Init SPL Token acct",
+                "Init token acct",
                 &info->initialize_account,
                 header
             );
         case SplTokenKind(InitializeMultisig):
             return print_spl_token_initialize_multisig_info(
-                "Init SPL Token multisig",
+                "Init token multisig",
                 &info->initialize_multisig,
                 header
             );

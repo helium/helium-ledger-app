@@ -482,7 +482,7 @@ static int print_spl_token_create_account(
     summary_item_set_pubkey(item, "Create token acct", ia_info->token_account);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Of mint", ia_info->mint_account);
+    summary_item_set_pubkey(item, "From mint", ia_info->mint_account);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Owned by", ia_info->owner);
@@ -574,7 +574,7 @@ static int print_spl_token_create_account_with_seed(
     summary_item_set_pubkey(item, "Create token acct", ia_info->token_account);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Of mint", ia_info->mint_account);
+    summary_item_set_pubkey(item, "From mint", ia_info->mint_account);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Owned by", ia_info->owner);

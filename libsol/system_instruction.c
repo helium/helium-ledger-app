@@ -312,7 +312,7 @@ static int print_system_transfer_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_amount(item, "Transfer", info->lamports);
+    summary_item_set_amount(item, "System transfer", info->lamports);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Sender", info->from);
@@ -501,7 +501,7 @@ int print_system_create_account_info(
     }
 
     item = transaction_summary_general_item();
-    summary_item_set_amount(item, "Transfer", info->lamports);
+    summary_item_set_amount(item, "Deposit", info->lamports);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "From", info->from);
@@ -521,7 +521,7 @@ int print_system_create_account_with_seed_info(
     }
 
     item = transaction_summary_general_item();
-    summary_item_set_amount(item, "Transfer", info->lamports);
+    summary_item_set_amount(item, "Deposit", info->lamports);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "From", info->from);

@@ -398,7 +398,7 @@ static int print_stake_set_lockup_info(
         item = transaction_summary_general_item();
         summary_item_set_pubkey(
             item,
-            "Lockup custodian",
+            "Lockup authority",
             info->lockup.custodian
         );
     }
@@ -488,7 +488,7 @@ int print_stake_initialize_info(
     summary_item_set_u64(item, "Lockup epoch", info->lockup.epoch);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Lockup custodian", info->lockup.custodian);
+    summary_item_set_pubkey(item, "Lockup authority", info->lockup.custodian);
 
     return 0;
 }
