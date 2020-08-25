@@ -1,3 +1,4 @@
+#include "common_byte_strings.h"
 #include "message.c"
 #include "sol/parser.h"
 #include "sol/transaction_summary.h"
@@ -878,30 +879,245 @@ void test_process_message_body_stake_split_with_seed_v1_2() {
     process_message_body_and_sanity_check(message, sizeof(message), 9);
 }
 
+#define BLOCKHASH       BYTES32_BS58_1
+#define MINT_ACCOUNT    BYTES32_BS58_2
+#define TOKEN_ACCOUNT   BYTES32_BS58_3
+#define OWNER_ACCOUNT   BYTES32_BS58_4
+#define MULTISIG_ACCOUNT    OWNER_ACCOUNT
+#define SIGNER1         BYTES32_BS58_5
+#define SIGNER2         BYTES32_BS58_6
+#define SIGNER3         BYTES32_BS58_7
+#define DEST_ACCOUNT    BYTES32_BS58_8
+#define DELEGATE        DEST_ACCOUNT
+#define NEW_OWNER       DEST_ACCOUNT
+
+void test_process_message_body_spl_token_create_token() {
+    uint8_t message[] = {
+        0x02, 0x00, 0x02,
+        0x04,
+            OWNER_ACCOUNT,
+            MINT_ACCOUNT,
+            PROGRAM_ID_SYSTEM,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        0x02,
+            // SystemCreateAccount
+            0x02,
+            0x02,
+                0x00, 0x01,
+            0x34,
+                0x00, 0x00, 0x00, 0x00,
+                0x80, 0xd7, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                PROGRAM_ID_SPL_TOKEN,
+            // SplTokenInitializeMint
+            0x03,
+            0x02,
+                0x01, 0x00,
+            0x0a,
+                0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x09,
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 7);
+}
+
+void test_process_message_body_spl_token_create_account() {
+    uint8_t message[] = {
+        0x02, 0x00, 0x03,
+        0x05,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            MINT_ACCOUNT,
+            PROGRAM_ID_SYSTEM,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        0x02,
+            // SystemCreateAccount
+            0x03,
+            0x02,
+                0x00, 0x01,
+            0x34,
+                0x00, 0x00, 0x00, 0x00,
+                0x80, 0x56, 0x1a, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                PROGRAM_ID_SPL_TOKEN,
+            // SplTokenInitializeAccount
+            0x04,
+            0x03,
+                0x01, 0x02, 0x00,
+            0x01,
+                0x01,
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 5);
+}
+
+void test_process_message_body_spl_token_create_multisig() {
+    uint8_t message[] = {
+        2, 0, 5,
+        7,
+            OWNER_ACCOUNT,
+            MULTISIG_ACCOUNT,
+            SIGNER1,
+            SIGNER2,
+            SIGNER3,
+            PROGRAM_ID_SYSTEM,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        2,
+            // SystemCreateAccount
+            5,
+            2,
+                0, 1,
+            52,
+                0, 0, 0, 0,
+                245, 1, 0, 0, 0, 0, 0, 0,
+                40, 0, 0, 0, 0, 0, 0, 0,
+                PROGRAM_ID_SPL_TOKEN,
+            // SplTokenInitializeMultisig
+            6,
+            4,
+                1, 2, 3, 4,
+            2,
+                2,
+                2
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 4);
+}
+
 void test_process_message_body_spl_token_transfer() {
     uint8_t message[] = {
         1, 0, 1,
         4,
-            10, 197, 71, 166, 84, 143, 238, 106, 60, 71, 210, 140, 50, 46, 5, 64,
-                197, 233, 184, 185, 240, 1, 189, 60, 85, 208, 255, 255, 23, 193, 128, 222,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-            6, 221, 246, 225, 184, 247, 138, 134, 222, 155, 148, 231, 93, 80, 227, 74,
-                129, 1, 199, 34, 198, 187, 150, 187, 221, 211, 20, 46, 142, 46, 111, 170,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            DEST_ACCOUNT,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
         1,
             3,
-                3, 1, 2,
-            0,
+            3,
+                1, 2, 0,
             9,
                 3,
                 42, 0, 0, 0, 0, 0, 0, 0
     };
-
     process_message_body_and_sanity_check(message, sizeof(message), 4);
+}
+
+void test_process_message_body_spl_token_approve() {
+    uint8_t message[] = {
+        1, 0, 2,
+        4,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            DELEGATE,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        1,
+            3,
+            3,
+                1, 2, 0,
+            9,
+                4,
+                42, 0, 0, 0, 0, 0, 0, 0
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 4);
+}
+
+void test_process_message_body_spl_token_revoke() {
+    uint8_t message[] = {
+        1, 0, 2,
+        3,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        1,
+            2,
+            2,
+                1, 0,
+            1,
+                5
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 2);
+}
+
+void test_process_message_body_spl_token_set_owner() {
+    uint8_t message[] = {
+        1, 0, 2,
+        4,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            NEW_OWNER,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        1,
+            3,
+            3,
+                1, 2, 0,
+            1,
+                6
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 3);
+}
+
+void test_process_message_body_spl_token_mint_to() {
+    uint8_t message[] = {
+        1, 0, 1,
+        4,
+            OWNER_ACCOUNT,
+            MINT_ACCOUNT,
+            TOKEN_ACCOUNT,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        1,
+            3,
+            3,
+                1, 2, 0,
+            9,
+                7,
+                42, 0, 0, 0, 0, 0, 0, 0
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 4);
+}
+
+void test_process_message_body_spl_token_burn() {
+    uint8_t message[] = {
+        1, 0, 1,
+        3,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        1,
+            2,
+            2,
+                1, 0,
+            9,
+                8,
+                42, 0, 0, 0, 0, 0, 0, 0
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 3);
+}
+
+void test_process_message_body_spl_token_close_account() {
+    uint8_t message[] = {
+        0x01, 0x00, 0x01,
+        0x03,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        0x01,
+            // SplTokenCloseAccount
+            0x02,
+            0x03,
+                0x01, 0x00, 0x00,
+            0x01,
+                0x09,
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 3);
 }
 
 int main() {
