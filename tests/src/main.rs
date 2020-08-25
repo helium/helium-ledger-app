@@ -861,7 +861,6 @@ fn test_spl_token_create_mint() {
         ).unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -895,7 +894,6 @@ fn test_spl_token_create_account() {
         ).unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -933,7 +931,6 @@ fn test_spl_token_create_multisig() {
         ).unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -972,7 +969,6 @@ fn test_spl_token_create_mint_with_seed() {
         ).unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1010,7 +1006,6 @@ fn test_spl_token_create_account_with_seed() {
         ).unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1053,7 +1048,6 @@ fn test_spl_token_create_multisig_with_seed() {
         ).unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1080,7 +1074,6 @@ fn test_spl_token_transfer() {
         42,
     ).unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1107,7 +1100,6 @@ fn test_spl_token_approve() {
         42,
     ).unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1131,7 +1123,6 @@ fn test_spl_token_revoke() {
         &[],
     ).unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1157,7 +1148,6 @@ fn test_spl_token_set_owner() {
         &[],
     ).unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1184,7 +1174,6 @@ fn test_spl_token_mint_to() {
         42,
     ).unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1209,7 +1198,6 @@ fn test_spl_token_burn() {
         42,
     ).unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1235,7 +1223,6 @@ fn test_spl_token_close_account() {
         &[],
     ).unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1267,7 +1254,6 @@ fn test_spl_token_transfer_multisig() {
         42,
     ).unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1299,7 +1285,6 @@ fn test_spl_token_approve_multisig() {
         42,
     ).unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1328,7 +1313,6 @@ fn test_spl_token_revoke_multisig() {
         &signers.iter().collect::<Vec<_>>(),
     ).unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1359,7 +1343,6 @@ fn test_spl_token_set_owner_multisig() {
         &signers.iter().collect::<Vec<_>>(),
     ).unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1391,7 +1374,6 @@ fn test_spl_token_mint_to_multisig() {
         42,
     ).unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1421,7 +1403,6 @@ fn test_spl_token_burn_multisig() {
         42,
     ).unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1452,7 +1433,6 @@ fn test_spl_token_close_account_multisig() {
         &signers.iter().collect::<Vec<_>>(),
     ).unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
