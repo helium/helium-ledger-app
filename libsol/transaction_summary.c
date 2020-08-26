@@ -127,9 +127,9 @@ char G_transaction_summary_title[TITLE_SIZE];
 char G_transaction_summary_text[TEXT_BUFFER_LENGTH];
 
 void transaction_summary_reset() {
-    memset(&G_transaction_summary, 0, sizeof(TransactionSummary));
-    memset(&G_transaction_summary_title, 0, TITLE_SIZE);
-    memset(&G_transaction_summary_text, 0, TEXT_BUFFER_LENGTH);
+    explicit_bzero(&G_transaction_summary, sizeof(TransactionSummary));
+    explicit_bzero(&G_transaction_summary_title, TITLE_SIZE);
+    explicit_bzero(&G_transaction_summary_text, TEXT_BUFFER_LENGTH);
 }
 
 static SummaryItem* summary_item_as_unused(SummaryItem* item) {

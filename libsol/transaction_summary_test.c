@@ -1,3 +1,4 @@
+#include "common_byte_strings.h"
 #include "transaction_summary.c"
 #include <assert.h>
 #include <stdio.h>
@@ -27,15 +28,13 @@ void test_summary_item_setters() {
     assert_string_equal(item.title, "u64");
     assert(item.u64 == 4242);
 
-    Pubkey pubkey;
-    memset(&pubkey, 1, sizeof(Pubkey));
+    Pubkey pubkey = {{ BYTES32_BS58_2 }};
     summary_item_set_pubkey(&item, "pubkey", &pubkey);
     assert(item.kind == SummaryItemPubkey);
     assert_string_equal(item.title, "pubkey");
     assert(item.pubkey == &pubkey);
 
-    Hash hash;
-    memset(&hash, 2, sizeof(Hash));
+    Hash hash = {{ BYTES32_BS58_3 }};
     summary_item_set_hash(&item, "hash", &hash);
     assert(item.kind == SummaryItemHash);
     assert_string_equal(item.title, "hash");
@@ -185,7 +184,7 @@ void test_transaction_summary_update_display_for_item() {
     assert_transaction_summary_display("u64", "4242");
 
     Pubkey pubkey;
-    memset(&pubkey, 0, sizeof(Pubkey));
+    explicit_bzero(&pubkey, sizeof(Pubkey));
     summary_item_set_pubkey(&item, "pubkey", &pubkey);
     assert(transaction_summary_update_display_for_item(&item, DisplayFlagNone) == 0);
     assert_transaction_summary_display("pubkey", "1111111..1111111");
@@ -193,7 +192,7 @@ void test_transaction_summary_update_display_for_item() {
     assert_transaction_summary_display("pubkey", "11111111111111111111111111111111");
 
     Hash hash;
-    memset(&hash, 0, sizeof(Hash));
+    explicit_bzero(&hash, sizeof(Hash));
     summary_item_set_hash(&item, "hash", &hash);
     assert(transaction_summary_update_display_for_item(&item, DisplayFlagNone) == 0);
     assert_transaction_summary_display(
@@ -261,9 +260,8 @@ void test_transaction_summary_display_item() {
 }
 
 #define zero_kinds_array(kinds) \
-    memset(                     \
+    explicit_bzero(             \
         kinds,                  \
-        0,                      \
         MAX_TRANSACTION_SUMMARY_ITEMS * sizeof(enum SummaryItemKind))
 
 #define assert_kinds_array(kinds, num_kinds)                            \

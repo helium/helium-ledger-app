@@ -25,8 +25,7 @@ void test_instruction_program_id_stake() {
 }
 
 void test_instruction_program_id_unknown() {
-    Pubkey program_id;
-    memset(&program_id, 0x01, PUBKEY_SIZE);
+    Pubkey program_id = {{ BYTES32_BS58_2 }};
     Instruction instruction = { 0, NULL, 0, NULL, 0 };
     MessageHeader header = {{0, 0, 0, 1}, &program_id, NULL, 1};
     assert(instruction_program_id(&instruction, &header) == ProgramIdUnknown);

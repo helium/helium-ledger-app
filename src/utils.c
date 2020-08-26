@@ -15,7 +15,7 @@ void getPublicKey(
 
     getPrivateKey(derivationPath, &privateKey, pathLength);
     cx_ecfp_generate_pair(CX_CURVE_Ed25519, &publicKey, &privateKey, 1);
-    os_memset(&privateKey, 0, sizeof(privateKey));
+    explicit_bzero(&privateKey, sizeof(privateKey));
 
     for (int i = 0; i < 32; i++) {
         publicKeyArray[i] = publicKey.W[64 - i];
@@ -50,7 +50,7 @@ void getPrivateKey(
         0
     );
     cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, privateKey);
-    os_memset(privateKeyData, 0, sizeof(privateKeyData));
+    explicit_bzero(privateKeyData, sizeof(privateKeyData));
 }
 
 void sendResponse(uint8_t tx, bool approve) {

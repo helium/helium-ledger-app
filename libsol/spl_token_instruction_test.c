@@ -571,7 +571,7 @@ void test_parse_spl_token_sign() {
         .pubkeys = pubkeys,
     };
     uint8_t accounts[accounts_len];
-    memset(accounts, 0, accounts_len);
+    explicit_bzero(accounts, accounts_len);
     Instruction ix = {
         .program_id_index = 0,
         .accounts = accounts,
