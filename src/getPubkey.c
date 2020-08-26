@@ -12,6 +12,9 @@ int read_derivation_path(
     size_t size,
     uint32_t *derivationPath
 ) {
+    if (size == 0) {
+        THROW(ApduReplySolanaInvalidMessage);
+    }
     size_t len = dataBuffer[0];
     dataBuffer += 1;
     if (len < 0x01 || len > BIP32_PATH) {
