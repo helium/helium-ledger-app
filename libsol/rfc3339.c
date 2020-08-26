@@ -25,6 +25,7 @@
  */
 #include <stddef.h>
 #include "rfc3339.h"
+#include "util.h"
 
 static const uint16_t DayOffset[13] = {
     0, 306, 337, 0, 31, 61, 92, 122, 153, 184, 214, 245, 275
@@ -32,10 +33,10 @@ static const uint16_t DayOffset[13] = {
 
 /* Rata Die algorithm by Peter Baum */
 
-static void
+static int
 rdn_to_ymd(uint32_t rdn, uint16_t *yp, uint16_t *mp, uint16_t *dp) {
     uint32_t Z, H, A, B;
-    uint16_t y, m, d;
+    uint32_t y, m, d;
 
     Z = rdn + 306;
     H = 100 * Z - 25;
@@ -47,9 +48,13 @@ rdn_to_ymd(uint32_t rdn, uint16_t *yp, uint16_t *mp, uint16_t *dp) {
     if (m > 12)
         y++, m -= 12;
 
-    *yp = y;
-    *mp = m;
-    *dp = d - DayOffset[m];
+    BAIL_IF(y > 9999 || m > 12 || d > (31U + DayOffset[m]));
+
+    *yp = (uint16_t)y;
+    *mp = (uint16_t)m;
+    *dp = (uint16_t)(d - DayOffset[m]);
+
+    return 0;
 }
 
 #define EPOCH INT64_C(62135683200)  /* 1970-01-01 00:00:00 */
@@ -62,13 +67,12 @@ int rfc3339_format(char *dst, size_t len, int64_t seconds) {
     size_t dlen;
 
     dlen = sizeof("YYYY-MM-DD hh:mm:ss") - 1;
-    if (dlen >= len)
-        return 1;
+    BAIL_IF(dlen >= len);
 
     sec = seconds + EPOCH;
     rdn = sec / 86400;
 
-    rdn_to_ymd(rdn, &y, &m, &d);
+    BAIL_IF(rdn_to_ymd(rdn, &y, &m, &d) != 0);
 
    /*
     *           1
