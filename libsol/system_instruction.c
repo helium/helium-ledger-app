@@ -312,7 +312,7 @@ static int print_system_transfer_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_amount(item, "System transfer", info->lamports);
+    summary_item_set_amount(item, "Transfer", info->lamports);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Sender", info->from);
