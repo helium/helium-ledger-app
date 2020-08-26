@@ -11,7 +11,7 @@
 
 static uint8_t G_message[MAX_MESSAGE_LENGTH];
 static int G_messageLength;
-static uint8_t G_numDerivationPaths;
+uint8_t G_numDerivationPaths;
 static uint32_t G_derivationPath[BIP32_PATH];
 static int G_derivationPathLength;
 
@@ -121,7 +121,7 @@ void handleSignMessage(
         MEMCLEAR(G_derivationPath);
         MEMCLEAR(G_message);
         G_messageLength = 0;
-        G_numDerivationPaths = 0;
+        G_numDerivationPaths = 1;
 
         if (!deprecated_host) {
             G_numDerivationPaths = dataBuffer[0];
@@ -140,6 +140,14 @@ void handleSignMessage(
         );
         dataBuffer += 1 + G_derivationPathLength * 4;
         dataLength -= 1 + G_derivationPathLength * 4;
+    } else {
+        // P2_EXTEND is set to signal that this APDU buffer extends, rather
+        // than replaces, the current message buffer. Asserting it with the
+        // first APDU buffer is an error, since we haven't yet received a
+        // derivation path.
+        if (G_numDerivationPaths == 0) {
+            THROW(ApduReplySolanaInvalidMessage);
+        }
     }
 
     int messageLength;
@@ -159,6 +167,11 @@ void handleSignMessage(
     if (p2 & P2_MORE) {
         THROW(ApduReplySuccess);
     }
+
+    // Host has signaled that the message is complete. We won't be receiving
+    // any more extending APDU buffers. Clear the derivation path count so we
+    // can detect P2_EXTEND misuse at the start of the next exchange
+    G_numDerivationPaths = 0;
 
     Parser parser = {G_message, G_messageLength};
     MessageHeader header;

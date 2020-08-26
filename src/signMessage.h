@@ -5,6 +5,8 @@
 #ifndef _SIGN_MESSAGE_H_
 #define _SIGN_MESSAGE_H_
 
+extern uint8_t G_numDerivationPaths;
+
 void handleSignMessage(
     uint8_t p1,
     uint8_t p2,

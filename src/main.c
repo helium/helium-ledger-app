@@ -144,6 +144,10 @@ void app_main(void) {
     volatile unsigned int tx = 0;
     volatile unsigned int flags = 0;
 
+    // Initialize derivation path count so we can accurately track the message
+    // buffer handling state
+    G_numDerivationPaths = 0;
+
     // DESIGN NOTE: the bootloader ignores the way APDU are fetched. The only
     // goal is to retrieve APDU.
     // When APDU are to be fetched from multiple IOs, like NFC+USB+BLE, make
