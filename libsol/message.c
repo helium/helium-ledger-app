@@ -19,7 +19,7 @@ int process_message_body(
     BAIL_IF(header->instructions_length > MAX_INSTRUCTIONS);
 
     InstructionInfo instruction_info[MAX_INSTRUCTIONS];
-    memset(instruction_info, 0, sizeof(InstructionInfo) * MAX_INSTRUCTIONS);
+    explicit_bzero(instruction_info, sizeof(InstructionInfo) * MAX_INSTRUCTIONS);
 
     Parser parser = {message_body, message_body_length};
     size_t instruction_count = 0;
@@ -38,6 +38,15 @@ int process_message_body(
             header
         );
         switch (program_id) {
+            case ProgramIdSplToken:
+                if (parse_spl_token_instructions(
+                        &instruction, header,
+                        &info->spl_token
+                    ) == 0
+                ) {
+                    info->kind = program_id;
+                }
+                break;
             case ProgramIdSystem:
             {
                 if (parse_system_instructions(

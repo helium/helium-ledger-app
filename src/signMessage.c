@@ -11,7 +11,7 @@
 
 static uint8_t G_message[MAX_MESSAGE_LENGTH];
 static int G_messageLength;
-static uint8_t G_numDerivationPaths;
+uint8_t G_numDerivationPaths;
 static uint32_t G_derivationPath[BIP32_PATH];
 static int G_derivationPathLength;
 
@@ -84,7 +84,7 @@ UX_STEP_NOCB_INIT(
             flags |=  DisplayFlagLongPubkeys;
         }
         if (transaction_summary_display_item(step_index, flags)) {
-            THROW(0x6f01);
+            THROW(ApduReplySolanaSummaryUpdateFailed);
         }
     },
     {
@@ -121,7 +121,7 @@ void handleSignMessage(
         MEMCLEAR(G_derivationPath);
         MEMCLEAR(G_message);
         G_messageLength = 0;
-        G_numDerivationPaths = 0;
+        G_numDerivationPaths = 1;
 
         if (!deprecated_host) {
             G_numDerivationPaths = dataBuffer[0];
@@ -129,7 +129,7 @@ void handleSignMessage(
             dataLength--;
             // We only support one derivation path ATM
             if (G_numDerivationPaths != 1) {
-                THROW(EXCEPTION_OVERFLOW);
+                THROW(ApduReplySdkExceptionOverflow);
             }
         }
 
@@ -140,6 +140,14 @@ void handleSignMessage(
         );
         dataBuffer += 1 + G_derivationPathLength * 4;
         dataLength -= 1 + G_derivationPathLength * 4;
+    } else {
+        // P2_EXTEND is set to signal that this APDU buffer extends, rather
+        // than replaces, the current message buffer. Asserting it with the
+        // first APDU buffer is an error, since we haven't yet received a
+        // derivation path.
+        if (G_numDerivationPaths == 0) {
+            THROW(ApduReplySolanaInvalidMessage);
+        }
     }
 
     int messageLength;
@@ -151,27 +159,46 @@ void handleSignMessage(
     }
 
     if (G_messageLength + messageLength > MAX_MESSAGE_LENGTH) {
-        THROW(EXCEPTION_OVERFLOW);
+        THROW(ApduReplySdkExceptionOverflow);
     }
     os_memmove(G_message + G_messageLength, dataBuffer, messageLength);
     G_messageLength += messageLength;
 
     if (p2 & P2_MORE) {
-        THROW(0x9000);
+        THROW(ApduReplySuccess);
     }
+
+    // Host has signaled that the message is complete. We won't be receiving
+    // any more extending APDU buffers. Clear the derivation path count so we
+    // can detect P2_EXTEND misuse at the start of the next exchange
+    G_numDerivationPaths = 0;
 
     Parser parser = {G_message, G_messageLength};
     MessageHeader header;
     if (parse_message_header(&parser, &header)) {
         // This is not a valid Solana message
-        THROW(0x6a80);
+        THROW(ApduReplySolanaInvalidMessage);
         return;
+    } else {
+        uint8_t signer_pubkey[32];
+        getPublicKey(G_derivationPath, signer_pubkey, G_derivationPathLength);
+        size_t signer_count = header.pubkeys_header.num_required_signatures;
+        size_t i;
+        for (i = 0; i < signer_count; i++) {
+            const Pubkey* pubkey = &header.pubkeys[i];
+            if (memcmp(pubkey, signer_pubkey, PUBKEY_SIZE) == 0) {
+                break;
+            }
+        }
+        if (i >= signer_count) {
+            THROW(ApduReplySdkInvalidParameter);
+        }
     }
 
     if (p1 == P1_NON_CONFIRM) {
         // Uncomment this to allow blind signing.
         //*tx = set_result_sign_message();
-        //THROW(0x9000);
+        //THROW(ApduReplySuccess);
 
         sendResponse(0, false);
     }
@@ -192,7 +219,7 @@ void handleSignMessage(
             item = transaction_summary_general_item();
             summary_item_set_hash(item, "Message Hash", &UnrecognizedMessageHash);
         } else {
-            THROW(NOT_SUPPORTED);
+            THROW(ApduReplySdkNotSupported);
         }
     }
 
@@ -219,7 +246,7 @@ void handleSignMessage(
 
         ux_flow_init(0, flow_steps, NULL);
     } else {
-        THROW(0x6f00);
+        THROW(ApduReplySolanaSummaryFinalizeFailed);
         return;
     }
 

@@ -65,21 +65,38 @@ Vagrant.configure("2") do |config|
   # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
-    apt-get update
-    apt-get install -y clang-7 gcc-multilib g++-multilib python3-pip
+    set -ex
 
-    BASHRC=/home/vagrant/.bashrc
-    grep -qF -- BOLOS_ENV $BASHRC || echo "export BOLOS_ENV=/bolos-env" >> $BASHRC
+    apt update
+    apt install -y gcc-multilib libudev-dev libusb-1.0-0-dev pkg-config python3-venv python3-pip python3-pil
 
-    if [ ! -d "/bolos-env" ]
-    then
-        mkdir /bolos-env
-        wget --progress=bar:force https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_3-2016q1/gccarmnoneeabi532016q120160330linuxtar.bz2
-        tar xf gccarmnoneeabi532016q120160330linuxtar.bz2 -C /bolos-env
-    fi
+    # Minimize the terminal mess wget is about to make
+    echo "progress = bar:force:noscroll" > ~/.wgetrc
 
-    apt-get install -y libudev-dev libusb-1.0-0-dev pkg-config
-    python3 -m pip install ledgerblue
+    # Commence workaround for vbox share dirs not supportting hard links...
+    # 1) Temporarily setup our "dev-env" dir in ~vagrant
+    source /vagrant/prepare-devenv.sh s
+    # 2) Convert hard links to duplicates of their source file
+    # NOTE: Link counts may need updated should Ledger update their toolchain
+    find dev-env/CC/others/gcc-arm-none-eabi-5_3-2016q1/ -type f -\\( -links 2 -o -links 3 -o -links 4 -\\) -exec sed -i ';;' '{}' \\;
+    # 3) Move "dev-env" dir into the source root, where it's expected to be
+    mv dev-env /vagrant
+    # 4) Reinstall the python3 venv, since all of the paths are wrong
+    cd /vagrant
+    rm -rf dev-env/ledger_py3
+    # NOTE: The next block needs to be kept in sync with prepare-devenv.sh
+    python3 -m venv dev-env/ledger_py3
+    source dev-env/ledger_py3/bin/activate
+    pip install wheel
+    pip install ledgerblue
+    # End hard link work around
+
+    # Restore wget's mess making ability
+    rm ~/.wgetrc
+
+    # Setup env for Ledger S SDK.
+    # NOTE: We'll need to do something fancier (or lazier) when we add Ledger X support
+    echo -e "\nsource /vagrant/prepare-devenv.sh s" >> ~vagrant/.bashrc
   SHELL
 
   # cd to /vagrant when "vagrant ssh"

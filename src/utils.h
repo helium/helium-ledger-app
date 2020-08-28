@@ -1,6 +1,7 @@
 #include "os.h"
 #include "cx.h"
 #include "globals.h"
+#include <string.h>
 
 #ifndef _UTILS_H_
 #define _UTILS_H_
@@ -62,8 +63,8 @@ void sendResponse(uint8_t tx, bool approve);
 #define PIC(code) code
 //#define TARGET_NANOS 1
 #define TARGET_BLUE 1
-#define MEMCLEAR(dest) memset(&dest, 0, sizeof(dest));
+#define MEMCLEAR(dest) explicit_bzero(&dest, sizeof(dest));
 #else
-#define MEMCLEAR(dest) do { os_memset(&dest, 0, sizeof(dest)); } while (0)
+#define MEMCLEAR(dest) do { explicit_bzero(&dest, sizeof(dest)); } while (0)
 #include "bolos_target.h"
 #endif // TEST

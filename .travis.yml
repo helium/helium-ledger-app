@@ -1,24 +1,22 @@
 language: c
 dist: bionic
 
-env:
-  global:
-    - BOLOS_ENV=$TRAVIS_BUILD_DIR/bolos-env
-
 before_install:
-  - sudo apt-get update
-  - sudo apt-get install -y clang-7 gcc-multilib g++-multilib python3-pip
-  - sudo apt-get install -y libudev-dev libusb-1.0-0-dev pkg-config
-  - sudo mkdir -p $BOLOS_ENV
-  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_3-2016q1/gccarmnoneeabi532016q120160330linuxtar.bz2
-  - sudo tar xf gccarmnoneeabi532016q120160330linuxtar.bz2 -C $BOLOS_ENV
-  - sudo apt-get install python3-setuptools
-  - python3 -m pip install ledgerblue
+  - sudo apt update
+  - sudo apt install -y gcc-multilib libudev-dev libusb-1.0-0-dev pkg-config python3-venv python3-pip python3-pil
+  - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh
+  - sh /tmp/rustup-init.sh -y --default-toolchain 1.45.2 --component clippy --component rustfmt
+  - source ./prepare-devenv.sh s
 
 script:
+  - source ./prepare-devenv.sh s
   - make -C libsol
   - make
   - make -f host.mk release
+  - export PATH="${HOME}/.cargo/bin:${PATH}"
+  - cd ./tests
+  - cargo clippy --all -- --deny=warnings
+  - cargo fmt --all -- --check
 
 deploy:
   - provider: releases

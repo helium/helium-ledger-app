@@ -4,18 +4,46 @@
 
 void test_print_amount() {
   char printed[24];
-  const char *asset = "SOL";
 
-  print_amount(1, asset, printed, sizeof(printed));
+  print_amount(0, printed, sizeof(printed));
+  assert_string_equal(printed, "0 SOL");
+  print_amount(1, printed, sizeof(printed));
   assert_string_equal(printed, "0.000000001 SOL");
-  print_amount(1000000000, asset, printed, sizeof(printed));
+  print_amount(1000000000, printed, sizeof(printed));
   assert_string_equal(printed, "1 SOL");
-  print_amount(10000000000000001, asset, printed, sizeof(printed));
+  print_amount(10000000000000001, printed, sizeof(printed));
   assert_string_equal(printed, "10000000.000000001 SOL");
-  print_amount(10000000001, asset, printed, sizeof(printed));
+  print_amount(10000000001, printed, sizeof(printed));
   assert_string_equal(printed, "10.000000001 SOL");
-  print_amount(10000000100000000, asset, printed, sizeof(printed));
+  print_amount(10000000100000000, printed, sizeof(printed));
   assert_string_equal(printed, "10000000.1 SOL");
+}
+
+void test_print_token_amount() {
+  char printed[26];
+
+  print_token_amount(0, "TST", 0, printed, sizeof(printed));
+  assert_string_equal(printed, "0 TST");
+  print_token_amount(0, "TST", 10, printed, sizeof(printed));
+  assert_string_equal(printed, "0 TST");
+  print_token_amount(0, "TST", 19, printed, sizeof(printed));
+  assert_string_equal(printed, "0 TST");
+  print_token_amount(1, "TST", 0, printed, sizeof(printed));
+  assert_string_equal(printed, "1 TST");
+  print_token_amount(1, "TST", 10, printed, sizeof(printed));
+  assert_string_equal(printed, "0.0000000001 TST");
+  print_token_amount(1, "TST", 19, printed, sizeof(printed));
+  assert_string_equal(printed, "0.0000000000000000001 TST");
+  print_token_amount(10000000000000000000ULL, "TST", 19, printed, sizeof(printed));
+  assert_string_equal(printed, "1 TST");
+  print_token_amount(UINT64_MAX, "TST", 19, printed, sizeof(printed));
+  assert_string_equal(printed, "1.8446744073709551615 TST");
+  print_token_amount(UINT64_MAX, "TST", 10, printed, sizeof(printed));
+  assert_string_equal(printed, "1844674407.3709551615 TST");
+  print_token_amount(UINT64_MAX, "TST", 1, printed, sizeof(printed));
+  assert_string_equal(printed, "1844674407370955161.5 TST");
+  print_token_amount(UINT64_MAX, "TST", 0, printed, sizeof(printed));
+  assert_string_equal(printed, "18446744073709551615 TST");
 }
 
 void test_print_sized_string() {
@@ -124,6 +152,7 @@ void test_print_timestamp() {
 
 int main() {
     test_print_amount();
+    test_print_token_amount();
     test_print_sized_string();
     test_print_string();
     test_print_summary();

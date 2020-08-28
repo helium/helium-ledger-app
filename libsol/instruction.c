@@ -1,4 +1,5 @@
 #include "instruction.h"
+#include "spl_token_instruction.h"
 #include "stake_instruction.h"
 #include "system_instruction.h"
 #include "util.h"
@@ -15,6 +16,8 @@ enum ProgramId instruction_program_id(
         return ProgramIdStake;
     } else if (memcmp(program_id, &vote_program_id, PUBKEY_SIZE) == 0) {
         return ProgramIdVote;
+    } else if (memcmp(program_id, &spl_token_program_id, PUBKEY_SIZE) == 0) {
+        return ProgramIdSplToken;
     }
 
     return ProgramIdUnknown;
@@ -41,6 +44,7 @@ bool instruction_info_matches_brief(
 ) {
     if (brief->program_id == info->kind) {
         switch (brief->program_id) {
+            case ProgramIdSplToken: return (brief->spl_token == info->spl_token.kind);
             case ProgramIdStake: return (brief->stake == info->stake.kind);
             case ProgramIdSystem: return (brief->system == info->system.kind);
             case ProgramIdVote: return (brief->vote == info->vote.kind);
@@ -88,4 +92,13 @@ int instruction_accounts_iterator_next(
         return 0;
     }
     return 1;
+}
+
+size_t instruction_accounts_iterator_remaining(
+    const InstructionAccountsIterator* it
+) {
+    if (it->current_instruction_account < it->instruction_accounts_length) {
+        return it->instruction_accounts_length - it->current_instruction_account;
+    }
+    return 0;
 }

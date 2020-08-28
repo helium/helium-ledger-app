@@ -12,13 +12,16 @@ int read_derivation_path(
     size_t size,
     uint32_t *derivationPath
 ) {
+    if (size == 0) {
+        THROW(ApduReplySolanaInvalidMessage);
+    }
     size_t len = dataBuffer[0];
     dataBuffer += 1;
     if (len < 0x01 || len > BIP32_PATH) {
-        THROW(0x6a80);
+        THROW(ApduReplySolanaInvalidMessage);
     }
     if (1 + 4 * len > size) {
-        THROW(0x6a80);
+        THROW(ApduReplySolanaInvalidMessage);
     }
 
     for (unsigned int i = 0; i < len; i++) {
@@ -97,7 +100,7 @@ void handleGetPubkey(
 
     if (p1 == P1_NON_CONFIRM) {
         *tx = set_result_get_pubkey();
-        THROW(0x9000);
+        THROW(ApduReplySuccess);
     } else {
         ux_flow_init(0, ux_display_public_flow, NULL);
         *flags |= IO_ASYNCH_REPLY;

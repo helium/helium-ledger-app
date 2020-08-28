@@ -48,7 +48,7 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
     BEGIN_TRY {
         TRY {
             if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
-                THROW(0x6E00);
+                THROW(ApduReplyInvalidCla);
             }
 
             int dataLength;
@@ -78,7 +78,7 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
                     G_io_apdu_buffer[3] = LEDGER_MINOR_VERSION;
                     G_io_apdu_buffer[4] = LEDGER_PATCH_VERSION;
                     *tx = 5;
-                    THROW(0x9000);
+                    THROW(ApduReplySuccess);
                     break;
 
                 case INS_GET_PUBKEY:
@@ -107,12 +107,12 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
                     break;
 
                 default:
-                    THROW(0x6D00);
+                    THROW(ApduReplyUnimplementedInstruction);
                     break;
             }
         }
-        CATCH(EXCEPTION_IO_RESET) {
-            THROW(EXCEPTION_IO_RESET);
+        CATCH(ApduReplySdkExceptionIoReset) {
+            THROW(ApduReplySdkExceptionIoReset);
         }
         CATCH_OTHER(e) {
             switch (e & 0xF000) {
@@ -144,6 +144,10 @@ void app_main(void) {
     volatile unsigned int tx = 0;
     volatile unsigned int flags = 0;
 
+    // Initialize derivation path count so we can accurately track the message
+    // buffer handling state
+    G_numDerivationPaths = 0;
+
     // DESIGN NOTE: the bootloader ignores the way APDU are fetched. The only
     // goal is to retrieve APDU.
     // When APDU are to be fetched from multiple IOs, like NFC+USB+BLE, make
@@ -164,15 +168,15 @@ void app_main(void) {
                 // no apdu received, well, reset the session, and reset the
                 // bootloader configuration
                 if (rx == 0) {
-                    THROW(0x6982);
+                    THROW(ApduReplyNoApduReceived);
                 }
 
                 PRINTF("New APDU received:\n%.*H\n", rx, G_io_apdu_buffer);
 
                 handleApdu(&flags, &tx);
             }
-            CATCH(EXCEPTION_IO_RESET) {
-                THROW(EXCEPTION_IO_RESET);
+            CATCH(ApduReplySdkExceptionIoReset) {
+                THROW(ApduReplySdkExceptionIoReset);
             }
             CATCH_OTHER(e) {
                 switch (e & 0xF000) {
@@ -230,7 +234,7 @@ unsigned char io_event(unsigned char channel) {
                 !(U4BE(G_io_seproxyhal_spi_buffer, 3) &
                     SEPROXYHAL_TAG_STATUS_EVENT_FLAG_USB_POWERED)
             ) {
-                THROW(EXCEPTION_IO_RESET);
+                THROW(ApduReplySdkExceptionIoReset);
             }
             // no break is intentional
         default:
@@ -290,7 +294,7 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
             }
 
         default:
-            THROW(INVALID_PARAMETER);
+            THROW(ApduReplySdkInvalidParameter);
     }
     return 0;
 }
@@ -357,7 +361,7 @@ __attribute__((section(".boot"))) int main(void) {
 
                 app_main();
             }
-            CATCH(EXCEPTION_IO_RESET) {
+            CATCH(ApduReplySdkExceptionIoReset) {
                 // reset IO and UX before continuing
                 continue;
             }
