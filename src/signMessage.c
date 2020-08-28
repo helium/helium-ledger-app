@@ -76,7 +76,7 @@ UX_STEP_VALID(
     });
 UX_STEP_NOCB_INIT(
     ux_summary_step,
-    paging,
+    bnnn_paging,
     {
         size_t step_index = G_ux.flow_stack[stack_slot].index;
         enum DisplayFlags flags = DisplayFlagNone;
