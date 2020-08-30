@@ -827,7 +827,7 @@ fn test_spl_token_create_mint() {
             std::mem::size_of::<spl_token::state::Mint>() as u64,
             &spl_token::id(),
         ),
-        spl_token::instruction::initialize_mint(&spl_token::id(), &mint, None, Some(&owner), 0, 2)
+        spl_token::instruction::initialize_mint(&spl_token::id(), &mint, &owner, None, 2)
             .unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
@@ -932,7 +932,7 @@ fn test_spl_token_create_mint_with_seed() {
             std::mem::size_of::<spl_token::state::Mint>() as u64,
             &spl_token::id(),
         ),
-        spl_token::instruction::initialize_mint(&spl_token::id(), &mint, None, Some(&owner), 0, 2)
+        spl_token::instruction::initialize_mint(&spl_token::id(), &mint, &owner, None, 2)
             .unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
@@ -1089,7 +1089,7 @@ fn test_spl_token_revoke() {
     assert!(signature.verify(&owner.as_ref(), &message));
 }
 
-fn test_spl_token_set_owner() {
+fn test_spl_token_set_authority() {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -1103,7 +1103,7 @@ fn test_spl_token_set_owner() {
     let new_owner = Pubkey::new(&[2u8; 32]);
 
     let instruction =
-        spl_token::instruction::set_owner(&spl_token::id(), &account, &new_owner, &owner, &[])
+        spl_token::instruction::set_authority(&spl_token::id(), &account, Some(&new_owner), spl_token::instruction::AuthorityType::AccountOwner, &owner, &[])
             .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger
@@ -1146,9 +1146,10 @@ fn test_spl_token_burn() {
         .get_pubkey(&derivation_path, false)
         .expect("ledger get pubkey");
     let account = Pubkey::new(&[1u8; 32]);
+    let mint = Pubkey::new(&[2u8; 32]);
 
     let instruction =
-        spl_token::instruction::burn(&spl_token::id(), &account, &owner, &[], 42).unwrap();
+        spl_token::instruction::burn(&spl_token::id(), &account, &mint, &owner, &[], 42).unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
@@ -1274,7 +1275,7 @@ fn test_spl_token_revoke_multisig() {
     assert!(signature.verify(&signer.as_ref(), &message));
 }
 
-fn test_spl_token_set_owner_multisig() {
+fn test_spl_token_set_authority_multisig() {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -1289,10 +1290,11 @@ fn test_spl_token_set_owner_multisig() {
     let new_owner = Pubkey::new(&[3u8; 32]);
     let signers = [Pubkey::new(&[4u8; 32]), signer];
 
-    let instruction = spl_token::instruction::set_owner(
+    let instruction = spl_token::instruction::set_authority(
         &spl_token::id(),
         &account,
-        &new_owner,
+        Some(&new_owner),
+        spl_token::instruction::AuthorityType::AccountOwner,
         &owner,
         &signers.iter().collect::<Vec<_>>(),
     )
@@ -1348,10 +1350,12 @@ fn test_spl_token_burn_multisig() {
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
     let signers = [Pubkey::new(&[3u8; 32]), signer];
+    let mint = Pubkey::new(&[4u8; 32]);
 
     let instruction = spl_token::instruction::burn(
         &spl_token::id(),
         &account,
+        &mint,
         &owner,
         &signers.iter().collect::<Vec<_>>(),
         42,
@@ -1401,23 +1405,23 @@ macro_rules! run {
     };
 }
 fn main() {
+    run!(test_spl_token_create_mint);
     run!(test_spl_token_transfer_multisig);
     run!(test_spl_token_approve_multisig);
     run!(test_spl_token_revoke_multisig);
-    run!(test_spl_token_set_owner_multisig);
+    run!(test_spl_token_set_authority_multisig);
     run!(test_spl_token_mint_to_multisig);
     run!(test_spl_token_burn_multisig);
     run!(test_spl_token_close_account_multisig);
     run!(test_spl_token_create_mint_with_seed);
     run!(test_spl_token_create_account_with_seed);
     run!(test_spl_token_create_multisig_with_seed);
-    run!(test_spl_token_create_mint);
     run!(test_spl_token_create_account);
     run!(test_spl_token_create_multisig);
     run!(test_spl_token_transfer);
     run!(test_spl_token_approve);
     run!(test_spl_token_revoke);
-    run!(test_spl_token_set_owner);
+    run!(test_spl_token_set_authority);
     run!(test_spl_token_mint_to);
     run!(test_spl_token_burn);
     run!(test_spl_token_close_account);
