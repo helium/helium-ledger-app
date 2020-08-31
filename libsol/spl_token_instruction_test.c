@@ -507,6 +507,89 @@ void test_parse_spl_token_close_account() {
     assert_pubkey_equal(close_acc->sign.single.signer, &owner);
 }
 
+void test_parse_spl_token_freeze_account() {
+    uint8_t message[] = {
+        1, 0, 2,
+        4,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            MINT_ACCOUNT,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        1,
+            3,
+            3,
+                1, 2, 0,
+            1,
+                10
+    };
+    Parser parser = {message, sizeof(message)};
+    MessageHeader header;
+    assert(parse_message_header(&parser, &header) == 0);
+
+    Instruction instruction;
+    assert(parse_instruction(&parser, &instruction) == 0); // SplTokenFreezeAccount
+    assert(instruction_validate(&instruction, &header) == 0);
+
+    SplTokenInfo info;
+    assert(parse_spl_token_instructions(&instruction, &header, &info) == 0);
+    assert(parser.buffer_length == 0);
+
+    assert(info.kind == SplTokenKind(FreezeAccount));
+    const SplTokenFreezeAccountInfo* freeze_account = &info.freeze_account;
+
+    const Pubkey token_account = {{ TOKEN_ACCOUNT }};
+    assert_pubkey_equal(freeze_account->token_account, &token_account);
+
+    const Pubkey mint_account = {{ MINT_ACCOUNT }};
+    assert_pubkey_equal(freeze_account->mint_account, &mint_account);
+
+    const Pubkey owner = {{ OWNER_ACCOUNT }};
+    assert_pubkey_equal(freeze_account->sign.single.signer, &owner);
+}
+
+void test_parse_spl_token_thaw_account() {
+    uint8_t message[] = {
+        1, 0, 2,
+        4,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            MINT_ACCOUNT,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        1,
+            3,
+            3,
+                1, 2, 0,
+            1,
+                11
+    };
+    Parser parser = {message, sizeof(message)};
+    MessageHeader header;
+    assert(parse_message_header(&parser, &header) == 0);
+
+    Instruction instruction;
+    assert(parse_instruction(&parser, &instruction) == 0); // SplTokenThawAccount
+    assert(instruction_validate(&instruction, &header) == 0);
+
+    SplTokenInfo info;
+    assert(parse_spl_token_instructions(&instruction, &header, &info) == 0);
+    assert(parser.buffer_length == 0);
+
+    assert(info.kind == SplTokenKind(ThawAccount));
+    const SplTokenThawAccountInfo* thaw_account = &info.thaw_account;
+
+    const Pubkey token_account = {{ TOKEN_ACCOUNT }};
+    assert_pubkey_equal(thaw_account->token_account, &token_account);
+
+    const Pubkey mint_account = {{ MINT_ACCOUNT }};
+    assert_pubkey_equal(thaw_account->mint_account, &mint_account);
+
+    const Pubkey owner = {{ OWNER_ACCOUNT }};
+    assert_pubkey_equal(thaw_account->sign.single.signer, &owner);
+}
+
+
 void test_parse_spl_token_instruction_kind() {
     SplTokenInstructionKind kind;
 
@@ -545,19 +628,17 @@ void test_parse_spl_token_instruction_kind() {
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
     assert(kind == SplTokenKind(CloseAccount));
 
-    // New/unimplemented fails
     buf[0] = 10;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
-    assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
-    //assert(kind == SplTokenKind(FreezeAccount));
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
+    assert(kind == SplTokenKind(FreezeAccount));
 
-    // New/unimplemented fails
     buf[0] = 11;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
-    assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
-    //assert(kind == SplTokenKind(ThawAccount));
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
+    assert(kind == SplTokenKind(ThawAccount));
 
     buf[0] = 12;
     parser.buffer = buf;
@@ -700,6 +781,8 @@ int main() {
     test_parse_spl_token_mint_to();
     test_parse_spl_token_burn();
     test_parse_spl_token_close_account();
+    test_parse_spl_token_freeze_account();
+    test_parse_spl_token_thaw_account();
 
     printf("passed\n");
     return 0;

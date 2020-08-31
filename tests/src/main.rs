@@ -1174,7 +1174,6 @@ fn test_spl_token_burn() {
         spl_token::instruction::burn2(&spl_token::id(), &account, &mint, &owner, &[], 42, 9)
             .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1430,6 +1429,119 @@ fn test_spl_token_close_account_multisig() {
     assert!(signature.verify(&signer.as_ref(), &message));
 }
 
+fn test_spl_token_freeze_account() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let signer = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("ledger get pubkey");
+    let freeze_auth = signer;
+    let account = Pubkey::new(&[1u8; 32]);
+    let mint = Pubkey::new(&[2u8; 32]);
+
+    let instruction = spl_token::instruction::freeze_account(
+        &spl_token::id(),
+        &account,
+        &mint,
+        &freeze_auth,
+        &[],
+    )
+    .unwrap();
+    let message = Message::new(&[instruction], Some(&signer)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&signer.as_ref(), &message));
+}
+
+fn test_spl_token_freeze_account_multisig() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let signer = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("ledger get pubkey");
+    let freeze_auth = signer;
+    let account = Pubkey::new(&[1u8; 32]);
+    let mint = Pubkey::new(&[2u8; 32]);
+    let signers = [Pubkey::new(&[3u8; 32]), signer];
+
+    let instruction = spl_token::instruction::freeze_account(
+        &spl_token::id(),
+        &account,
+        &mint,
+        &freeze_auth,
+        &signers.iter().collect::<Vec<_>>(),
+    )
+    .unwrap();
+    let message = Message::new(&[instruction], Some(&signer)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&signer.as_ref(), &message));
+}
+
+fn test_spl_token_thaw_account() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let signer = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("ledger get pubkey");
+    let thaw_auth = signer;
+    let account = Pubkey::new(&[1u8; 32]);
+    let mint = Pubkey::new(&[2u8; 32]);
+
+    let instruction =
+        spl_token::instruction::thaw_account(&spl_token::id(), &account, &mint, &thaw_auth, &[])
+            .unwrap();
+    let message = Message::new(&[instruction], Some(&signer)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&signer.as_ref(), &message));
+}
+
+fn test_spl_token_thaw_account_multisig() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let signer = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("ledger get pubkey");
+    let thaw_auth = signer;
+    let account = Pubkey::new(&[1u8; 32]);
+    let mint = Pubkey::new(&[2u8; 32]);
+    let signers = [Pubkey::new(&[3u8; 32]), signer];
+
+    let instruction = spl_token::instruction::thaw_account(
+        &spl_token::id(),
+        &account,
+        &mint,
+        &thaw_auth,
+        &signers.iter().collect::<Vec<_>>(),
+    )
+    .unwrap();
+    let message = Message::new(&[instruction], Some(&signer)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&signer.as_ref(), &message));
+}
+
 macro_rules! run {
     ($test:ident) => {
         println!(" >>> Running {} <<<", stringify!($test));
@@ -1437,6 +1549,10 @@ macro_rules! run {
     };
 }
 fn main() {
+    run!(test_spl_token_freeze_account);
+    run!(test_spl_token_freeze_account_multisig);
+    run!(test_spl_token_thaw_account);
+    run!(test_spl_token_thaw_account_multisig);
     run!(test_spl_token_burn);
     run!(test_spl_token_burn_multisig);
     run!(test_spl_token_mint_to);

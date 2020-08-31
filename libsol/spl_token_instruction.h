@@ -100,6 +100,18 @@ typedef struct SplTokenCloseAccountInfo {
     SplTokenSign sign;
 } SplTokenCloseAccountInfo;
 
+typedef struct SplTokenFreezeAccountInfo {
+    const Pubkey* token_account;
+    const Pubkey* mint_account;
+    SplTokenSign sign;
+} SplTokenFreezeAccountInfo;
+
+typedef struct SplTokenThawAccountInfo {
+    const Pubkey* token_account;
+    const Pubkey* mint_account;
+    SplTokenSign sign;
+} SplTokenThawAccountInfo;
+
 typedef struct SplTokenInfo {
     SplTokenInstructionKind kind;
     union {
@@ -113,6 +125,8 @@ typedef struct SplTokenInfo {
         SplTokenMintToInfo mint_to;
         SplTokenBurnInfo burn;
         SplTokenCloseAccountInfo close_account;
+        SplTokenFreezeAccountInfo freeze_account;
+        SplTokenThawAccountInfo thaw_account;
     };
 } SplTokenInfo;
 

@@ -27,10 +27,11 @@ static int parse_spl_token_instruction_kind(
         case SplTokenKind(MintTo2):
         case SplTokenKind(Burn2):
         case SplTokenKind(CloseAccount):
-            *kind = (SplTokenInstructionKind) maybe_kind;
-            return 0;
         case SplTokenKind(FreezeAccount):
         case SplTokenKind(ThawAccount):
+            *kind = (SplTokenInstructionKind) maybe_kind;
+            return 0;
+        // Deprecated instructions
         case SplTokenKind(Transfer):
         case SplTokenKind(Approve):
         case SplTokenKind(MintTo):
@@ -297,6 +298,38 @@ static int parse_close_account_spl_token_instruction(
     return 0;
 }
 
+static int parse_freeze_account_spl_token_instruction(
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SplTokenFreezeAccountInfo* info
+) {
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
+
+    BAIL_IF(parse_spl_token_sign(&it, &info->sign));
+
+    return 0;
+}
+
+static int parse_thaw_account_spl_token_instruction(
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SplTokenThawAccountInfo* info
+) {
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
+
+    BAIL_IF(parse_spl_token_sign(&it, &info->sign));
+
+    return 0;
+}
+
 int parse_spl_token_instructions(
     const Instruction* instruction,
     const MessageHeader* header,
@@ -353,8 +386,17 @@ int parse_spl_token_instructions(
                 &info->close_account
             );
         case SplTokenKind(FreezeAccount):
+            return parse_freeze_account_spl_token_instruction(
+                instruction,
+                header,
+                &info->freeze_account
+            );
         case SplTokenKind(ThawAccount):
-            break;
+            return parse_thaw_account_spl_token_instruction(
+                instruction,
+                header,
+                &info->thaw_account
+            );
         case SplTokenKind(Transfer2):
             return parse_transfer_spl_token_instruction(
                 &parser,
@@ -630,6 +672,40 @@ static int print_spl_token_close_account_info(
     return 0;
 }
 
+static int print_spl_token_freeze_account_info(
+    const SplTokenFreezeAccountInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Freeze acct", info->token_account);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Mint", info->mint_account);
+
+    print_spl_token_sign(&info->sign);
+
+    return 0;
+}
+
+static int print_spl_token_thaw_account_info(
+    const SplTokenThawAccountInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Thaw acct", info->token_account);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Mint", info->mint_account);
+
+    print_spl_token_sign(&info->sign);
+
+    return 0;
+}
+
 int print_spl_token_info(
     const SplTokenInfo* info,
     const MessageHeader* header
@@ -666,7 +742,9 @@ int print_spl_token_info(
         case SplTokenKind(CloseAccount):
             return print_spl_token_close_account_info(&info->close_account, header);
         case SplTokenKind(FreezeAccount):
+            return print_spl_token_freeze_account_info(&info->freeze_account, header);
         case SplTokenKind(ThawAccount):
+            return print_spl_token_thaw_account_info(&info->thaw_account, header);
         case SplTokenKind(Transfer2):
             return print_spl_token_transfer_info(&info->transfer, header);
         case SplTokenKind(Approve2):

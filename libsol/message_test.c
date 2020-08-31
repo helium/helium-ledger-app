@@ -1126,6 +1126,44 @@ void test_process_message_body_spl_token_close_account() {
     process_message_body_and_sanity_check(message, sizeof(message), 4);
 }
 
+void test_process_message_body_spl_token_freeze_account() {
+    uint8_t message[] = {
+        1, 0, 2,
+        4,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            MINT_ACCOUNT,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        1,
+            3,
+            3,
+                1, 2, 0,
+            1,
+                10
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 4);
+}
+
+void test_process_message_body_spl_token_thaw_account() {
+    uint8_t message[] = {
+        1, 0, 2,
+        4,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            MINT_ACCOUNT,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        1,
+            3,
+            3,
+                1, 2, 0,
+            1,
+                11
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 4);
+}
+
 int main() {
     test_process_message_body_spl_token_create_token();
     test_process_message_body_spl_token_create_account();
@@ -1137,6 +1175,8 @@ int main() {
     test_process_message_body_spl_token_mint_to();
     test_process_message_body_spl_token_burn();
     test_process_message_body_spl_token_close_account();
+    test_process_message_body_spl_token_freeze_account();
+    test_process_message_body_spl_token_thaw_account();
     test_process_message_body_ok();
     test_process_message_body_too_few_ix_fail();
     test_process_message_body_too_many_ix_fail();
