@@ -111,6 +111,10 @@ void handleSignMessage(
     volatile unsigned int *flags,
     volatile unsigned int *tx
 ) {
+    if (dataLength == 0) {
+        THROW(ApduReplySolanaInvalidMessage);
+    }
+
     int deprecated_host = ((dataLength & DATA_HAS_LENGTH_PREFIX) != 0);
 
     if (deprecated_host) {
