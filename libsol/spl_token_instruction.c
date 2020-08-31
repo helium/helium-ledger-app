@@ -203,9 +203,9 @@ static const char* stringify_token_authority_type(Token_AuthorityType auth_type)
         case Token_AuthorityType_FreezeAccount:
             return "Freeze account";
         case Token_AuthorityType_AccountOwner:
-            return "Account owner";
+            return "Owner";
         case Token_AuthorityType_CloseAccount:
-            return "Close account";
+            return "Close acct";
     }
     return NULL;
 }
@@ -431,10 +431,10 @@ static int print_spl_token_initialize_account_info(
     }
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Token account owner", info->owner);
+    summary_item_set_pubkey(item, "Owner", info->owner);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Token mint", info->mint_account);
+    summary_item_set_pubkey(item, "Mint", info->mint_account);
 
     return 0;
 }
@@ -487,7 +487,7 @@ static int print_spl_token_approve_info(
     summary_item_set_pubkey(item, "Approve delegate", info->delegate);
 
     item = transaction_summary_general_item();
-    summary_item_set_u64(item, "To spend", info->body.amount);
+    summary_item_set_u64(item, "Allowance", info->body.amount);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "From", info->token_account);
@@ -548,10 +548,10 @@ static int print_spl_token_mint_to_info(
     summary_item_set_u64(item, "Mint tokens", info->body.amount);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "From mint", info->mint_account);
+    summary_item_set_pubkey(item, "From", info->mint_account);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "To account", info->token_account);
+    summary_item_set_pubkey(item, "To", info->token_account);
 
     print_spl_token_sign(&info->sign);
 
@@ -568,7 +568,7 @@ static int print_spl_token_burn_info(
     summary_item_set_u64(item, "Burn tokens", info->body.amount);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "From account", info->token_account);
+    summary_item_set_pubkey(item, "From", info->token_account);
 
     print_spl_token_sign(&info->sign);
 
@@ -582,7 +582,7 @@ static int print_spl_token_close_account_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Close token acct", info->token_account);
+    summary_item_set_pubkey(item, "Close acct", info->token_account);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Withdraw to", info->dest_account);
@@ -599,19 +599,19 @@ int print_spl_token_info(
     switch (info->kind) {
         case SplTokenKind(InitializeMint):
             return print_spl_token_initialize_mint_info(
-                "Init token mint",
+                "Init mint",
                 &info->initialize_mint,
                 header
             );
         case SplTokenKind(InitializeAccount):
             return print_spl_token_initialize_account_info(
-                "Init token acct",
+                "Init acct",
                 &info->initialize_account,
                 header
             );
         case SplTokenKind(InitializeMultisig):
             return print_spl_token_initialize_multisig_info(
-                "Init token multisig",
+                "Init multisig",
                 &info->initialize_multisig,
                 header
             );
