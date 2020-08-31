@@ -24,32 +24,33 @@ void print_pubkey(const Pubkey* pubkey) {
 
 void test_parse_spl_token_create_token() {
     uint8_t message[] = {
-        0x02, 0x00, 0x02,
-        0x04,
+        2, 0, 3,
+        5, 
             OWNER_ACCOUNT,
             MINT_ACCOUNT,
+            SYSVAR_RENT,
             PROGRAM_ID_SYSTEM,
             PROGRAM_ID_SPL_TOKEN,
         BLOCKHASH,
-        0x02,
-            // SystemCreateAccount
-            0x02,
-            0x02,
-                0x00, 0x01,
-            0x34,
-                0x00, 0x00, 0x00, 0x00,
-                0x80, 0xd7, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        2,
+            3,
+            2,
+                0, 1,
+            52,
+                0, 0, 0, 0, 
+                245, 1, 0, 0, 0, 0, 0, 0, 
+                88, 0, 0, 0, 0, 0, 0, 0, 
                 PROGRAM_ID_SPL_TOKEN,
-            // SplTokenInitializeMint
-            0x03,
-            0x02,
-                0x01, 0x00,
-            0x0a,
-                0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x09,
+            4, 
+            2, 
+                1, 2, 
+            35,
+                0,
+                9,
+                OWNER_ACCOUNT,
+                0
     };
+
     Parser parser = {message, sizeof(message)};
     MessageHeader header;
     assert(parse_message_header(&parser, &header) == 0);
@@ -71,13 +72,12 @@ void test_parse_spl_token_create_token() {
     const Pubkey mint_account = {{ MINT_ACCOUNT }};
     assert_pubkey_equal(init_mint->mint_account, &mint_account);
 
-    assert(init_mint->token_account == NULL);
-
     const Pubkey owner = {{ OWNER_ACCOUNT }};
-    assert_pubkey_equal(init_mint->owner, &owner);
+    assert_pubkey_equal(init_mint->mint_authority, &owner);
 
-    assert(init_mint->body.amount == 0);
-    assert(init_mint->body.decimals == 9);
+    assert(init_mint->decimals == 9);
+
+    assert(init_mint->freeze_authority == NULL);
 }
 
 void test_parse_spl_token_create_account() {
@@ -321,42 +321,46 @@ void test_parse_spl_token_revoke() {
     assert_pubkey_equal(re_info->sign.single.signer, &owner);
 }
 
-void test_parse_spl_token_set_owner() {
+void test_parse_spl_token_set_authority() {
     uint8_t message[] = {
-        1, 0, 2,
-        4,
+        1, 0, 1,
+        3,
             OWNER_ACCOUNT,
             TOKEN_ACCOUNT,
-            NEW_OWNER,
             PROGRAM_ID_SPL_TOKEN,
         BLOCKHASH,
         1,
-            3,
-            3,
-                1, 2, 0,
-            1,
-                6
+            2,
+            2,
+                1, 0,
+            35,
+                6,
+                2,
+                1,
+                    NEW_OWNER
     };
     Parser parser = {message, sizeof(message)};
     MessageHeader header;
     assert(parse_message_header(&parser, &header) == 0);
 
     Instruction instruction;
-    assert(parse_instruction(&parser, &instruction) == 0); // SplTokenSetOwner
+    assert(parse_instruction(&parser, &instruction) == 0); // SplTokenSetAuthority
     assert(instruction_validate(&instruction, &header) == 0);
 
     SplTokenInfo info;
     assert(parse_spl_token_instructions(&instruction, &header, &info) == 0);
     assert(parser.buffer_length == 0);
 
-    assert(info.kind == SplTokenKind(SetOwner));
-    const SplTokenSetOwnerInfo* so_info = &info.set_owner;
+    assert(info.kind == SplTokenKind(SetAuthority));
+    const SplTokenSetAuthorityInfo* so_info = &info.set_owner;
 
     const Pubkey token_account = {{ TOKEN_ACCOUNT }};
-    assert_pubkey_equal(so_info->token_account, &token_account);
+    assert_pubkey_equal(so_info->account, &token_account);
+
+    assert(so_info->authority_type == Token_AuthorityType_AccountOwner);
 
     const Pubkey new_owner = {{ NEW_OWNER }};
-    assert_pubkey_equal(so_info->new_owner, &new_owner);
+    assert_pubkey_equal(so_info->new_authority, &new_owner);
 
     const Pubkey owner = {{ OWNER_ACCOUNT }};
     assert_pubkey_equal(so_info->sign.single.signer, &owner);
@@ -528,7 +532,7 @@ void test_parse_spl_token_instruction_kind() {
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
-    assert(kind == SplTokenKind(SetOwner));
+    assert(kind == SplTokenKind(SetAuthority));
 
     buf[0] = 7;
     parser.buffer = buf;
@@ -548,8 +552,47 @@ void test_parse_spl_token_instruction_kind() {
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
     assert(kind == SplTokenKind(CloseAccount));
 
-    // First unused enum value fails
+    // New/unimplemented fails
     buf[0] = 10;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
+    //assert(kind == SplTokenKind(FreezeAccount));
+
+    // New/unimplemented fails
+    buf[0] = 11;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
+    //assert(kind == SplTokenKind(ThawAccount));
+
+    buf[0] = 12;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
+    //assert(kind == SplTokenKind(Transfer2));
+
+    buf[0] = 13;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
+    //assert(kind == SplTokenKind(Approve2));
+
+    buf[0] = 14;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
+    //assert(kind == SplTokenKind(MintTo2));
+
+    // New/unimplemented fails
+    buf[0] = 15;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
+    //assert(kind == SplTokenKind(Burn2));
+
+    // First unused enum value fails
+    buf[0] = 16;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
@@ -640,7 +683,7 @@ int main() {
     test_parse_spl_token_transfer();
     test_parse_spl_token_approve();
     test_parse_spl_token_revoke();
-    test_parse_spl_token_set_owner();
+    test_parse_spl_token_set_authority();
     test_parse_spl_token_mint_to();
     test_parse_spl_token_burn();
     test_parse_spl_token_close_account();

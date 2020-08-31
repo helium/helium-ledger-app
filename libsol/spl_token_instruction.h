@@ -3,8 +3,8 @@
 #include "sol/transaction_summary.h"
 #include "spl/token.h"
 
-#define SplTokenBody(b) Token_ ## b ## _Body
-#define SplTokenKind(b) b
+#define SplTokenBody(b) Token_TokenInstruction_Token_ ## b ## _Body
+#define SplTokenKind(b) Token_TokenInstruction_ ## b
 
 #define SplTokenInstructionKind Token_TokenInstruction_Tag
 
@@ -35,9 +35,9 @@ extern const Pubkey spl_token_program_id;
 
 typedef struct SplTokenInitializeMintInfo {
     const Pubkey* mint_account;
-    const Pubkey* token_account;
-    const Pubkey* owner;
-    SplTokenBody(InitializeMint) body;
+    const Pubkey* mint_authority;
+    const Pubkey* freeze_authority;
+    uint8_t decimals;
 } SplTokenInitializeMintInfo;
 
 typedef struct SplTokenInitializeAccountInfo {
@@ -71,11 +71,12 @@ typedef struct SplTokenRevokeInfo {
     SplTokenSign sign;
 } SplTokenRevokeInfo;
 
-typedef struct SplTokenSetOwnerInfo {
-    const Pubkey* token_account;
-    const Pubkey* new_owner;
+typedef struct SplTokenSetAuthorityInfo {
+    const Pubkey* account;
+    const Pubkey* new_authority;
+    Token_AuthorityType authority_type;
     SplTokenSign sign;
-} SplTokenSetOwnerInfo;
+} SplTokenSetAuthorityInfo;
 
 typedef struct SplTokenMintToInfo {
     const Pubkey* mint_account;
@@ -105,7 +106,7 @@ typedef struct SplTokenInfo {
         SplTokenTransferInfo transfer;
         SplTokenApproveInfo approve;
         SplTokenRevokeInfo revoke;
-        SplTokenSetOwnerInfo set_owner;
+        SplTokenSetAuthorityInfo set_owner;
         SplTokenMintToInfo mint_to;
         SplTokenBurnInfo burn;
         SplTokenCloseAccountInfo close_account;
@@ -126,3 +127,12 @@ void summary_item_set_multisig_m_of_n(
     uint8_t m,
     uint8_t n
 );
+
+#define SplTokenOptionPubkeyKind Token_COption_Pubkey_Tag
+#define SplTokenToOptionPubkeyKind(k) Token_COption_Pubkey_ ## k ## _Pubkey
+#define SplTokenOptionPubkeyBody Token_COption_Pubkey_Token_Some_Body_Pubkey
+#define SplTokenOptionPubkey Token_COption_Pubkey
+const Pubkey* spl_token_option_pubkey_get(
+    const SplTokenOptionPubkey* option_pubkey
+);
+

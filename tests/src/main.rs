@@ -827,8 +827,7 @@ fn test_spl_token_create_mint() {
             std::mem::size_of::<spl_token::state::Mint>() as u64,
             &spl_token::id(),
         ),
-        spl_token::instruction::initialize_mint(&spl_token::id(), &mint, &owner, None, 2)
-            .unwrap(),
+        spl_token::instruction::initialize_mint(&spl_token::id(), &mint, &owner, None, 2).unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
     let signature = ledger
@@ -932,8 +931,7 @@ fn test_spl_token_create_mint_with_seed() {
             std::mem::size_of::<spl_token::state::Mint>() as u64,
             &spl_token::id(),
         ),
-        spl_token::instruction::initialize_mint(&spl_token::id(), &mint, &owner, None, 2)
-            .unwrap(),
+        spl_token::instruction::initialize_mint(&spl_token::id(), &mint, &owner, None, 2).unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
     let signature = ledger
@@ -1102,10 +1100,17 @@ fn test_spl_token_set_authority() {
     let account = Pubkey::new(&[1u8; 32]);
     let new_owner = Pubkey::new(&[2u8; 32]);
 
-    let instruction =
-        spl_token::instruction::set_authority(&spl_token::id(), &account, Some(&new_owner), spl_token::instruction::AuthorityType::AccountOwner, &owner, &[])
-            .unwrap();
+    let instruction = spl_token::instruction::set_authority(
+        &spl_token::id(),
+        &account,
+        Some(&new_owner),
+        spl_token::instruction::AuthorityType::AccountOwner,
+        &owner,
+        &[],
+    )
+    .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
+    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1405,15 +1410,16 @@ macro_rules! run {
     };
 }
 fn main() {
+    run!(test_spl_token_set_authority);
+    run!(test_spl_token_set_authority_multisig);
     run!(test_spl_token_create_mint);
+    run!(test_spl_token_create_mint_with_seed);
     run!(test_spl_token_transfer_multisig);
     run!(test_spl_token_approve_multisig);
     run!(test_spl_token_revoke_multisig);
-    run!(test_spl_token_set_authority_multisig);
     run!(test_spl_token_mint_to_multisig);
     run!(test_spl_token_burn_multisig);
     run!(test_spl_token_close_account_multisig);
-    run!(test_spl_token_create_mint_with_seed);
     run!(test_spl_token_create_account_with_seed);
     run!(test_spl_token_create_multisig_with_seed);
     run!(test_spl_token_create_account);
@@ -1421,7 +1427,6 @@ fn main() {
     run!(test_spl_token_transfer);
     run!(test_spl_token_approve);
     run!(test_spl_token_revoke);
-    run!(test_spl_token_set_authority);
     run!(test_spl_token_mint_to);
     run!(test_spl_token_burn);
     run!(test_spl_token_close_account);

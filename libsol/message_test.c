@@ -893,33 +893,33 @@ void test_process_message_body_stake_split_with_seed_v1_2() {
 
 void test_process_message_body_spl_token_create_token() {
     uint8_t message[] = {
-        0x02, 0x00, 0x02,
-        0x04,
+        2, 0, 3,
+        5, 
             OWNER_ACCOUNT,
             MINT_ACCOUNT,
+            SYSVAR_RENT,
             PROGRAM_ID_SYSTEM,
             PROGRAM_ID_SPL_TOKEN,
         BLOCKHASH,
-        0x02,
-            // SystemCreateAccount
-            0x02,
-            0x02,
-                0x00, 0x01,
-            0x34,
-                0x00, 0x00, 0x00, 0x00,
-                0x80, 0xd7, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        2,
+            3,
+            2,
+                0, 1,
+            52,
+                0, 0, 0, 0, 
+                245, 1, 0, 0, 0, 0, 0, 0, 
+                88, 0, 0, 0, 0, 0, 0, 0, 
                 PROGRAM_ID_SPL_TOKEN,
-            // SplTokenInitializeMint
-            0x03,
-            0x02,
-                0x01, 0x00,
-            0x0a,
-                0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x09,
+            4, 
+            2, 
+                1, 2, 
+            35,
+                0,
+                9,
+                OWNER_ACCOUNT,
+                0
     };
-    process_message_body_and_sanity_check(message, sizeof(message), 7);
+    process_message_body_and_sanity_check(message, sizeof(message), 6);
 }
 
 void test_process_message_body_spl_token_create_account() {
@@ -949,7 +949,7 @@ void test_process_message_body_spl_token_create_account() {
             0x01,
                 0x01,
     };
-    process_message_body_and_sanity_check(message, sizeof(message), 5);
+    process_message_body_and_sanity_check(message, sizeof(message), 6);
 }
 
 void test_process_message_body_spl_token_create_multisig() {
@@ -982,7 +982,7 @@ void test_process_message_body_spl_token_create_multisig() {
                 2,
                 2
     };
-    process_message_body_and_sanity_check(message, sizeof(message), 4);
+    process_message_body_and_sanity_check(message, sizeof(message), 5);
 }
 
 void test_process_message_body_spl_token_transfer() {
@@ -1002,7 +1002,7 @@ void test_process_message_body_spl_token_transfer() {
                 3,
                 42, 0, 0, 0, 0, 0, 0, 0
     };
-    process_message_body_and_sanity_check(message, sizeof(message), 4);
+    process_message_body_and_sanity_check(message, sizeof(message), 5);
 }
 
 void test_process_message_body_spl_token_approve() {
@@ -1022,7 +1022,7 @@ void test_process_message_body_spl_token_approve() {
                 4,
                 42, 0, 0, 0, 0, 0, 0, 0
     };
-    process_message_body_and_sanity_check(message, sizeof(message), 4);
+    process_message_body_and_sanity_check(message, sizeof(message), 5);
 }
 
 void test_process_message_body_spl_token_revoke() {
@@ -1040,26 +1040,28 @@ void test_process_message_body_spl_token_revoke() {
             1,
                 5
     };
-    process_message_body_and_sanity_check(message, sizeof(message), 2);
+    process_message_body_and_sanity_check(message, sizeof(message), 3);
 }
 
-void test_process_message_body_spl_token_set_owner() {
+void test_process_message_body_spl_token_set_authority() {
     uint8_t message[] = {
-        1, 0, 2,
-        4,
+        1, 0, 1,
+        3,
             OWNER_ACCOUNT,
             TOKEN_ACCOUNT,
-            NEW_OWNER,
             PROGRAM_ID_SPL_TOKEN,
         BLOCKHASH,
         1,
-            3,
-            3,
-                1, 2, 0,
-            1,
-                6
+            2,
+            2,
+                1, 0,
+            35,
+                6,
+                2,
+                1,
+                    NEW_OWNER
     };
-    process_message_body_and_sanity_check(message, sizeof(message), 3);
+    process_message_body_and_sanity_check(message, sizeof(message), 5);
 }
 
 void test_process_message_body_spl_token_mint_to() {
@@ -1079,7 +1081,7 @@ void test_process_message_body_spl_token_mint_to() {
                 7,
                 42, 0, 0, 0, 0, 0, 0, 0
     };
-    process_message_body_and_sanity_check(message, sizeof(message), 4);
+    process_message_body_and_sanity_check(message, sizeof(message), 5);
 }
 
 void test_process_message_body_spl_token_burn() {
@@ -1098,7 +1100,7 @@ void test_process_message_body_spl_token_burn() {
                 8,
                 42, 0, 0, 0, 0, 0, 0, 0
     };
-    process_message_body_and_sanity_check(message, sizeof(message), 3);
+    process_message_body_and_sanity_check(message, sizeof(message), 4);
 }
 
 void test_process_message_body_spl_token_close_account() {
@@ -1117,10 +1119,20 @@ void test_process_message_body_spl_token_close_account() {
             0x01,
                 0x09,
     };
-    process_message_body_and_sanity_check(message, sizeof(message), 3);
+    process_message_body_and_sanity_check(message, sizeof(message), 4);
 }
 
 int main() {
+    test_process_message_body_spl_token_create_token();
+    test_process_message_body_spl_token_create_account();
+    test_process_message_body_spl_token_create_multisig();
+    test_process_message_body_spl_token_transfer();
+    test_process_message_body_spl_token_approve();
+    test_process_message_body_spl_token_revoke();
+    test_process_message_body_spl_token_set_authority();
+    test_process_message_body_spl_token_mint_to();
+    test_process_message_body_spl_token_burn();
+    test_process_message_body_spl_token_close_account();
     test_process_message_body_ok();
     test_process_message_body_too_few_ix_fail();
     test_process_message_body_too_many_ix_fail();
