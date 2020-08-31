@@ -1069,20 +1069,20 @@ void test_process_message_body_spl_token_set_authority() {
 
 void test_process_message_body_spl_token_mint_to() {
     uint8_t message[] = {
-        1, 0, 1,
-        4,
+        1, 0, 0,
+        3,
             OWNER_ACCOUNT,
-            MINT_ACCOUNT,
-            TOKEN_ACCOUNT,
             PROGRAM_ID_SPL_TOKEN,
+            TOKEN_ACCOUNT,
         BLOCKHASH,
         1,
-            3,
+            1,
             3,
                 1, 2, 0,
-            9,
-                7,
-                42, 0, 0, 0, 0, 0, 0, 0
+            10,
+                14,
+                42, 0, 0, 0, 0, 0, 0, 0,
+                9
     };
     process_message_body_and_sanity_check(message, sizeof(message), 5);
 }

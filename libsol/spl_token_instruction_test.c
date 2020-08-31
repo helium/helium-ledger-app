@@ -379,39 +379,40 @@ void test_parse_spl_token_set_authority() {
 
 void test_parse_spl_token_mint_to() {
     uint8_t message[] = {
-        1, 0, 1,
-        4,
+        1, 0, 0,
+        3,
             OWNER_ACCOUNT,
-            MINT_ACCOUNT,
-            TOKEN_ACCOUNT,
             PROGRAM_ID_SPL_TOKEN,
+            TOKEN_ACCOUNT,
         BLOCKHASH,
         1,
-            3,
+            1,
             3,
                 1, 2, 0,
-            9,
-                7,
-                42, 0, 0, 0, 0, 0, 0, 0
+            10,
+                14,
+                42, 0, 0, 0, 0, 0, 0, 0,
+                9
     };
     Parser parser = {message, sizeof(message)};
     MessageHeader header;
     assert(parse_message_header(&parser, &header) == 0);
 
     Instruction instruction;
-    assert(parse_instruction(&parser, &instruction) == 0); // SplTokenMintTo
+    assert(parse_instruction(&parser, &instruction) == 0); // SplTokenMintTo2
     assert(instruction_validate(&instruction, &header) == 0);
 
     SplTokenInfo info;
     assert(parse_spl_token_instructions(&instruction, &header, &info) == 0);
     assert(parser.buffer_length == 0);
 
-    assert(info.kind == SplTokenKind(MintTo));
+    assert(info.kind == SplTokenKind(MintTo2));
     const SplTokenMintToInfo* mt_info = &info.mint_to;
 
     assert(mt_info->body.amount == 42);
+    assert(mt_info->body.decimals == 9);
 
-    const Pubkey mint_account = {{ MINT_ACCOUNT }};
+    const Pubkey mint_account = {{ PROGRAM_ID_SPL_TOKEN }};
     assert_pubkey_equal(mt_info->mint_account, &mint_account);
 
     const Pubkey token_account = {{ TOKEN_ACCOUNT }};
@@ -533,12 +534,6 @@ void test_parse_spl_token_instruction_kind() {
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
     assert(kind == SplTokenKind(SetAuthority));
 
-    buf[0] = 7;
-    parser.buffer = buf;
-    parser.buffer_length = ARRAY_LEN(buf);
-    assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
-    assert(kind == SplTokenKind(MintTo));
-
     buf[0] = 8;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
@@ -580,8 +575,8 @@ void test_parse_spl_token_instruction_kind() {
     buf[0] = 14;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
-    assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
-    //assert(kind == SplTokenKind(MintTo2));
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
+    assert(kind == SplTokenKind(MintTo2));
 
     // New/unimplemented fails
     buf[0] = 15;
@@ -609,6 +604,11 @@ void test_parse_spl_token_instruction_kind() {
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
 
     buf[0] = 4;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
+
+    buf[0] = 7;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
