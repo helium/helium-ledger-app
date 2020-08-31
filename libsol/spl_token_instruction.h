@@ -63,8 +63,9 @@ typedef struct SplTokenTransferInfo {
 typedef struct SplTokenApproveInfo {
     const Pubkey* token_account;
     const Pubkey* delegate;
+    const Pubkey* mint_account;
     SplTokenSign sign;
-    SplTokenBody(Approve) body;
+    SplTokenBody(Approve2) body;
 } SplTokenApproveInfo;
 
 typedef struct SplTokenRevokeInfo {

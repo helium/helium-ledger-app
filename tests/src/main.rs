@@ -1046,7 +1046,6 @@ fn test_spl_token_transfer() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1065,11 +1064,21 @@ fn test_spl_token_approve() {
         .expect("ledger get pubkey");
     let account = Pubkey::new(&[1u8; 32]);
     let delegate = Pubkey::new(&[2u8; 32]);
+    let mint = spl_token::id();
 
-    let instruction =
-        spl_token::instruction::approve(&spl_token::id(), &account, &delegate, &owner, &[], 42)
-            .unwrap();
+    let instruction = spl_token::instruction::approve2(
+        &spl_token::id(),
+        &account,
+        &mint,
+        &delegate,
+        &owner,
+        &[],
+        42,
+        9,
+    )
+    .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
+    println!("{:?}", message);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -1246,15 +1255,18 @@ fn test_spl_token_approve_multisig() {
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
     let delegate = Pubkey::new(&[3u8; 32]);
-    let signers = [Pubkey::new(&[4u8; 32]), signer];
+    let mint = Pubkey::new(&[4u8; 32]);
+    let signers = [Pubkey::new(&[5u8; 32]), signer];
 
-    let instruction = spl_token::instruction::approve(
+    let instruction = spl_token::instruction::approve2(
         &spl_token::id(),
         &account,
+        &mint,
         &delegate,
         &owner,
         &signers.iter().collect::<Vec<_>>(),
         42,
+        9,
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
@@ -1422,13 +1434,14 @@ macro_rules! run {
     };
 }
 fn main() {
+    run!(test_spl_token_approve);
+    run!(test_spl_token_approve_multisig);
     run!(test_spl_token_transfer);
     run!(test_spl_token_transfer_multisig);
     run!(test_spl_token_set_authority);
     run!(test_spl_token_set_authority_multisig);
     run!(test_spl_token_create_mint);
     run!(test_spl_token_create_mint_with_seed);
-    run!(test_spl_token_approve_multisig);
     run!(test_spl_token_revoke_multisig);
     run!(test_spl_token_mint_to_multisig);
     run!(test_spl_token_burn_multisig);
@@ -1437,7 +1450,6 @@ fn main() {
     run!(test_spl_token_create_multisig_with_seed);
     run!(test_spl_token_create_account);
     run!(test_spl_token_create_multisig);
-    run!(test_spl_token_approve);
     run!(test_spl_token_revoke);
     run!(test_spl_token_mint_to);
     run!(test_spl_token_burn);

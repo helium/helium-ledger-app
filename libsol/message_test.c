@@ -1013,16 +1013,17 @@ void test_process_message_body_spl_token_approve() {
         4,
             OWNER_ACCOUNT,
             TOKEN_ACCOUNT,
-            DELEGATE,
             PROGRAM_ID_SPL_TOKEN,
+            DEST_ACCOUNT,
         BLOCKHASH,
         1,
-            3,
-            3,
-                1, 2, 0,
-            9,
-                4,
-                42, 0, 0, 0, 0, 0, 0, 0
+            2,
+            4,
+                1, 2, 3, 0,
+            10,
+                13,
+                42, 0, 0, 0, 0, 0, 0, 0,
+                9
     };
     process_message_body_and_sanity_check(message, sizeof(message), 5);
 }
