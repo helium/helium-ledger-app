@@ -89,8 +89,9 @@ typedef struct SplTokenMintToInfo {
 
 typedef struct SplTokenBurnInfo {
     const Pubkey* token_account;
+    const Pubkey* mint_account;
     SplTokenSign sign;
-    SplTokenBody(Burn) body;
+    SplTokenBody(Burn2) body;
 } SplTokenBurnInfo;
 
 typedef struct SplTokenCloseAccountInfo {

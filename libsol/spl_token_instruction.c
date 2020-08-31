@@ -25,7 +25,7 @@ static int parse_spl_token_instruction_kind(
         case SplTokenKind(Revoke):
         case SplTokenKind(SetAuthority):
         case SplTokenKind(MintTo2):
-        case SplTokenKind(Burn):
+        case SplTokenKind(Burn2):
         case SplTokenKind(CloseAccount):
             *kind = (SplTokenInstructionKind) maybe_kind;
             return 0;
@@ -34,7 +34,7 @@ static int parse_spl_token_instruction_kind(
         case SplTokenKind(Transfer):
         case SplTokenKind(Approve):
         case SplTokenKind(MintTo):
-        case SplTokenKind(Burn2):
+        case SplTokenKind(Burn):
             break;
     }
     return 1;
@@ -271,8 +271,10 @@ static int parse_burn_spl_token_instruction(
     instruction_accounts_iterator_init(&it, header, instruction);
 
     BAIL_IF(parse_u64(parser, &info->body.amount));
+    BAIL_IF(parse_u8(parser, &info->body.decimals));
 
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
 
     BAIL_IF(parse_spl_token_sign(&it, &info->sign));
 
@@ -328,6 +330,7 @@ int parse_spl_token_instructions(
         case SplTokenKind(Transfer):
         case SplTokenKind(Approve):
         case SplTokenKind(MintTo):
+        case SplTokenKind(Burn):
             // Deprecated instructions
             break;
         case SplTokenKind(Revoke):
@@ -342,13 +345,6 @@ int parse_spl_token_instructions(
                 instruction,
                 header,
                 &info->set_owner
-            );
-        case SplTokenKind(Burn):
-            return parse_burn_spl_token_instruction(
-                &parser,
-                instruction,
-                header,
-                &info->burn
             );
         case SplTokenKind(CloseAccount):
             return parse_close_account_spl_token_instruction(
@@ -381,7 +377,12 @@ int parse_spl_token_instructions(
                 &info->mint_to
             );
         case SplTokenKind(Burn2):
-            break;
+            return parse_burn_spl_token_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->burn
+            );
     }
     return 1;
 }
@@ -577,7 +578,6 @@ static int print_spl_token_mint_to_info(
         info->body.decimals
     );
 
-
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "From", info->mint_account);
 
@@ -596,7 +596,14 @@ static int print_spl_token_burn_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_u64(item, "Burn tokens", info->body.amount);
+    const char* symbol = get_token_symbol(info->mint_account);
+    summary_item_set_token_amount(
+        item,
+        "Burn tokens",
+        info->body.amount,
+        symbol,
+        info->body.decimals
+    );
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "From", info->token_account);
@@ -649,14 +656,13 @@ int print_spl_token_info(
         case SplTokenKind(Transfer):
         case SplTokenKind(Approve):
         case SplTokenKind(MintTo):
+        case SplTokenKind(Burn):
             // Deprecated instructions
             break;
         case SplTokenKind(Revoke):
             return print_spl_token_revoke_info(&info->revoke, header);
         case SplTokenKind(SetAuthority):
             return print_spl_token_set_authority_info(&info->set_owner, header);
-        case SplTokenKind(Burn):
-            return print_spl_token_burn_info(&info->burn, header);
         case SplTokenKind(CloseAccount):
             return print_spl_token_close_account_info(&info->close_account, header);
         case SplTokenKind(FreezeAccount):
@@ -668,7 +674,7 @@ int print_spl_token_info(
         case SplTokenKind(MintTo2):
             return print_spl_token_mint_to_info(&info->mint_to, header);
         case SplTokenKind(Burn2):
-            break;
+            return print_spl_token_burn_info(&info->burn, header);
     }
 
     return 1;

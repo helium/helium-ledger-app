@@ -1089,7 +1089,7 @@ void test_process_message_body_spl_token_mint_to() {
 
 void test_process_message_body_spl_token_burn() {
     uint8_t message[] = {
-        1, 0, 1,
+        1, 0, 0,
         3,
             OWNER_ACCOUNT,
             TOKEN_ACCOUNT,
@@ -1097,11 +1097,12 @@ void test_process_message_body_spl_token_burn() {
         BLOCKHASH,
         1,
             2,
-            2,
-                1, 0,
-            9,
-                8,
-                42, 0, 0, 0, 0, 0, 0, 0
+            3,
+                1, 2, 0,
+            10,
+                15,
+                42, 0, 0, 0, 0, 0, 0, 0,
+                9
     };
     process_message_body_and_sanity_check(message, sizeof(message), 4);
 }
