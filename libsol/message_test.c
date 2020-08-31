@@ -987,20 +987,22 @@ void test_process_message_body_spl_token_create_multisig() {
 
 void test_process_message_body_spl_token_transfer() {
     uint8_t message[] = {
-        1, 0, 1,
-        4,
+        1, 0, 2,
+        5,
             OWNER_ACCOUNT,
             TOKEN_ACCOUNT,
             DEST_ACCOUNT,
+            MINT_ACCOUNT,
             PROGRAM_ID_SPL_TOKEN,
         BLOCKHASH,
         1,
-            3,
-            3,
-                1, 2, 0,
-            9,
-                3,
-                42, 0, 0, 0, 0, 0, 0, 0
+            4,
+            4,
+                1, 3, 2, 0,
+            10,
+                12,
+                42, 0, 0, 0, 0, 0, 0, 0,
+                9
     };
     process_message_body_and_sanity_check(message, sizeof(message), 5);
 }

@@ -55,8 +55,9 @@ typedef struct SplTokenInitializeMultisigInfo {
 typedef struct SplTokenTransferInfo {
     const Pubkey* src_account;
     const Pubkey* dest_account;
+    const Pubkey* mint_account;
     SplTokenSign sign;
-    SplTokenBody(Transfer) body;
+    SplTokenBody(Transfer2) body;
 } SplTokenTransferInfo;
 
 typedef struct SplTokenApproveInfo {

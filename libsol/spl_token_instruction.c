@@ -3,6 +3,7 @@
 #include "sol/parser.h"
 #include "sol/transaction_summary.h"
 #include "spl_token_instruction.h"
+#include "token_info.h"
 #include "util.h"
 
 const Pubkey spl_token_program_id = {{
@@ -19,7 +20,7 @@ static int parse_spl_token_instruction_kind(
         case SplTokenKind(InitializeMint):
         case SplTokenKind(InitializeAccount):
         case SplTokenKind(InitializeMultisig):
-        case SplTokenKind(Transfer):
+        case SplTokenKind(Transfer2):
         case SplTokenKind(Approve):
         case SplTokenKind(Revoke):
         case SplTokenKind(SetAuthority):
@@ -30,7 +31,7 @@ static int parse_spl_token_instruction_kind(
             return 0;
         case SplTokenKind(FreezeAccount):
         case SplTokenKind(ThawAccount):
-        case SplTokenKind(Transfer2):
+        case SplTokenKind(Transfer):
         case SplTokenKind(Approve2):
         case SplTokenKind(MintTo2):
         case SplTokenKind(Burn2):
@@ -136,8 +137,10 @@ static int parse_transfer_spl_token_instruction(
     instruction_accounts_iterator_init(&it, header, instruction);
 
     BAIL_IF(parse_u64(parser, &info->body.amount));
+    BAIL_IF(parse_u8(parser, &info->body.decimals));
 
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->src_account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->dest_account));
 
     BAIL_IF(parse_spl_token_sign(&it, &info->sign));
@@ -320,12 +323,7 @@ int parse_spl_token_instructions(
                 &info->initialize_multisig
             );
         case SplTokenKind(Transfer):
-            return parse_transfer_spl_token_instruction(
-                &parser,
-                instruction,
-                header,
-                &info->transfer
-            );
+            break;
         case SplTokenKind(Approve):
             return parse_approve_spl_token_instruction(
                 &parser,
@@ -368,7 +366,14 @@ int parse_spl_token_instructions(
             );
         case SplTokenKind(FreezeAccount):
         case SplTokenKind(ThawAccount):
+            break;
         case SplTokenKind(Transfer2):
+            return parse_transfer_spl_token_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->transfer
+            );
         case SplTokenKind(Approve2):
         case SplTokenKind(MintTo2):
         case SplTokenKind(Burn2):
@@ -464,7 +469,14 @@ static int print_spl_token_transfer_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_u64(item, "Transfer tokens", info->body.amount);
+    const char* symbol = get_token_symbol(info->mint_account);
+    summary_item_set_token_amount(
+        item,
+        "Transfer tokens",
+        info->body.amount,
+        symbol,
+        info->body.decimals
+    );
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "From", info->src_account);
@@ -616,7 +628,7 @@ int print_spl_token_info(
                 header
             );
         case SplTokenKind(Transfer):
-            return print_spl_token_transfer_info(&info->transfer, header);
+            break;
         case SplTokenKind(Approve):
             return print_spl_token_approve_info(&info->approve, header);
         case SplTokenKind(Revoke):
@@ -632,6 +644,7 @@ int print_spl_token_info(
         case SplTokenKind(FreezeAccount):
         case SplTokenKind(ThawAccount):
         case SplTokenKind(Transfer2):
+            return print_spl_token_transfer_info(&info->transfer, header);
         case SplTokenKind(Approve2):
         case SplTokenKind(MintTo2):
         case SplTokenKind(Burn2):

@@ -198,37 +198,40 @@ void test_parse_spl_token_create_multisig() {
 
 void test_parse_spl_token_transfer() {
     uint8_t message[] = {
-        1, 0, 1,
-        4,
+        1, 0, 2,
+        5,
             OWNER_ACCOUNT,
             TOKEN_ACCOUNT,
             DEST_ACCOUNT,
+            MINT_ACCOUNT,
             PROGRAM_ID_SPL_TOKEN,
         BLOCKHASH,
         1,
-            3,
-            3,
-                1, 2, 0,
-            9,
-                3,
-                42, 0, 0, 0, 0, 0, 0, 0
+            4,
+            4,
+                1, 3, 2, 0,
+            10,
+                12,
+                42, 0, 0, 0, 0, 0, 0, 0,
+                9
     };
     Parser parser = {message, sizeof(message)};
     MessageHeader header;
     assert(parse_message_header(&parser, &header) == 0);
 
     Instruction instruction;
-    assert(parse_instruction(&parser, &instruction) == 0); // SplTokenTransfer
+    assert(parse_instruction(&parser, &instruction) == 0); // SplTokenTransfer2
     assert(instruction_validate(&instruction, &header) == 0);
 
     SplTokenInfo info;
     assert(parse_spl_token_instructions(&instruction, &header, &info) == 0);
     assert(parser.buffer_length == 0);
 
-    assert(info.kind == SplTokenKind(Transfer));
+    assert(info.kind == SplTokenKind(Transfer2));
     const SplTokenTransferInfo* tr_info = &info.transfer;
 
     assert(tr_info->body.amount == 42);
+    assert(tr_info->body.decimals == 9);
 
     const Pubkey src_account = {{ TOKEN_ACCOUNT }};
     assert_pubkey_equal(tr_info->src_account, &src_account);
@@ -238,6 +241,9 @@ void test_parse_spl_token_transfer() {
 
     const Pubkey owner = {{ OWNER_ACCOUNT }};
     assert_pubkey_equal(tr_info->sign.single.signer, &owner);
+
+    const Pubkey mint_account = {{ MINT_ACCOUNT }};
+    assert_pubkey_equal(tr_info->mint_account, &mint_account);
 }
 
 void test_parse_spl_token_approve() {
@@ -510,12 +516,6 @@ void test_parse_spl_token_instruction_kind() {
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
     assert(kind == SplTokenKind(InitializeMultisig));
 
-    buf[0] = 3;
-    parser.buffer = buf;
-    parser.buffer_length = ARRAY_LEN(buf);
-    assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
-    assert(kind == SplTokenKind(Transfer));
-
     buf[0] = 4;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
@@ -569,8 +569,8 @@ void test_parse_spl_token_instruction_kind() {
     buf[0] = 12;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
-    assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
-    //assert(kind == SplTokenKind(Transfer2));
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
+    assert(kind == SplTokenKind(Transfer2));
 
     buf[0] = 13;
     parser.buffer = buf;
@@ -599,6 +599,12 @@ void test_parse_spl_token_instruction_kind() {
 
     // Largest buffer value fails
     buf[0] = 255;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
+
+    // Deprecated instructions fail
+    buf[0] = 3;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
