@@ -214,8 +214,8 @@ void handleSignMessage(
             summary_item_set_string(item, "Unrecognized", "format");
 
             cx_hash_sha256(
-                dataBuffer,
-                dataLength,
+                G_message,
+                G_messageLength,
                 (uint8_t*) &UnrecognizedMessageHash,
                 HASH_LENGTH
             );
