@@ -360,12 +360,6 @@ int parse_spl_token_instructions(
                 header,
                 &info->initialize_multisig
             );
-        case SplTokenKind(Transfer):
-        case SplTokenKind(Approve):
-        case SplTokenKind(MintTo):
-        case SplTokenKind(Burn):
-            // Deprecated instructions
-            break;
         case SplTokenKind(Revoke):
             return parse_revoke_spl_token_instruction(
                 instruction,
@@ -425,6 +419,12 @@ int parse_spl_token_instructions(
                 header,
                 &info->burn
             );
+        // Deprecated instructions
+        case SplTokenKind(Transfer):
+        case SplTokenKind(Approve):
+        case SplTokenKind(MintTo):
+        case SplTokenKind(Burn):
+            break;
     }
     return 1;
 }
@@ -729,12 +729,6 @@ int print_spl_token_info(
                 &info->initialize_multisig,
                 header
             );
-        case SplTokenKind(Transfer):
-        case SplTokenKind(Approve):
-        case SplTokenKind(MintTo):
-        case SplTokenKind(Burn):
-            // Deprecated instructions
-            break;
         case SplTokenKind(Revoke):
             return print_spl_token_revoke_info(&info->revoke, header);
         case SplTokenKind(SetAuthority):
@@ -753,6 +747,12 @@ int print_spl_token_info(
             return print_spl_token_mint_to_info(&info->mint_to, header);
         case SplTokenKind(Burn2):
             return print_spl_token_burn_info(&info->burn, header);
+        // Deprecated instructions
+        case SplTokenKind(Transfer):
+        case SplTokenKind(Approve):
+        case SplTokenKind(MintTo):
+        case SplTokenKind(Burn):
+            break;
     }
 
     return 1;
