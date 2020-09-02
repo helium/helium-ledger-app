@@ -158,6 +158,9 @@ void handleSignMessage(
     if (deprecated_host) {
         messageLength = U2BE(dataBuffer, 0);
         dataBuffer += 2;
+        if (messageLength != (dataLength - 2)) {
+            THROW(ApduReplySolanaInvalidMessage);
+        }
     } else {
         messageLength = dataLength;
     }
