@@ -110,6 +110,8 @@ fn test_ledger_sign_transaction() {
     let recipients: Vec<(Pubkey, u64)> = (0..10).map(|_| (Pubkey::new_rand(), 42)).collect();
     let instructions = system_instruction::transfer_many(&from, &recipients);
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
+    let hash = solana_sdk::hash::hash(&message);
+    println!("Expected hash: {}", hash);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -398,6 +400,8 @@ fn test_sign_full_shred_of_garbage_tx() {
         data,
     };
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
+    let hash = solana_sdk::hash::hash(&message);
+    println!("Expected hash: {}", hash);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
