@@ -1553,6 +1553,7 @@ macro_rules! run {
     };
 }
 fn main() {
+    solana_logger::setup();
     run!(test_spl_token_freeze_account);
     run!(test_spl_token_freeze_account_multisig);
     run!(test_spl_token_thaw_account);
