@@ -16,19 +16,25 @@
 #*******************************************************************************
 
 ifeq ($(BOLOS_SDK),)
-$(error BOLOS_SDK is not set)
+$(error Environment variable BOLOS_SDK is not set)
 endif
+include $(BOLOS_SDK)/Makefile.defines
+
+APPVERSION_M=0
+APPVERSION_N=3
+APPVERSION_P=1
+APPVERSION=$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)
+APPNAME = "Solana"
+
+APP_LOAD_PARAMS = --curve ed25519 --path "44'/501'" --appFlags 0x240 $(COMMON_LOAD_PARAMS)
+
+DEFINES += $(DEFINES_LIB)
 
 ifeq ($(TARGET_NAME),TARGET_NANOX)
 	ICONNAME=icons/nanox_app_solana.gif
 else
 	ICONNAME=icons/nanos_app_solana.gif
 endif
-
-include config.min
-include $(BOLOS_SDK)/Makefile.defines
-
-DEFINES += $(DEFINES_LIB)
 
 ################
 # Default rule #
@@ -138,7 +144,29 @@ include $(BOLOS_SDK)/Makefile.rules
 #add dependency on custom makefile filename
 dep/%.d: %.c Makefile
 
+load: all
+	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
+load-offline: all
+	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS) --offline
+
+delete:
+	python3 -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
+
+release: install.sh
+
+install.sh: all requirements.txt bin/app.hex
+	echo > install.sh
+
+	export APP_CODE="$$(cat bin/app.hex)"; \
+	export APP_REQUIREMENTS="$$(cat requirements.txt)"; \
+	export APP_LOAD_PARAMS_EVALUATED="$(shell printf '\\"%s\\" ' $(APP_LOAD_PARAMS:bin/%=%))"; \
+	cat install-template.sh | envsubst '$$APP_LOAD_PARAMS_EVALUATED $$APP_CODE $$APP_REQUIREMENTS' >> install.sh
+
+	chmod +x install.sh
+
+deps:
+	python3 -mpip install -r requirements.txt --require-hashes
 
 listvariants:
 	@echo VARIANTS COIN solana
