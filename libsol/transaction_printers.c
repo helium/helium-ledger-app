@@ -447,17 +447,14 @@ static int print_spl_token_create_mint(
     summary_item_set_pubkey(item, "Create token mint", im_info->mint_account);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Mint owner", im_info->owner);
+    summary_item_set_pubkey(item, "Mint authority", im_info->mint_authority);
 
     item = transaction_summary_general_item();
-    summary_item_set_u64(item, "Mint decimals", im_info->body.decimals);
+    summary_item_set_u64(item, "Mint decimals", im_info->decimals);
 
-    if (im_info->body.amount != 0) {
+    if (im_info->freeze_authority != NULL) {
         item = transaction_summary_general_item();
-        summary_item_set_pubkey(item, "New token account", im_info->token_account);
-
-        item = transaction_summary_general_item();
-        summary_item_set_u64(item, "New tokens", im_info->body.amount);
+        summary_item_set_pubkey(item, "Freeze authority", im_info->freeze_authority);
     }
 
     item = transaction_summary_general_item();
@@ -533,17 +530,14 @@ static int print_spl_token_create_mint_with_seed(
     summary_item_set_pubkey(item, "Create token mint", im_info->mint_account);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Mint owner", im_info->owner);
+    summary_item_set_pubkey(item, "Mint authority", im_info->mint_authority);
 
     item = transaction_summary_general_item();
-    summary_item_set_u64(item, "Mint decimals", im_info->body.decimals);
+    summary_item_set_u64(item, "Mint decimals", im_info->decimals);
 
-    if (im_info->body.amount != 0) {
+    if (im_info->freeze_authority != NULL) {
         item = transaction_summary_general_item();
-        summary_item_set_pubkey(item, "New token account", im_info->token_account);
-
-        item = transaction_summary_general_item();
-        summary_item_set_u64(item, "New tokens", im_info->body.amount);
+        summary_item_set_pubkey(item, "Freeze authority", im_info->freeze_authority);
     }
 
     item = transaction_summary_general_item();

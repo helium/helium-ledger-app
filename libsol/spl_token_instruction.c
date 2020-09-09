@@ -3,6 +3,7 @@
 #include "sol/parser.h"
 #include "sol/transaction_summary.h"
 #include "spl_token_instruction.h"
+#include "token_info.h"
 #include "util.h"
 
 const Pubkey spl_token_program_id = {{
@@ -19,15 +20,23 @@ static int parse_spl_token_instruction_kind(
         case SplTokenKind(InitializeMint):
         case SplTokenKind(InitializeAccount):
         case SplTokenKind(InitializeMultisig):
-        case SplTokenKind(Transfer):
-        case SplTokenKind(Approve):
+        case SplTokenKind(Transfer2):
+        case SplTokenKind(Approve2):
         case SplTokenKind(Revoke):
-        case SplTokenKind(SetOwner):
-        case SplTokenKind(MintTo):
-        case SplTokenKind(Burn):
+        case SplTokenKind(SetAuthority):
+        case SplTokenKind(MintTo2):
+        case SplTokenKind(Burn2):
         case SplTokenKind(CloseAccount):
+        case SplTokenKind(FreezeAccount):
+        case SplTokenKind(ThawAccount):
             *kind = (SplTokenInstructionKind) maybe_kind;
             return 0;
+        // Deprecated instructions
+        case SplTokenKind(Transfer):
+        case SplTokenKind(Approve):
+        case SplTokenKind(MintTo):
+        case SplTokenKind(Burn):
+            break;
     }
     return 1;
 }
@@ -41,17 +50,18 @@ static int parse_initialize_mint_spl_token_instruction(
     InstructionAccountsIterator it;
     instruction_accounts_iterator_init(&it, header, instruction);
 
-    BAIL_IF(parse_u64(parser, &info->body.amount));
-    BAIL_IF(parse_u8(parser, &info->body.decimals));
+    BAIL_IF(parse_u8(parser, &info->decimals));
+    BAIL_IF(parse_pubkey(parser, &info->mint_authority));
+    enum Option freeze_authority;
+    BAIL_IF(parse_option(parser, &freeze_authority));
+    if (freeze_authority == OptionSome) {
+        BAIL_IF(parse_pubkey(parser, &info->freeze_authority));
+    } else {
+        info->freeze_authority = NULL;
+    }
 
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
-    if (info->body.amount == 0) {
-        info->token_account = NULL;
-        BAIL_IF(instruction_accounts_iterator_next(&it, &info->owner));
-    } else {
-        BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
-        BAIL_IF(instruction_accounts_iterator_next(&it, &info->owner));
-    }
+
     return 0;
 }
 
@@ -128,8 +138,10 @@ static int parse_transfer_spl_token_instruction(
     instruction_accounts_iterator_init(&it, header, instruction);
 
     BAIL_IF(parse_u64(parser, &info->body.amount));
+    BAIL_IF(parse_u8(parser, &info->body.decimals));
 
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->src_account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->dest_account));
 
     BAIL_IF(parse_spl_token_sign(&it, &info->sign));
@@ -147,8 +159,10 @@ static int parse_approve_spl_token_instruction(
     instruction_accounts_iterator_init(&it, header, instruction);
 
     BAIL_IF(parse_u64(parser, &info->body.amount));
+    BAIL_IF(parse_u8(parser, &info->body.decimals));
 
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->delegate));
 
     BAIL_IF(parse_spl_token_sign(&it, &info->sign));
@@ -171,16 +185,57 @@ static int parse_revoke_spl_token_instruction(
     return 0;
 }
 
-static int parse_set_owner_spl_token_instruction(
+static int parse_token_authority_type(
+    Parser* parser,
+    Token_AuthorityType* auth_type
+) {
+    uint8_t maybe_type;
+    BAIL_IF(parse_u8(parser, &maybe_type));
+    switch (maybe_type) {
+        case Token_AuthorityType_MintTokens:
+        case Token_AuthorityType_FreezeAccount:
+        case Token_AuthorityType_AccountOwner:
+        case Token_AuthorityType_CloseAccount:
+            *auth_type = (Token_AuthorityType)maybe_type;
+            return 0;
+    }
+    return 1;
+}
+
+static const char* stringify_token_authority_type(Token_AuthorityType auth_type) {
+    switch (auth_type) {
+        case Token_AuthorityType_MintTokens:
+            return "Mint tokens";
+        case Token_AuthorityType_FreezeAccount:
+            return "Freeze account";
+        case Token_AuthorityType_AccountOwner:
+            return "Owner";
+        case Token_AuthorityType_CloseAccount:
+            return "Close acct";
+    }
+    return NULL;
+}
+
+static int parse_set_authority_spl_token_instruction(
+    Parser* parser,
     const Instruction* instruction,
     const MessageHeader* header,
-    SplTokenSetOwnerInfo* info
+    SplTokenSetAuthorityInfo* info
 ) {
     InstructionAccountsIterator it;
     instruction_accounts_iterator_init(&it, header, instruction);
 
-    BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
-    BAIL_IF(instruction_accounts_iterator_next(&it, &info->new_owner));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+
+    BAIL_IF(parse_token_authority_type(parser, &info->authority_type));
+
+    enum Option new_authority;
+    BAIL_IF(parse_option(parser, &new_authority));
+    if (new_authority == OptionSome) {
+        BAIL_IF(parse_pubkey(parser, &info->new_authority));
+    } else {
+        info->new_authority = NULL;
+    }
 
     BAIL_IF(parse_spl_token_sign(&it, &info->sign));
 
@@ -197,6 +252,7 @@ static int parse_mint_to_spl_token_instruction(
     instruction_accounts_iterator_init(&it, header, instruction);
 
     BAIL_IF(parse_u64(parser, &info->body.amount));
+    BAIL_IF(parse_u8(parser, &info->body.decimals));
 
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
@@ -216,8 +272,10 @@ static int parse_burn_spl_token_instruction(
     instruction_accounts_iterator_init(&it, header, instruction);
 
     BAIL_IF(parse_u64(parser, &info->body.amount));
+    BAIL_IF(parse_u8(parser, &info->body.decimals));
 
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
 
     BAIL_IF(parse_spl_token_sign(&it, &info->sign));
 
@@ -234,6 +292,38 @@ static int parse_close_account_spl_token_instruction(
 
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->dest_account));
+
+    BAIL_IF(parse_spl_token_sign(&it, &info->sign));
+
+    return 0;
+}
+
+static int parse_freeze_account_spl_token_instruction(
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SplTokenFreezeAccountInfo* info
+) {
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
+
+    BAIL_IF(parse_spl_token_sign(&it, &info->sign));
+
+    return 0;
+}
+
+static int parse_thaw_account_spl_token_instruction(
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SplTokenThawAccountInfo* info
+) {
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
 
     BAIL_IF(parse_spl_token_sign(&it, &info->sign));
 
@@ -270,45 +360,18 @@ int parse_spl_token_instructions(
                 header,
                 &info->initialize_multisig
             );
-        case SplTokenKind(Transfer):
-            return parse_transfer_spl_token_instruction(
-                &parser,
-                instruction,
-                header,
-                &info->transfer
-            );
-        case SplTokenKind(Approve):
-            return parse_approve_spl_token_instruction(
-                &parser,
-                instruction,
-                header,
-                &info->approve
-            );
         case SplTokenKind(Revoke):
             return parse_revoke_spl_token_instruction(
                 instruction,
                 header,
                 &info->revoke
             );
-        case SplTokenKind(SetOwner):
-            return parse_set_owner_spl_token_instruction(
+        case SplTokenKind(SetAuthority):
+            return parse_set_authority_spl_token_instruction(
+                &parser,
                 instruction,
                 header,
                 &info->set_owner
-            );
-        case SplTokenKind(MintTo):
-            return parse_mint_to_spl_token_instruction(
-                &parser,
-                instruction,
-                header,
-                &info->mint_to
-            );
-        case SplTokenKind(Burn):
-            return parse_burn_spl_token_instruction(
-                &parser,
-                instruction,
-                header,
-                &info->burn
             );
         case SplTokenKind(CloseAccount):
             return parse_close_account_spl_token_instruction(
@@ -316,6 +379,52 @@ int parse_spl_token_instructions(
                 header,
                 &info->close_account
             );
+        case SplTokenKind(FreezeAccount):
+            return parse_freeze_account_spl_token_instruction(
+                instruction,
+                header,
+                &info->freeze_account
+            );
+        case SplTokenKind(ThawAccount):
+            return parse_thaw_account_spl_token_instruction(
+                instruction,
+                header,
+                &info->thaw_account
+            );
+        case SplTokenKind(Transfer2):
+            return parse_transfer_spl_token_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->transfer
+            );
+        case SplTokenKind(Approve2):
+            return parse_approve_spl_token_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->approve
+            );
+        case SplTokenKind(MintTo2):
+            return parse_mint_to_spl_token_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->mint_to
+            );
+        case SplTokenKind(Burn2):
+            return parse_burn_spl_token_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->burn
+            );
+        // Deprecated instructions
+        case SplTokenKind(Transfer):
+        case SplTokenKind(Approve):
+        case SplTokenKind(MintTo):
+        case SplTokenKind(Burn):
+            break;
     }
     return 1;
 }
@@ -348,17 +457,14 @@ static int print_spl_token_initialize_mint_info(
     }
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Mint owner", info->owner);
+    summary_item_set_pubkey(item, "Mint authority", info->mint_authority);
 
     item = transaction_summary_general_item();
-    summary_item_set_u64(item, "Decimals", info->body.decimals);
+    summary_item_set_u64(item, "Decimals", info->decimals);
 
-    if (info->body.amount != 0) {
+    if (info->freeze_authority != NULL) {
         item = transaction_summary_general_item();
-        summary_item_set_pubkey(item, "Token account", info->token_account);
-
-        item = transaction_summary_general_item();
-        summary_item_set_token_amount(item, "Token balance", info->body.amount, NULL, info->body.decimals);
+        summary_item_set_pubkey(item, "Freeze authority", info->freeze_authority);
     }
 
     return 0;
@@ -377,10 +483,10 @@ static int print_spl_token_initialize_account_info(
     }
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Token account owner", info->owner);
+    summary_item_set_pubkey(item, "Owner", info->owner);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Token mint", info->mint_account);
+    summary_item_set_pubkey(item, "Mint", info->mint_account);
 
     return 0;
 }
@@ -410,7 +516,14 @@ static int print_spl_token_transfer_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_u64(item, "Transfer tokens", info->body.amount);
+    const char* symbol = get_token_symbol(info->mint_account);
+    summary_item_set_token_amount(
+        item,
+        "Transfer tokens",
+        info->body.amount,
+        symbol,
+        info->body.decimals
+    );
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "From", info->src_account);
@@ -433,7 +546,14 @@ static int print_spl_token_approve_info(
     summary_item_set_pubkey(item, "Approve delegate", info->delegate);
 
     item = transaction_summary_general_item();
-    summary_item_set_u64(item, "To spend", info->body.amount);
+    const char* symbol = get_token_symbol(info->mint_account);
+    summary_item_set_token_amount(
+        item,
+        "Allowance",
+        info->body.amount,
+        symbol,
+        info->body.decimals
+    );
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "From", info->token_account);
@@ -457,17 +577,27 @@ static int print_spl_token_revoke_info(
     return 0;
 }
 
-static int print_spl_token_set_owner_info(
-    const SplTokenSetOwnerInfo* info,
+static int print_spl_token_set_authority_info(
+    const SplTokenSetAuthorityInfo* info,
     const MessageHeader* header
 ) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Set account owner", info->token_account);
+    summary_item_set_pubkey(item, "Set authority", info->account);
+
+    const char* authority_type = stringify_token_authority_type(info->authority_type);
+    BAIL_IF(authority_type == NULL);
+    item = transaction_summary_general_item();
+    summary_item_set_string(item, "Type", authority_type);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "New owner", info->new_owner);
+    const char* new_auth_title = "Authority";
+    if (info->new_authority == NULL) {
+        summary_item_set_string(item, new_auth_title, "None");
+    } else {
+        summary_item_set_pubkey(item, new_auth_title, info->new_authority);
+    }
 
     print_spl_token_sign(&info->sign);
 
@@ -481,13 +611,20 @@ static int print_spl_token_mint_to_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_u64(item, "Mint tokens", info->body.amount);
+    const char* symbol = get_token_symbol(info->mint_account);
+    summary_item_set_token_amount(
+        item,
+        "Mint tokens",
+        info->body.amount,
+        symbol,
+        info->body.decimals
+    );
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "From mint", info->mint_account);
+    summary_item_set_pubkey(item, "From", info->mint_account);
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "To account", info->token_account);
+    summary_item_set_pubkey(item, "To", info->token_account);
 
     print_spl_token_sign(&info->sign);
 
@@ -501,10 +638,17 @@ static int print_spl_token_burn_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_u64(item, "Burn tokens", info->body.amount);
+    const char* symbol = get_token_symbol(info->mint_account);
+    summary_item_set_token_amount(
+        item,
+        "Burn tokens",
+        info->body.amount,
+        symbol,
+        info->body.decimals
+    );
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "From account", info->token_account);
+    summary_item_set_pubkey(item, "From", info->token_account);
 
     print_spl_token_sign(&info->sign);
 
@@ -518,10 +662,44 @@ static int print_spl_token_close_account_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Close token acct", info->token_account);
+    summary_item_set_pubkey(item, "Close acct", info->token_account);
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Withdraw to", info->dest_account);
+
+    print_spl_token_sign(&info->sign);
+
+    return 0;
+}
+
+static int print_spl_token_freeze_account_info(
+    const SplTokenFreezeAccountInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Freeze acct", info->token_account);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Mint", info->mint_account);
+
+    print_spl_token_sign(&info->sign);
+
+    return 0;
+}
+
+static int print_spl_token_thaw_account_info(
+    const SplTokenThawAccountInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Thaw acct", info->token_account);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Mint", info->mint_account);
 
     print_spl_token_sign(&info->sign);
 
@@ -535,36 +713,46 @@ int print_spl_token_info(
     switch (info->kind) {
         case SplTokenKind(InitializeMint):
             return print_spl_token_initialize_mint_info(
-                "Init token mint",
+                "Init mint",
                 &info->initialize_mint,
                 header
             );
         case SplTokenKind(InitializeAccount):
             return print_spl_token_initialize_account_info(
-                "Init token acct",
+                "Init acct",
                 &info->initialize_account,
                 header
             );
         case SplTokenKind(InitializeMultisig):
             return print_spl_token_initialize_multisig_info(
-                "Init token multisig",
+                "Init multisig",
                 &info->initialize_multisig,
                 header
             );
-        case SplTokenKind(Transfer):
-            return print_spl_token_transfer_info(&info->transfer, header);
-        case SplTokenKind(Approve):
-            return print_spl_token_approve_info(&info->approve, header);
         case SplTokenKind(Revoke):
             return print_spl_token_revoke_info(&info->revoke, header);
-        case SplTokenKind(SetOwner):
-            return print_spl_token_set_owner_info(&info->set_owner, header);
-        case SplTokenKind(MintTo):
-            return print_spl_token_mint_to_info(&info->mint_to, header);
-        case SplTokenKind(Burn):
-            return print_spl_token_burn_info(&info->burn, header);
+        case SplTokenKind(SetAuthority):
+            return print_spl_token_set_authority_info(&info->set_owner, header);
         case SplTokenKind(CloseAccount):
             return print_spl_token_close_account_info(&info->close_account, header);
+        case SplTokenKind(FreezeAccount):
+            return print_spl_token_freeze_account_info(&info->freeze_account, header);
+        case SplTokenKind(ThawAccount):
+            return print_spl_token_thaw_account_info(&info->thaw_account, header);
+        case SplTokenKind(Transfer2):
+            return print_spl_token_transfer_info(&info->transfer, header);
+        case SplTokenKind(Approve2):
+            return print_spl_token_approve_info(&info->approve, header);
+        case SplTokenKind(MintTo2):
+            return print_spl_token_mint_to_info(&info->mint_to, header);
+        case SplTokenKind(Burn2):
+            return print_spl_token_burn_info(&info->burn, header);
+        // Deprecated instructions
+        case SplTokenKind(Transfer):
+        case SplTokenKind(Approve):
+        case SplTokenKind(MintTo):
+        case SplTokenKind(Burn):
+            break;
     }
 
     return 1;
@@ -591,7 +779,19 @@ static int print_m_of_n_string(uint8_t m, uint8_t n, char* buf, size_t buflen) {
 void summary_item_set_multisig_m_of_n(SummaryItem* item, uint8_t m, uint8_t n) {
     static char m_of_n[M_OF_N_MAX_LEN];
 
-    if (print_m_of_n_string(m, n, m_of_n, sizeof(m_of_n))) {
+    if (print_m_of_n_string(m, n, m_of_n, sizeof(m_of_n)) == 0) {
         summary_item_set_string(item, "Required signers", m_of_n);
     }
+}
+
+const Pubkey* spl_token_option_pubkey_get(
+    const SplTokenOptionPubkey* option_pubkey
+) {
+    switch (option_pubkey->tag) {
+        case SplTokenToOptionPubkeyKind(None):
+            break;
+        case SplTokenToOptionPubkeyKind(Some):
+            return (const Pubkey*)&option_pubkey->some._0;
+    }
+    return NULL;
 }

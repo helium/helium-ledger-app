@@ -377,28 +377,28 @@ static int print_stake_set_lockup_info(
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Set stake lockup", info->account);
+    summary_item_set_pubkey(item, "Set lockup", info->account);
 
     enum StakeLockupPresent present = info->lockup.present;
     if (present & StakeLockupHasTimestamp) {
         item = transaction_summary_general_item();
         summary_item_set_timestamp(
             item,
-            "Lockup time",
+            "Time",
             info->lockup.unix_timestamp
         );
     }
 
     if (present & StakeLockupHasEpoch) {
         item = transaction_summary_general_item();
-        summary_item_set_u64(item, "Lockup epoch", info->lockup.epoch);
+        summary_item_set_u64(item, "Epoch", info->lockup.epoch);
     }
 
     if (present & StakeLockupHasCustodian) {
         item = transaction_summary_general_item();
         summary_item_set_pubkey(
             item,
-            "Lockup authority",
+            "New authority",
             info->lockup.custodian
         );
     }

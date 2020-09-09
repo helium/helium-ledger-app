@@ -110,6 +110,8 @@ fn test_ledger_sign_transaction() {
     let recipients: Vec<(Pubkey, u64)> = (0..10).map(|_| (Pubkey::new_rand(), 42)).collect();
     let instructions = system_instruction::transfer_many(&from, &recipients);
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
+    let hash = solana_sdk::hash::hash(&message);
+    println!("Expected hash: {}", hash);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -398,6 +400,8 @@ fn test_sign_full_shred_of_garbage_tx() {
         data,
     };
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
+    let hash = solana_sdk::hash::hash(&message);
+    println!("Expected hash: {}", hash);
     let signature = ledger
         .sign_message(&derivation_path, &message)
         .expect("sign transaction");
@@ -827,8 +831,7 @@ fn test_spl_token_create_mint() {
             std::mem::size_of::<spl_token::state::Mint>() as u64,
             &spl_token::id(),
         ),
-        spl_token::instruction::initialize_mint(&spl_token::id(), &mint, None, Some(&owner), 0, 2)
-            .unwrap(),
+        spl_token::instruction::initialize_mint(&spl_token::id(), &mint, &owner, None, 2).unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
     let signature = ledger
@@ -932,8 +935,7 @@ fn test_spl_token_create_mint_with_seed() {
             std::mem::size_of::<spl_token::state::Mint>() as u64,
             &spl_token::id(),
         ),
-        spl_token::instruction::initialize_mint(&spl_token::id(), &mint, None, Some(&owner), 0, 2)
-            .unwrap(),
+        spl_token::instruction::initialize_mint(&spl_token::id(), &mint, &owner, None, 2).unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
     let signature = ledger
@@ -1034,10 +1036,19 @@ fn test_spl_token_transfer() {
         .expect("ledger get pubkey");
     let sender = Pubkey::new(&[1u8; 32]);
     let recipient = Pubkey::new(&[2u8; 32]);
+    let mint = spl_token::id();
 
-    let instruction =
-        spl_token::instruction::transfer(&spl_token::id(), &sender, &recipient, &owner, &[], 42)
-            .unwrap();
+    let instruction = spl_token::instruction::transfer2(
+        &spl_token::id(),
+        &sender,
+        &mint,
+        &recipient,
+        &owner,
+        &[],
+        42,
+        9,
+    )
+    .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
@@ -1057,10 +1068,19 @@ fn test_spl_token_approve() {
         .expect("ledger get pubkey");
     let account = Pubkey::new(&[1u8; 32]);
     let delegate = Pubkey::new(&[2u8; 32]);
+    let mint = spl_token::id();
 
-    let instruction =
-        spl_token::instruction::approve(&spl_token::id(), &account, &delegate, &owner, &[], 42)
-            .unwrap();
+    let instruction = spl_token::instruction::approve2(
+        &spl_token::id(),
+        &account,
+        &mint,
+        &delegate,
+        &owner,
+        &[],
+        42,
+        9,
+    )
+    .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
@@ -1089,7 +1109,7 @@ fn test_spl_token_revoke() {
     assert!(signature.verify(&owner.as_ref(), &message));
 }
 
-fn test_spl_token_set_owner() {
+fn test_spl_token_set_authority() {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -1102,9 +1122,15 @@ fn test_spl_token_set_owner() {
     let account = Pubkey::new(&[1u8; 32]);
     let new_owner = Pubkey::new(&[2u8; 32]);
 
-    let instruction =
-        spl_token::instruction::set_owner(&spl_token::id(), &account, &new_owner, &owner, &[])
-            .unwrap();
+    let instruction = spl_token::instruction::set_authority(
+        &spl_token::id(),
+        &account,
+        Some(&new_owner),
+        spl_token::instruction::AuthorityType::AccountOwner,
+        &owner,
+        &[],
+    )
+    .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
@@ -1122,11 +1148,11 @@ fn test_spl_token_mint_to() {
     let owner = ledger
         .get_pubkey(&derivation_path, false)
         .expect("ledger get pubkey");
-    let mint = Pubkey::new(&[1u8; 32]);
+    let mint = spl_token::id();
     let account = Pubkey::new(&[2u8; 32]);
 
     let instruction =
-        spl_token::instruction::mint_to(&spl_token::id(), &mint, &account, &owner, &[], 42)
+        spl_token::instruction::mint_to2(&spl_token::id(), &mint, &account, &owner, &[], 42, 9)
             .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger
@@ -1146,9 +1172,11 @@ fn test_spl_token_burn() {
         .get_pubkey(&derivation_path, false)
         .expect("ledger get pubkey");
     let account = Pubkey::new(&[1u8; 32]);
+    let mint = spl_token::id();
 
     let instruction =
-        spl_token::instruction::burn(&spl_token::id(), &account, &owner, &[], 42).unwrap();
+        spl_token::instruction::burn2(&spl_token::id(), &account, &mint, &owner, &[], 42, 9)
+            .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
@@ -1197,15 +1225,18 @@ fn test_spl_token_transfer_multisig() {
     let owner = Pubkey::new(&[1u8; 32]);
     let sender = Pubkey::new(&[2u8; 32]);
     let recipient = Pubkey::new(&[3u8; 32]);
-    let signers = [Pubkey::new(&[4u8; 32]), signer];
+    let mint = Pubkey::new(&[4u8; 32]); // Bad mint show symbol "???"
+    let signers = [Pubkey::new(&[5u8; 32]), signer];
 
-    let instruction = spl_token::instruction::transfer(
+    let instruction = spl_token::instruction::transfer2(
         &spl_token::id(),
         &sender,
+        &mint,
         &recipient,
         &owner,
         &signers.iter().collect::<Vec<_>>(),
         42,
+        9,
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
@@ -1228,15 +1259,18 @@ fn test_spl_token_approve_multisig() {
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
     let delegate = Pubkey::new(&[3u8; 32]);
-    let signers = [Pubkey::new(&[4u8; 32]), signer];
+    let mint = Pubkey::new(&[4u8; 32]);
+    let signers = [Pubkey::new(&[5u8; 32]), signer];
 
-    let instruction = spl_token::instruction::approve(
+    let instruction = spl_token::instruction::approve2(
         &spl_token::id(),
         &account,
+        &mint,
         &delegate,
         &owner,
         &signers.iter().collect::<Vec<_>>(),
         42,
+        9,
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
@@ -1274,7 +1308,7 @@ fn test_spl_token_revoke_multisig() {
     assert!(signature.verify(&signer.as_ref(), &message));
 }
 
-fn test_spl_token_set_owner_multisig() {
+fn test_spl_token_set_authority_multisig() {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -1289,10 +1323,11 @@ fn test_spl_token_set_owner_multisig() {
     let new_owner = Pubkey::new(&[3u8; 32]);
     let signers = [Pubkey::new(&[4u8; 32]), signer];
 
-    let instruction = spl_token::instruction::set_owner(
+    let instruction = spl_token::instruction::set_authority(
         &spl_token::id(),
         &account,
-        &new_owner,
+        Some(&new_owner),
+        spl_token::instruction::AuthorityType::AccountOwner,
         &owner,
         &signers.iter().collect::<Vec<_>>(),
     )
@@ -1319,13 +1354,14 @@ fn test_spl_token_mint_to_multisig() {
     let account = Pubkey::new(&[3u8; 32]);
     let signers = [Pubkey::new(&[4u8; 32]), signer];
 
-    let instruction = spl_token::instruction::mint_to(
+    let instruction = spl_token::instruction::mint_to2(
         &spl_token::id(),
         &mint,
         &account,
         &owner,
         &signers.iter().collect::<Vec<_>>(),
         42,
+        9,
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
@@ -1348,13 +1384,16 @@ fn test_spl_token_burn_multisig() {
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
     let signers = [Pubkey::new(&[3u8; 32]), signer];
+    let mint = Pubkey::new(&[4u8; 32]);
 
-    let instruction = spl_token::instruction::burn(
+    let instruction = spl_token::instruction::burn2(
         &spl_token::id(),
         &account,
+        &mint,
         &owner,
         &signers.iter().collect::<Vec<_>>(),
         42,
+        9,
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
@@ -1394,6 +1433,119 @@ fn test_spl_token_close_account_multisig() {
     assert!(signature.verify(&signer.as_ref(), &message));
 }
 
+fn test_spl_token_freeze_account() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let signer = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("ledger get pubkey");
+    let freeze_auth = signer;
+    let account = Pubkey::new(&[1u8; 32]);
+    let mint = Pubkey::new(&[2u8; 32]);
+
+    let instruction = spl_token::instruction::freeze_account(
+        &spl_token::id(),
+        &account,
+        &mint,
+        &freeze_auth,
+        &[],
+    )
+    .unwrap();
+    let message = Message::new(&[instruction], Some(&signer)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&signer.as_ref(), &message));
+}
+
+fn test_spl_token_freeze_account_multisig() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let signer = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("ledger get pubkey");
+    let freeze_auth = signer;
+    let account = Pubkey::new(&[1u8; 32]);
+    let mint = Pubkey::new(&[2u8; 32]);
+    let signers = [Pubkey::new(&[3u8; 32]), signer];
+
+    let instruction = spl_token::instruction::freeze_account(
+        &spl_token::id(),
+        &account,
+        &mint,
+        &freeze_auth,
+        &signers.iter().collect::<Vec<_>>(),
+    )
+    .unwrap();
+    let message = Message::new(&[instruction], Some(&signer)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&signer.as_ref(), &message));
+}
+
+fn test_spl_token_thaw_account() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let signer = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("ledger get pubkey");
+    let thaw_auth = signer;
+    let account = Pubkey::new(&[1u8; 32]);
+    let mint = Pubkey::new(&[2u8; 32]);
+
+    let instruction =
+        spl_token::instruction::thaw_account(&spl_token::id(), &account, &mint, &thaw_auth, &[])
+            .unwrap();
+    let message = Message::new(&[instruction], Some(&signer)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&signer.as_ref(), &message));
+}
+
+fn test_spl_token_thaw_account_multisig() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let signer = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("ledger get pubkey");
+    let thaw_auth = signer;
+    let account = Pubkey::new(&[1u8; 32]);
+    let mint = Pubkey::new(&[2u8; 32]);
+    let signers = [Pubkey::new(&[3u8; 32]), signer];
+
+    let instruction = spl_token::instruction::thaw_account(
+        &spl_token::id(),
+        &account,
+        &mint,
+        &thaw_auth,
+        &signers.iter().collect::<Vec<_>>(),
+    )
+    .unwrap();
+    let message = Message::new(&[instruction], Some(&signer)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&signer.as_ref(), &message));
+}
+
 macro_rules! run {
     ($test:ident) => {
         println!(" >>> Running {} <<<", stringify!($test));
@@ -1401,25 +1553,30 @@ macro_rules! run {
     };
 }
 fn main() {
-    run!(test_spl_token_transfer_multisig);
-    run!(test_spl_token_approve_multisig);
-    run!(test_spl_token_revoke_multisig);
-    run!(test_spl_token_set_owner_multisig);
-    run!(test_spl_token_mint_to_multisig);
+    solana_logger::setup();
+    run!(test_spl_token_freeze_account);
+    run!(test_spl_token_freeze_account_multisig);
+    run!(test_spl_token_thaw_account);
+    run!(test_spl_token_thaw_account_multisig);
+    run!(test_spl_token_burn);
     run!(test_spl_token_burn_multisig);
-    run!(test_spl_token_close_account_multisig);
+    run!(test_spl_token_mint_to);
+    run!(test_spl_token_mint_to_multisig);
+    run!(test_spl_token_approve);
+    run!(test_spl_token_approve_multisig);
+    run!(test_spl_token_transfer);
+    run!(test_spl_token_transfer_multisig);
+    run!(test_spl_token_set_authority);
+    run!(test_spl_token_set_authority_multisig);
+    run!(test_spl_token_create_mint);
     run!(test_spl_token_create_mint_with_seed);
+    run!(test_spl_token_revoke_multisig);
+    run!(test_spl_token_close_account_multisig);
     run!(test_spl_token_create_account_with_seed);
     run!(test_spl_token_create_multisig_with_seed);
-    run!(test_spl_token_create_mint);
     run!(test_spl_token_create_account);
     run!(test_spl_token_create_multisig);
-    run!(test_spl_token_transfer);
-    run!(test_spl_token_approve);
     run!(test_spl_token_revoke);
-    run!(test_spl_token_set_owner);
-    run!(test_spl_token_mint_to);
-    run!(test_spl_token_burn);
     run!(test_spl_token_close_account);
     run!(test_ledger_reject_unexpected_signer);
     run!(test_stake_split_with_nonce);

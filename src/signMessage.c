@@ -111,6 +111,10 @@ void handleSignMessage(
     volatile unsigned int *flags,
     volatile unsigned int *tx
 ) {
+    if (dataLength == 0) {
+        THROW(ApduReplySolanaInvalidMessage);
+    }
+
     int deprecated_host = ((dataLength & DATA_HAS_LENGTH_PREFIX) != 0);
 
     if (deprecated_host) {
@@ -154,6 +158,9 @@ void handleSignMessage(
     if (deprecated_host) {
         messageLength = U2BE(dataBuffer, 0);
         dataBuffer += 2;
+        if (messageLength != (dataLength - 2)) {
+            THROW(ApduReplySolanaInvalidMessage);
+        }
     } else {
         messageLength = dataLength;
     }
@@ -210,8 +217,8 @@ void handleSignMessage(
             summary_item_set_string(item, "Unrecognized", "format");
 
             cx_hash_sha256(
-                dataBuffer,
-                dataLength,
+                G_message,
+                G_messageLength,
                 (uint8_t*) &UnrecognizedMessageHash,
                 HASH_LENGTH
             );

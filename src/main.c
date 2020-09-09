@@ -19,6 +19,7 @@
 #include "getPubkey.h"
 #include "signMessage.h"
 #include "menu.h"
+#include <assert.h>
 
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
@@ -42,8 +43,10 @@ unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 #define OFFSET_LC 4
 #define OFFSET_CDATA 5
 
-void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
+void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx, int rx) {
     unsigned short sw = 0;
+
+    assert(rx >= 0 && rx <= UINT16_MAX);
 
     BEGIN_TRY {
         TRY {
@@ -58,12 +61,22 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
                 case INS_GET_APP_CONFIGURATION16:
                 case INS_GET_PUBKEY16:
                 case INS_SIGN_MESSAGE16:
+                    if (    rx < OFFSET_CDATA16
+                        ||  ((uint16_t)rx != U2BE(G_io_apdu_buffer, OFFSET_LC) + OFFSET_CDATA16)
+                    ) {
+                        THROW(ApduReplySdkExceptionOverflow);
+                    }
                     dataLength = U2BE(G_io_apdu_buffer, OFFSET_LC);
                     dataBuffer = &G_io_apdu_buffer[OFFSET_CDATA16];
                     break;
                 // Modern instructions use 8bit dataLength
                 // as per Ledger convention
                 default:
+                    if (    rx < OFFSET_CDATA
+                        ||  (rx != G_io_apdu_buffer[OFFSET_LC] + OFFSET_CDATA)
+                    ) {
+                        THROW(ApduReplySdkExceptionOverflow);
+                    }
                     dataLength = G_io_apdu_buffer[OFFSET_LC];
                     dataBuffer = &G_io_apdu_buffer[OFFSET_CDATA];
                     break;
@@ -173,7 +186,7 @@ void app_main(void) {
 
                 PRINTF("New APDU received:\n%.*H\n", rx, G_io_apdu_buffer);
 
-                handleApdu(&flags, &tx);
+                handleApdu(&flags, &tx, rx);
             }
             CATCH(ApduReplySdkExceptionIoReset) {
                 THROW(ApduReplySdkExceptionIoReset);
