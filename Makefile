@@ -20,9 +20,9 @@ $(error Environment variable BOLOS_SDK is not set)
 endif
 include $(BOLOS_SDK)/Makefile.defines
 
-APPVERSION_M=0
-APPVERSION_N=3
-APPVERSION_P=2
+APPVERSION_M=1
+APPVERSION_N=0
+APPVERSION_P=0
 APPVERSION=$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)
 APPNAME = "Solana"
 
