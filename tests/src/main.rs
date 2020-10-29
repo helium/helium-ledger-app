@@ -1036,7 +1036,7 @@ fn test_spl_token_transfer() {
         .expect("ledger get pubkey");
     let sender = Pubkey::new(&[1u8; 32]);
     let recipient = Pubkey::new(&[2u8; 32]);
-    let mint = spl_token::id();
+    let mint = spl_token::native_mint::id();
 
     let instruction = spl_token::instruction::transfer2(
         &spl_token::id(),
@@ -1068,7 +1068,7 @@ fn test_spl_token_approve() {
         .expect("ledger get pubkey");
     let account = Pubkey::new(&[1u8; 32]);
     let delegate = Pubkey::new(&[2u8; 32]);
-    let mint = spl_token::id();
+    let mint = spl_token::native_mint::id();
 
     let instruction = spl_token::instruction::approve2(
         &spl_token::id(),
@@ -1148,7 +1148,7 @@ fn test_spl_token_mint_to() {
     let owner = ledger
         .get_pubkey(&derivation_path, false)
         .expect("ledger get pubkey");
-    let mint = spl_token::id();
+    let mint = spl_token::native_mint::id();
     let account = Pubkey::new(&[2u8; 32]);
 
     let instruction =
@@ -1172,7 +1172,7 @@ fn test_spl_token_burn() {
         .get_pubkey(&derivation_path, false)
         .expect("ledger get pubkey");
     let account = Pubkey::new(&[1u8; 32]);
-    let mint = spl_token::id();
+    let mint = spl_token::native_mint::id();
 
     let instruction =
         spl_token::instruction::burn2(&spl_token::id(), &account, &mint, &owner, &[], 42, 9)

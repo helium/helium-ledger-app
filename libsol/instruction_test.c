@@ -142,20 +142,26 @@ void test_instruction_accounts_iterator_next() {
     };
     InstructionAccountsIterator it;
     instruction_accounts_iterator_init(&it, &header, &instruction);
+    size_t expected_remaining = ARRAY_LEN(instruction_accounts);
+    assert(instruction_accounts_iterator_remaining(&it) == expected_remaining--);
     const Pubkey* pubkey;
 
     Pubkey expected1 = {{ BYTES32_BS58_2 }};
     assert(instruction_accounts_iterator_next(&it, &pubkey) == 0);
     assert(memcmp(pubkey, &expected1, PUBKEY_SIZE) == 0);
+    assert(instruction_accounts_iterator_remaining(&it) == expected_remaining--);
 
     // Test skipping a pubkey
     assert(instruction_accounts_iterator_next(&it, NULL) == 0);
+    assert(instruction_accounts_iterator_remaining(&it) == expected_remaining--);
 
     Pubkey expected3 = {{ BYTES32_BS58_4 }};
     assert(instruction_accounts_iterator_next(&it, &pubkey) == 0);
+    assert(instruction_accounts_iterator_remaining(&it) == expected_remaining);
     assert(memcmp(pubkey, &expected3, PUBKEY_SIZE) == 0);
 
     assert(instruction_accounts_iterator_next(&it, &pubkey) == 1);
+    assert(instruction_accounts_iterator_remaining(&it) == expected_remaining);
 }
 
 int main() {
