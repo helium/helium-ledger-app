@@ -83,16 +83,17 @@ void test_parse_spl_token_create_token() {
 void test_parse_spl_token_create_account() {
     uint8_t message[] = {
         0x02, 0x00, 0x03,
-        0x05,
+        0x06,
             OWNER_ACCOUNT,
             TOKEN_ACCOUNT,
             MINT_ACCOUNT,
+            SYSVAR_RENT,
             PROGRAM_ID_SYSTEM,
             PROGRAM_ID_SPL_TOKEN,
         BLOCKHASH,
         0x02,
             // SystemCreateAccount
-            0x03,
+            0x04,
             0x02,
                 0x00, 0x01,
             0x34,
@@ -101,9 +102,9 @@ void test_parse_spl_token_create_account() {
                 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 PROGRAM_ID_SPL_TOKEN,
             // SplTokenInitializeAccount
+            0x05,
             0x04,
-            0x03,
-                0x01, 0x02, 0x00,
+                0x01, 0x02, 0x00, 0x03,
             0x01,
                 0x01,
     };
@@ -138,9 +139,10 @@ void test_parse_spl_token_create_account() {
 void test_parse_spl_token_create_multisig() {
     uint8_t message[] = {
         2, 0, 5,
-        7,
+        8,
             OWNER_ACCOUNT,
             MULTISIG_ACCOUNT,
+            SYSVAR_RENT,
             SIGNER1,
             SIGNER2,
             SIGNER3,
@@ -149,7 +151,7 @@ void test_parse_spl_token_create_multisig() {
         BLOCKHASH,
         2,
             // SystemCreateAccount
-            5,
+            6,
             2,
                 0, 1,
             52,
@@ -158,9 +160,9 @@ void test_parse_spl_token_create_multisig() {
                 40, 0, 0, 0, 0, 0, 0, 0,
                 PROGRAM_ID_SPL_TOKEN,
             // SplTokenInitializeMultisig
-            6,
-            4,
-                1, 2, 3, 4,
+            7,
+            5,
+                1, 2, 3, 4, 5,
             2,
                 2,
                 2
@@ -187,6 +189,7 @@ void test_parse_spl_token_create_multisig() {
     const Pubkey multisig_account = {{ MULTISIG_ACCOUNT }};
     assert_pubkey_equal(init_ms->multisig_account, &multisig_account);
 
+    assert(init_ms->signers.count == 3);
     const Pubkey* signer = init_ms->signers.first;
     const Pubkey signer1 = {{ SIGNER1 }};
     assert_pubkey_equal(signer++, &signer1);
@@ -425,13 +428,14 @@ void test_parse_spl_token_mint_to() {
 void test_parse_spl_token_burn() {
     uint8_t message[] = {
         1, 0, 0,
-        3,
+        4,
             OWNER_ACCOUNT,
             TOKEN_ACCOUNT,
+            MINT_ACCOUNT,
             PROGRAM_ID_SPL_TOKEN,
         BLOCKHASH,
         1,
-            2,
+            3,
             3,
                 1, 2, 0,
             10,
@@ -463,7 +467,7 @@ void test_parse_spl_token_burn() {
     const Pubkey owner = {{ OWNER_ACCOUNT }};
     assert_pubkey_equal(bn_info->sign.single.signer, &owner);
 
-    const Pubkey mint_account = {{ PROGRAM_ID_SPL_TOKEN }};
+    const Pubkey mint_account = {{ MINT_ACCOUNT }};
     assert_pubkey_equal(bn_info->mint_account, &mint_account);
 }
 

@@ -61,6 +61,8 @@ static int parse_initialize_mint_spl_token_instruction(
     }
 
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
+    // Skip rent sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
 
     return 0;
 }
@@ -76,6 +78,8 @@ static int parse_initialize_account_spl_token_instruction(
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->owner));
+    // Skip rent sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
 
     return 0;
 }
@@ -105,6 +109,8 @@ static int parse_initialize_multisig_spl_token_instruction(
     BAIL_IF(info->body.m > Token_MAX_SIGNERS);
 
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->multisig_account));
+    // Skip rent sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
     BAIL_IF(parse_spl_token_multisigners(&it, &info->signers))
 
     return 0;

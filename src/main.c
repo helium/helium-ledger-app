@@ -330,7 +330,11 @@ void nv_app_state_init(){
     if (N_storage.initialized != 0x01) {
         internalStorage_t storage;
         storage.settings.allow_blind_sign = BlindSignDisabled;
+#ifdef TARGET_NANOX
+        storage.settings.pubkey_display = PubkeyDisplayLong;
+#else
         storage.settings.pubkey_display = PubkeyDisplayShort;
+#endif
         storage.initialized = 0x01;
         nvm_write(
             (internalStorage_t*)&N_storage,
