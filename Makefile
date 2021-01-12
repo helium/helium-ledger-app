@@ -32,7 +32,7 @@ else
 	ICONNAME   = nanos_app_helium.gif
 endif
 
-APPVERSION = 1.0.0
+APPVERSION = 1.0.1
 
 # The --path argument here restricts which BIP32 paths the app is allowed to derive.
 APP_LOAD_PARAMS = --appFlags 0x240 --path "44'/904'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
