@@ -1,3 +1,24 @@
+/* package.json
+{
+  "name": "test",
+  "version": "0.0.1",
+  "description": "test",
+  "main": "example-sign.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "solana",
+  "license": "ISC",
+  "dependencies": {
+    "@ledgerhq/hw-transport-node-hid": "5.17.0",
+    "bs58": "4.0.1",
+    "tweetnacl": "1.0.3",
+    "@solana/web3.js": "0.90.0",
+    "assert": "2.0.0"
+  }
+}
+*/
+
 const Transport = require("@ledgerhq/hw-transport-node-hid").default;
 const bs58 = require("bs58");
 const nacl = require("tweetnacl");
@@ -87,8 +108,7 @@ async function solana_ledger_get_pubkey(transport, derivation_path) {
 }
 
 async function solana_ledger_sign_transaction(transport, derivation_path, transaction) {
-  const msg_bytes = transaction.serializeMessage();
-
+  const msg_bytes = transaction.compileMessage().serialize();
 
   // XXX: Ledger app only supports a single derivation_path per call ATM
   var num_paths = Buffer.alloc(1);
@@ -114,19 +134,25 @@ async function solana_ledger_sign_transaction(transport, derivation_path, transa
 
   const from_pubkey = new solana.PublicKey(from_pubkey_string);
   const to_pubkey = new solana.PublicKey(to_pubkey_string);
-  var tx = solana.SystemProgram.transfer({
+  const ix = solana.SystemProgram.transfer({
     fromPubkey: from_pubkey,
     toPubkey: to_pubkey,
     lamports: 42,
-  })
+  });
 
   // XXX: Fake blockhash so this example doesn't need a
   // network connection. It should be queried from the
   // cluster in normal use.
-  tx.recentBlockhash = bs58.encode(Buffer.from([
+  const recentBlockhash = bs58.encode(Buffer.from([
     3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
       3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
   ]));
+
+  var tx = new solana.Transaction({
+    recentBlockhash,
+    feePayer: from_pubkey,
+  })
+  .add(ix);
 
   const sig_bytes = await solana_ledger_sign_transaction(transport, from_derivation_path, tx);
 
