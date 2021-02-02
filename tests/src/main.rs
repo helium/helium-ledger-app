@@ -22,19 +22,20 @@ fn get_ledger() -> (Arc<LedgerWallet>, Pubkey) {
     wallet_manager.update_devices().expect(NO_DEVICE_HELP);
     assert!(!wallet_manager.list_devices().is_empty(), NO_DEVICE_HELP);
 
-    // Fetch the base pubkey of a connected ledger device
-    let ledger_base_pubkey = wallet_manager
+    // Fetch the device path and base pubkey of a connected ledger device
+    let (base_pubkey, device_path) = wallet_manager
         .list_devices()
         .iter()
         .find(|d| d.manufacturer == "ledger")
-        .map(|d| d.pubkey)
+        .cloned()
+        .map(|d| (d.pubkey, d.host_device_path))
         .expect("No ledger device detected");
 
     let ledger = wallet_manager
-        .get_ledger(&ledger_base_pubkey)
+        .get_ledger(&device_path)
         .expect("get device");
 
-    (ledger, ledger_base_pubkey)
+    (ledger, base_pubkey)
 }
 
 fn test_ledger_pubkey() {
@@ -107,7 +108,7 @@ fn test_ledger_sign_transaction() {
     assert!(signature.verify(&from.as_ref(), &message));
 
     // Test large transaction
-    let recipients: Vec<(Pubkey, u64)> = (0..10).map(|_| (Pubkey::new_rand(), 42)).collect();
+    let recipients: Vec<(Pubkey, u64)> = (0..10).map(|_| (Pubkey::new_unique(), 42)).collect();
     let instructions = system_instruction::transfer_many(&from, &recipients);
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     let hash = solana_sdk::hash::hash(&message);
@@ -130,7 +131,7 @@ fn test_ledger_sign_transaction_too_big() {
     let from = ledger
         .get_pubkey(&derivation_path, false)
         .expect("get pubkey");
-    let recipients: Vec<(Pubkey, u64)> = (0..100).map(|_| (Pubkey::new_rand(), 42)).collect();
+    let recipients: Vec<(Pubkey, u64)> = (0..100).map(|_| (Pubkey::new_unique(), 42)).collect();
     let instructions = system_instruction::transfer_many(&from, &recipients);
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     ledger.sign_message(&derivation_path, &message).unwrap_err();
@@ -583,6 +584,7 @@ fn test_stake_authorize() {
         &stake_authority,
         &new_authority,
         stake_state::StakeAuthorize::Staker,
+        None,
     );
 
     // Authorize staker
@@ -598,6 +600,7 @@ fn test_stake_authorize() {
         &stake_authority,
         &new_authority,
         stake_state::StakeAuthorize::Withdrawer,
+        None,
     );
 
     // Authorize withdrawer
