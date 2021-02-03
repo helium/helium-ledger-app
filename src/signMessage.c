@@ -21,38 +21,53 @@ void derive_private_key(
     uint8_t derivationPathLength
 ) {
     uint8_t privateKeyData[32];
-    os_perso_derive_node_bip32_seed_key(
-        HDW_ED25519_SLIP10,
-        CX_CURVE_Ed25519,
-        derivationPath,
-        derivationPathLength,
-        privateKeyData,
-        NULL,
-        (unsigned char*) "ed25519 seed",
-        12
-    );
-    cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, privateKey);
-    MEMCLEAR(privateKeyData);
+    BEGIN_TRY {
+        TRY {
+            os_perso_derive_node_bip32_seed_key(
+                HDW_ED25519_SLIP10,
+                CX_CURVE_Ed25519,
+                derivationPath,
+                derivationPathLength,
+                privateKeyData,
+                NULL,
+                (unsigned char*) "ed25519 seed",
+                12
+            );
+            cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, privateKey);
+        }
+        FINALLY {
+            MEMCLEAR(privateKeyData);
+        }
+    }
+    END_TRY;
 }
 
 static uint8_t set_result_sign_message() {
     uint8_t tx = 64;
     uint8_t signature[SIGNATURE_LENGTH];
     cx_ecfp_private_key_t privateKey;
-    derive_private_key(&privateKey, G_derivationPath, G_derivationPathLength);
-    cx_eddsa_sign(
-        &privateKey,
-        CX_LAST,
-        CX_SHA512,
-        G_message,
-        G_messageLength,
-        NULL,
-        0,
-        signature,
-        SIGNATURE_LENGTH,
-        NULL
-    );
-    os_memmove(G_io_apdu_buffer, signature, 64);
+    BEGIN_TRY {
+        TRY {
+            derive_private_key(&privateKey, G_derivationPath, G_derivationPathLength);
+            cx_eddsa_sign(
+                &privateKey,
+                CX_LAST,
+                CX_SHA512,
+                G_message,
+                G_messageLength,
+                NULL,
+                0,
+                signature,
+                SIGNATURE_LENGTH,
+                NULL
+            );
+            os_memmove(G_io_apdu_buffer, signature, 64);
+        }
+        FINALLY {
+            MEMCLEAR(privateKey);
+        }
+    }
+    END_TRY;
     return tx;
 }
 
