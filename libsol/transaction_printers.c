@@ -311,6 +311,15 @@ static int print_stake_authorize_both(
         );
     }
 
+    if (withdrawer_info->custodian) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(
+            item,
+            "Custodian",
+            withdrawer_info->custodian
+        );
+    }
+
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Authorized by", withdrawer_info->authority);
 

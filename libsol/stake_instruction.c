@@ -128,6 +128,8 @@ static int parse_stake_authorize_instruction(
     // Skip clock sysvar
     BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
+    // Custodian is optional, don't BAIL_IF()
+    instruction_accounts_iterator_next(&it, &info->custodian);
 
     BAIL_IF(parse_pubkey(parser, &info->new_authority));
     BAIL_IF(parse_stake_authorize(parser, &info->authorize));
@@ -351,6 +353,11 @@ static int print_stake_authorize_info(
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Authorized by", info->authority);
+
+    if (info->custodian) {
+      item = transaction_summary_general_item();
+      summary_item_set_pubkey(item, "Custodian", info->custodian);
+    }
 
     return 0;
 }
