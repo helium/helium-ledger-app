@@ -677,6 +677,26 @@ void test_process_message_body_vote_update_node_v1_0_8() {
     assert_string_equal(G_transaction_summary_text, expected);
 }
 
+void test_process_message_body_vote_update_commission() {
+    uint8_t message[] = {
+        2, 1, 1,
+        3,
+            19, 144, 25, 80, 156, 114, 186, 66, 29, 241, 166, 151, 127, 235, 131, 211, 64, 194, 62, 195, 227, 161, 166, 82, 59, 204, 214, 44, 193, 158, 63, 169,
+            10, 197, 71, 166, 84, 143, 238, 106, 60, 71, 210, 140, 50, 46, 5, 64, 197, 233, 184, 185, 240, 1, 189, 60, 85, 208, 255, 255, 23, 193, 128, 222,
+            7, 97, 72, 29, 53, 116, 116, 187, 124, 77, 118, 36, 235, 211, 189, 179, 216, 53, 94, 115, 209, 16, 67, 252, 13, 163, 83, 128, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        1,
+            2,
+            2,
+                0, 1,
+            5,
+                5, 0, 0, 0,
+                42
+    };
+
+    process_message_body_and_sanity_check(message, sizeof(message), 4);
+}
+
 void test_process_message_body_stake_deactivate() {
     uint8_t message[] = {
         1, 1, 2,
@@ -1207,6 +1227,7 @@ int main() {
     test_process_message_body_vote_authorize_voter();
     test_process_message_body_vote_authorize_withdrawer();
     test_process_message_body_vote_authorize_both();
+    test_process_message_body_vote_update_commission();
     test_process_message_body_vote_update_node_v1_0_7();
     test_process_message_body_vote_update_node_v1_0_8();
     test_process_message_body_stake_deactivate();

@@ -692,6 +692,29 @@ fn test_vote_update_validator_identity() {
 }
 
 // This test requires interactive approval of message signing on the ledger.
+fn test_vote_update_commission() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+
+    let vote_account = ledger_base_pubkey;
+    let vote_authority = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let new_commission = 42u8;
+    let instruction =
+        vote_instruction::update_commission(&vote_account, &vote_authority, new_commission);
+    let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&vote_authority.as_ref(), &message));
+}
+
+// This test requires interactive approval of message signing on the ledger.
 fn test_stake_deactivate() {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
@@ -1583,6 +1606,7 @@ fn main() {
     run!(test_stake_split_with_seed);
     run!(test_stake_set_lockup);
     run!(test_stake_deactivate);
+    run!(test_vote_update_commission);
     run!(test_vote_update_validator_identity);
     run!(test_vote_authorize);
     run!(test_stake_authorize);
