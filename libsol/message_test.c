@@ -997,6 +997,38 @@ void test_process_message_body_spl_token_create_account() {
     process_message_body_and_sanity_check(message, sizeof(message), 6);
 }
 
+void test_process_message_body_spl_token_create_account2() {
+    uint8_t message[] = {
+        0x02, 0x00, 0x04,
+        0x06,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            MINT_ACCOUNT,
+            SYSVAR_RENT,
+            PROGRAM_ID_SYSTEM,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        0x02,
+            // SystemCreateAccount
+            0x04,
+            0x02,
+                0x00, 0x01,
+            0x34,
+                0x00, 0x00, 0x00, 0x00,
+                0x80, 0x56, 0x1a, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                PROGRAM_ID_SPL_TOKEN,
+            // SplTokenInitializeAccount
+            0x05,
+            0x03,
+                0x01, 0x02, 0x00,
+            0x21,
+                0x10,
+                OWNER_ACCOUNT,
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 6);
+}
+
 void test_process_message_body_spl_token_create_multisig() {
     uint8_t message[] = {
         2, 0, 5,
@@ -1216,6 +1248,7 @@ void test_process_message_body_spl_token_thaw_account() {
 int main() {
     test_process_message_body_spl_token_create_token();
     test_process_message_body_spl_token_create_account();
+    test_process_message_body_spl_token_create_account2();
     test_process_message_body_spl_token_create_multisig();
     test_process_message_body_spl_token_transfer();
     test_process_message_body_spl_token_approve();

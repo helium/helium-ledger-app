@@ -136,6 +136,63 @@ void test_parse_spl_token_create_account() {
     assert_pubkey_equal(init_acc->owner, &owner);
 }
 
+void test_parse_spl_token_create_account2() {
+    uint8_t message[] = {
+        0x02, 0x00, 0x04,
+        0x06,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            MINT_ACCOUNT,
+            SYSVAR_RENT,
+            PROGRAM_ID_SYSTEM,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        0x02,
+            // SystemCreateAccount
+            0x04,
+            0x02,
+                0x00, 0x01,
+            0x34,
+                0x00, 0x00, 0x00, 0x00,
+                0x80, 0x56, 0x1a, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                PROGRAM_ID_SPL_TOKEN,
+            // SplTokenInitializeAccount2
+            0x05,
+            0x03,
+                0x01, 0x02, 0x03,
+            0x21,
+                0x10,
+                OWNER_ACCOUNT
+    };
+
+    Parser parser = {message, sizeof(message)};
+    MessageHeader header;
+    assert(parse_message_header(&parser, &header) == 0);
+
+    Instruction instruction;
+    assert(parse_instruction(&parser, &instruction) == 0); // SystemCreateAccount (ignored)
+    assert(instruction_validate(&instruction, &header) == 0);
+    assert(parse_instruction(&parser, &instruction) == 0); // SplTokenInitializeAccount2
+    assert(instruction_validate(&instruction, &header) == 0);
+
+    SplTokenInfo info;
+    assert(parse_spl_token_instructions(&instruction, &header, &info) == 0);
+    assert(parser.buffer_length == 0);
+
+    assert(info.kind == SplTokenKind(InitializeAccount2));
+    const SplTokenInitializeAccountInfo* init_acc = &info.initialize_account;
+
+    const Pubkey token_account = {{ TOKEN_ACCOUNT }};
+    assert_pubkey_equal(init_acc->token_account, &token_account);
+
+    const Pubkey mint_account = {{ MINT_ACCOUNT }};
+    assert_pubkey_equal(init_acc->mint_account, &mint_account);
+
+    const Pubkey owner = {{ OWNER_ACCOUNT }};
+    assert_pubkey_equal(init_acc->owner, &owner);
+}
+
 void test_parse_spl_token_create_multisig() {
     uint8_t message[] = {
         2, 0, 5,
@@ -668,8 +725,14 @@ void test_parse_spl_token_instruction_kind() {
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
     assert(kind == SplTokenKind(BurnChecked));
 
-    // First unused enum value fails
     buf[0] = 16;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
+    assert(kind == SplTokenKind(InitializeAccount2));
+
+    // First unused enum value fails
+    buf[0] = 17;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
@@ -777,6 +840,7 @@ int main() {
     test_parse_spl_token_instruction_kind();
     test_parse_spl_token_create_token();
     test_parse_spl_token_create_account();
+    test_parse_spl_token_create_account2();
     test_parse_spl_token_create_multisig();
     test_parse_spl_token_transfer();
     test_parse_spl_token_approve();
