@@ -594,29 +594,32 @@ fn test_stake_authorize() {
         .expect("sign transaction");
     assert!(signature.verify(&stake_authority.as_ref(), &message));
 
-    let new_authority = Pubkey::new(&[2u8; 32]);
-    let withdraw_auth = stake_instruction::authorize(
-        &stake_account,
-        &stake_authority,
-        &new_authority,
-        stake_state::StakeAuthorize::Withdrawer,
-        None,
-    );
+    let custodian = Pubkey::new_unique();
+    for maybe_custodian in &[None, Some(&custodian)] {
+        let new_authority = Pubkey::new(&[2u8; 32]);
+        let withdraw_auth = stake_instruction::authorize(
+            &stake_account,
+            &stake_authority,
+            &new_authority,
+            stake_state::StakeAuthorize::Withdrawer,
+            *maybe_custodian,
+        );
 
-    // Authorize withdrawer
-    let message = Message::new(&[withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
-    assert!(signature.verify(&stake_authority.as_ref(), &message));
+        // Authorize withdrawer
+        let message = Message::new(&[withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
+        let signature = ledger
+            .sign_message(&derivation_path, &message)
+            .expect("sign transaction");
+        assert!(signature.verify(&stake_authority.as_ref(), &message));
 
-    // Authorize both
-    // Note: Instruction order must match CLI; staker first, withdrawer second
-    let message = Message::new(&[stake_auth, withdraw_auth], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
-    assert!(signature.verify(&stake_authority.as_ref(), &message));
+        // Authorize both
+        // Note: Instruction order must match CLI; staker first, withdrawer second
+        let message = Message::new(&[stake_auth.clone(), withdraw_auth], Some(&ledger_base_pubkey)).serialize();
+        let signature = ledger
+            .sign_message(&derivation_path, &message)
+            .expect("sign transaction");
+        assert!(signature.verify(&stake_authority.as_ref(), &message));
+    }
 }
 
 // This test requires interactive approval of message signing on the ledger.
@@ -1609,6 +1612,7 @@ fn main() {
     run!(test_stake_split_with_seed);
     run!(test_stake_set_lockup);
     run!(test_stake_deactivate);
+    run!(test_stake_authorize);
     run!(test_vote_update_commission);
     run!(test_vote_update_validator_identity);
     run!(test_vote_authorize);
