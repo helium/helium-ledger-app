@@ -57,7 +57,7 @@ typedef struct SplTokenTransferInfo {
     const Pubkey* dest_account;
     const Pubkey* mint_account;
     SplTokenSign sign;
-    SplTokenBody(Transfer2) body;
+    SplTokenBody(TransferChecked) body;
 } SplTokenTransferInfo;
 
 typedef struct SplTokenApproveInfo {
@@ -65,7 +65,7 @@ typedef struct SplTokenApproveInfo {
     const Pubkey* delegate;
     const Pubkey* mint_account;
     SplTokenSign sign;
-    SplTokenBody(Approve2) body;
+    SplTokenBody(ApproveChecked) body;
 } SplTokenApproveInfo;
 
 typedef struct SplTokenRevokeInfo {
@@ -84,14 +84,14 @@ typedef struct SplTokenMintToInfo {
     const Pubkey* mint_account;
     const Pubkey* token_account;
     SplTokenSign sign;
-    SplTokenBody(MintTo2) body;
+    SplTokenBody(MintToChecked) body;
 } SplTokenMintToInfo;
 
 typedef struct SplTokenBurnInfo {
     const Pubkey* token_account;
     const Pubkey* mint_account;
     SplTokenSign sign;
-    SplTokenBody(Burn2) body;
+    SplTokenBody(BurnChecked) body;
 } SplTokenBurnInfo;
 
 typedef struct SplTokenCloseAccountInfo {

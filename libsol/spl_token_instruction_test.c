@@ -230,7 +230,7 @@ void test_parse_spl_token_transfer() {
     assert(parse_spl_token_instructions(&instruction, &header, &info) == 0);
     assert(parser.buffer_length == 0);
 
-    assert(info.kind == SplTokenKind(Transfer2));
+    assert(info.kind == SplTokenKind(TransferChecked));
     const SplTokenTransferInfo* tr_info = &info.transfer;
 
     assert(tr_info->body.amount == 42);
@@ -279,7 +279,7 @@ void test_parse_spl_token_approve() {
     assert(parse_spl_token_instructions(&instruction, &header, &info) == 0);
     assert(parser.buffer_length == 0);
 
-    assert(info.kind == SplTokenKind(Approve2));
+    assert(info.kind == SplTokenKind(ApproveChecked));
     const SplTokenApproveInfo* ap_info = &info.approve;
 
     assert(ap_info->body.amount == 42);
@@ -409,7 +409,7 @@ void test_parse_spl_token_mint_to() {
     assert(parse_spl_token_instructions(&instruction, &header, &info) == 0);
     assert(parser.buffer_length == 0);
 
-    assert(info.kind == SplTokenKind(MintTo2));
+    assert(info.kind == SplTokenKind(MintToChecked));
     const SplTokenMintToInfo* mt_info = &info.mint_to;
 
     assert(mt_info->body.amount == 42);
@@ -455,7 +455,7 @@ void test_parse_spl_token_burn() {
     assert(parse_spl_token_instructions(&instruction, &header, &info) == 0);
     assert(parser.buffer_length == 0);
 
-    assert(info.kind == SplTokenKind(Burn2));
+    assert(info.kind == SplTokenKind(BurnChecked));
     const SplTokenBurnInfo* bn_info = &info.burn;
 
     assert(bn_info->body.amount == 42);
@@ -648,25 +648,25 @@ void test_parse_spl_token_instruction_kind() {
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
-    assert(kind == SplTokenKind(Transfer2));
+    assert(kind == SplTokenKind(TransferChecked));
 
     buf[0] = 13;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
-    assert(kind == SplTokenKind(Approve2));
+    assert(kind == SplTokenKind(ApproveChecked));
 
     buf[0] = 14;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
-    assert(kind == SplTokenKind(MintTo2));
+    assert(kind == SplTokenKind(MintToChecked));
 
     buf[0] = 15;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
-    assert(kind == SplTokenKind(Burn2));
+    assert(kind == SplTokenKind(BurnChecked));
 
     // First unused enum value fails
     buf[0] = 16;

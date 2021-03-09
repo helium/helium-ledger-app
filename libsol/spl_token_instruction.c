@@ -20,17 +20,18 @@ static int parse_spl_token_instruction_kind(
         case SplTokenKind(InitializeMint):
         case SplTokenKind(InitializeAccount):
         case SplTokenKind(InitializeMultisig):
-        case SplTokenKind(Transfer2):
-        case SplTokenKind(Approve2):
+        case SplTokenKind(TransferChecked):
+        case SplTokenKind(ApproveChecked):
         case SplTokenKind(Revoke):
         case SplTokenKind(SetAuthority):
-        case SplTokenKind(MintTo2):
-        case SplTokenKind(Burn2):
+        case SplTokenKind(MintToChecked):
+        case SplTokenKind(BurnChecked):
         case SplTokenKind(CloseAccount):
         case SplTokenKind(FreezeAccount):
         case SplTokenKind(ThawAccount):
             *kind = (SplTokenInstructionKind) maybe_kind;
             return 0;
+        case SplTokenKind(InitializeAccount2):
         // Deprecated instructions
         case SplTokenKind(Transfer):
         case SplTokenKind(Approve):
@@ -397,34 +398,35 @@ int parse_spl_token_instructions(
                 header,
                 &info->thaw_account
             );
-        case SplTokenKind(Transfer2):
+        case SplTokenKind(TransferChecked):
             return parse_transfer_spl_token_instruction(
                 &parser,
                 instruction,
                 header,
                 &info->transfer
             );
-        case SplTokenKind(Approve2):
+        case SplTokenKind(ApproveChecked):
             return parse_approve_spl_token_instruction(
                 &parser,
                 instruction,
                 header,
                 &info->approve
             );
-        case SplTokenKind(MintTo2):
+        case SplTokenKind(MintToChecked):
             return parse_mint_to_spl_token_instruction(
                 &parser,
                 instruction,
                 header,
                 &info->mint_to
             );
-        case SplTokenKind(Burn2):
+        case SplTokenKind(BurnChecked):
             return parse_burn_spl_token_instruction(
                 &parser,
                 instruction,
                 header,
                 &info->burn
             );
+        case SplTokenKind(InitializeAccount2):
         // Deprecated instructions
         case SplTokenKind(Transfer):
         case SplTokenKind(Approve):
@@ -745,15 +747,16 @@ int print_spl_token_info(
             return print_spl_token_freeze_account_info(&info->freeze_account, header);
         case SplTokenKind(ThawAccount):
             return print_spl_token_thaw_account_info(&info->thaw_account, header);
-        case SplTokenKind(Transfer2):
+        case SplTokenKind(TransferChecked):
             return print_spl_token_transfer_info(&info->transfer, header);
-        case SplTokenKind(Approve2):
+        case SplTokenKind(ApproveChecked):
             return print_spl_token_approve_info(&info->approve, header);
-        case SplTokenKind(MintTo2):
+        case SplTokenKind(MintToChecked):
             return print_spl_token_mint_to_info(&info->mint_to, header);
-        case SplTokenKind(Burn2):
+        case SplTokenKind(BurnChecked):
             return print_spl_token_burn_info(&info->burn, header);
         // Deprecated instructions
+        case SplTokenKind(InitializeAccount2):
         case SplTokenKind(Transfer):
         case SplTokenKind(Approve):
         case SplTokenKind(MintTo):
@@ -797,7 +800,7 @@ const Pubkey* spl_token_option_pubkey_get(
         case SplTokenToOptionPubkeyKind(None):
             break;
         case SplTokenToOptionPubkeyKind(Some):
-            return (const Pubkey*)&option_pubkey->some._0;
+            return (const Pubkey*)&option_pubkey->some;
     }
     return NULL;
 }

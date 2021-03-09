@@ -1064,7 +1064,7 @@ fn test_spl_token_transfer() {
     let recipient = Pubkey::new(&[2u8; 32]);
     let mint = spl_token::native_mint::id();
 
-    let instruction = spl_token::instruction::transfer2(
+    let instruction = spl_token::instruction::transfer_checked(
         &spl_token::id(),
         &sender,
         &mint,
@@ -1096,7 +1096,7 @@ fn test_spl_token_approve() {
     let delegate = Pubkey::new(&[2u8; 32]);
     let mint = spl_token::native_mint::id();
 
-    let instruction = spl_token::instruction::approve2(
+    let instruction = spl_token::instruction::approve_checked(
         &spl_token::id(),
         &account,
         &mint,
@@ -1178,7 +1178,7 @@ fn test_spl_token_mint_to() {
     let account = Pubkey::new(&[2u8; 32]);
 
     let instruction =
-        spl_token::instruction::mint_to2(&spl_token::id(), &mint, &account, &owner, &[], 42, 9)
+        spl_token::instruction::mint_to_checked(&spl_token::id(), &mint, &account, &owner, &[], 42, 9)
             .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger
@@ -1201,7 +1201,7 @@ fn test_spl_token_burn() {
     let mint = spl_token::native_mint::id();
 
     let instruction =
-        spl_token::instruction::burn2(&spl_token::id(), &account, &mint, &owner, &[], 42, 9)
+        spl_token::instruction::burn_checked(&spl_token::id(), &account, &mint, &owner, &[], 42, 9)
             .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger
@@ -1254,7 +1254,7 @@ fn test_spl_token_transfer_multisig() {
     let mint = Pubkey::new(&[4u8; 32]); // Bad mint show symbol "???"
     let signers = [Pubkey::new(&[5u8; 32]), signer];
 
-    let instruction = spl_token::instruction::transfer2(
+    let instruction = spl_token::instruction::transfer_checked(
         &spl_token::id(),
         &sender,
         &mint,
@@ -1288,7 +1288,7 @@ fn test_spl_token_approve_multisig() {
     let mint = Pubkey::new(&[4u8; 32]);
     let signers = [Pubkey::new(&[5u8; 32]), signer];
 
-    let instruction = spl_token::instruction::approve2(
+    let instruction = spl_token::instruction::approve_checked(
         &spl_token::id(),
         &account,
         &mint,
@@ -1380,7 +1380,7 @@ fn test_spl_token_mint_to_multisig() {
     let account = Pubkey::new(&[3u8; 32]);
     let signers = [Pubkey::new(&[4u8; 32]), signer];
 
-    let instruction = spl_token::instruction::mint_to2(
+    let instruction = spl_token::instruction::mint_to_checked(
         &spl_token::id(),
         &mint,
         &account,
@@ -1412,7 +1412,7 @@ fn test_spl_token_burn_multisig() {
     let signers = [Pubkey::new(&[3u8; 32]), signer];
     let mint = Pubkey::new(&[4u8; 32]);
 
-    let instruction = spl_token::instruction::burn2(
+    let instruction = spl_token::instruction::burn_checked(
         &spl_token::id(),
         &account,
         &mint,
