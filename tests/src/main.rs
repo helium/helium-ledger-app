@@ -312,6 +312,40 @@ fn test_create_stake_account() {
         &from,
         &stake_account,
         &authorized,
+        &stake_state::Lockup {
+            epoch: 1,
+            unix_timestamp: 1,
+            ..stake_state::Lockup::default()
+        },
+        42,
+    );
+    let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&from.as_ref(), &message));
+}
+
+fn test_create_stake_account_no_lockup() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+
+    let from = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let stake_account = ledger_base_pubkey;
+    let authorized = stake_state::Authorized {
+        staker: Pubkey::new(&[3u8; 32]),
+        withdrawer: Pubkey::new(&[4u8; 32]),
+    };
+    let instructions = stake_instruction::create_account(
+        &from,
+        &stake_account,
+        &authorized,
         &stake_state::Lockup::default(),
         42,
     );
@@ -1658,6 +1692,7 @@ fn main() {
     run!(test_create_nonce_account);
     run!(test_create_nonce_account_with_seed);
     run!(test_create_stake_account);
+    run!(test_create_stake_account_no_lockup);
     run!(test_ledger_pubkey);
     run!(test_ledger_sign_transaction);
     run!(test_ledger_sign_transaction_too_big);
