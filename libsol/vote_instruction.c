@@ -18,6 +18,8 @@ static int parse_vote_instruction_kind(
         case VoteVote:
         case VoteWithdraw:
         case VoteUpdateValidatorId:
+        case VoteUpdateCommission:
+        case VoteSwitchVote:
             *kind = (enum VoteInstructionKind) maybe_kind;
             return 0;
     }
@@ -133,6 +135,23 @@ static int parse_vote_update_validator_id_instruction(
     return 0;
 }
 
+static int parse_vote_update_commission_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    VoteUpdateCommissionInfo* info
+) {
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
+
+    BAIL_IF(parse_u8(parser, &info->commission));
+
+    return 0;
+}
+
 int parse_vote_instructions(
     const Instruction* instruction,
     const MessageHeader* header,
@@ -171,7 +190,15 @@ int parse_vote_instructions(
                 header,
                 &info->update_validator_id
             );
+        case VoteUpdateCommission:
+            return parse_vote_update_commission_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->update_commission
+            );
         case VoteVote:
+        case VoteSwitchVote:
             break;
     }
 
@@ -245,6 +272,24 @@ static int print_vote_update_validator_id_info(
     return 0;
 }
 
+static int print_vote_update_commission_info(
+    const VoteUpdateCommissionInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Update commission", info->account);
+
+    item = transaction_summary_general_item();
+    summary_item_set_u64(item, "Commission", info->commission);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Authorized by", info->authority);
+
+    return 0;
+}
+
 int print_vote_info(const VoteInfo* info, const MessageHeader* header) {
     switch (info->kind) {
         case VoteInitialize:
@@ -268,7 +313,13 @@ int print_vote_info(const VoteInfo* info, const MessageHeader* header) {
                 &info->update_validator_id,
                 header
             );
+        case VoteUpdateCommission:
+            return print_vote_update_commission_info(
+                &info->update_commission,
+                header
+            );
         case VoteVote:
+        case VoteSwitchVote:
             break;
     }
 

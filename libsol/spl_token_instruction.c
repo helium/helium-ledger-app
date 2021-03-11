@@ -19,13 +19,14 @@ static int parse_spl_token_instruction_kind(
     switch (maybe_kind) {
         case SplTokenKind(InitializeMint):
         case SplTokenKind(InitializeAccount):
+        case SplTokenKind(InitializeAccount2):
         case SplTokenKind(InitializeMultisig):
-        case SplTokenKind(Transfer2):
-        case SplTokenKind(Approve2):
+        case SplTokenKind(TransferChecked):
+        case SplTokenKind(ApproveChecked):
         case SplTokenKind(Revoke):
         case SplTokenKind(SetAuthority):
-        case SplTokenKind(MintTo2):
-        case SplTokenKind(Burn2):
+        case SplTokenKind(MintToChecked):
+        case SplTokenKind(BurnChecked):
         case SplTokenKind(CloseAccount):
         case SplTokenKind(FreezeAccount):
         case SplTokenKind(ThawAccount):
@@ -68,18 +69,30 @@ static int parse_initialize_mint_spl_token_instruction(
 }
 
 static int parse_initialize_account_spl_token_instruction(
+    Parser* parser,
     const Instruction* instruction,
     const MessageHeader* header,
-    SplTokenInitializeAccountInfo* info
+    SplTokenInitializeAccountInfo* info,
+    bool expect_owner_in_accounts
 ) {
     InstructionAccountsIterator it;
     instruction_accounts_iterator_init(&it, header, instruction);
 
+    if (expect_owner_in_accounts) {
+      BAIL_IF(instruction->accounts_length != 4);
+    }
+
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->mint_account));
-    BAIL_IF(instruction_accounts_iterator_next(&it, &info->owner));
+    if (expect_owner_in_accounts) {
+        BAIL_IF(instruction_accounts_iterator_next(&it, &info->owner));
+    }
     // Skip rent sysvar
     BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+
+    if (!expect_owner_in_accounts) {
+        BAIL_IF(parse_pubkey(parser, &info->owner));
+    }
 
     return 0;
 }
@@ -355,9 +368,19 @@ int parse_spl_token_instructions(
             );
         case SplTokenKind(InitializeAccount):
             return parse_initialize_account_spl_token_instruction(
+                &parser,
                 instruction,
                 header,
-                &info->initialize_account
+                &info->initialize_account,
+                true
+            );
+        case SplTokenKind(InitializeAccount2):
+            return parse_initialize_account_spl_token_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->initialize_account,
+                false
             );
         case SplTokenKind(InitializeMultisig):
             return parse_initialize_multisig_spl_token_instruction(
@@ -397,28 +420,28 @@ int parse_spl_token_instructions(
                 header,
                 &info->thaw_account
             );
-        case SplTokenKind(Transfer2):
+        case SplTokenKind(TransferChecked):
             return parse_transfer_spl_token_instruction(
                 &parser,
                 instruction,
                 header,
                 &info->transfer
             );
-        case SplTokenKind(Approve2):
+        case SplTokenKind(ApproveChecked):
             return parse_approve_spl_token_instruction(
                 &parser,
                 instruction,
                 header,
                 &info->approve
             );
-        case SplTokenKind(MintTo2):
+        case SplTokenKind(MintToChecked):
             return parse_mint_to_spl_token_instruction(
                 &parser,
                 instruction,
                 header,
                 &info->mint_to
             );
-        case SplTokenKind(Burn2):
+        case SplTokenKind(BurnChecked):
             return parse_burn_spl_token_instruction(
                 &parser,
                 instruction,
@@ -724,6 +747,7 @@ int print_spl_token_info(
                 header
             );
         case SplTokenKind(InitializeAccount):
+        case SplTokenKind(InitializeAccount2):
             return print_spl_token_initialize_account_info(
                 "Init acct",
                 &info->initialize_account,
@@ -745,13 +769,13 @@ int print_spl_token_info(
             return print_spl_token_freeze_account_info(&info->freeze_account, header);
         case SplTokenKind(ThawAccount):
             return print_spl_token_thaw_account_info(&info->thaw_account, header);
-        case SplTokenKind(Transfer2):
+        case SplTokenKind(TransferChecked):
             return print_spl_token_transfer_info(&info->transfer, header);
-        case SplTokenKind(Approve2):
+        case SplTokenKind(ApproveChecked):
             return print_spl_token_approve_info(&info->approve, header);
-        case SplTokenKind(MintTo2):
+        case SplTokenKind(MintToChecked):
             return print_spl_token_mint_to_info(&info->mint_to, header);
-        case SplTokenKind(Burn2):
+        case SplTokenKind(BurnChecked):
             return print_spl_token_burn_info(&info->burn, header);
         // Deprecated instructions
         case SplTokenKind(Transfer):
@@ -797,7 +821,7 @@ const Pubkey* spl_token_option_pubkey_get(
         case SplTokenToOptionPubkeyKind(None):
             break;
         case SplTokenToOptionPubkeyKind(Some):
-            return (const Pubkey*)&option_pubkey->some._0;
+            return (const Pubkey*)&option_pubkey->some;
     }
     return NULL;
 }

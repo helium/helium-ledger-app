@@ -128,6 +128,8 @@ static int parse_stake_authorize_instruction(
     // Skip clock sysvar
     BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
+    // Custodian is optional, don't BAIL_IF()
+    instruction_accounts_iterator_next(&it, &info->custodian);
 
     BAIL_IF(parse_pubkey(parser, &info->new_authority));
     BAIL_IF(parse_stake_authorize(parser, &info->authorize));
@@ -352,6 +354,11 @@ static int print_stake_authorize_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Authorized by", info->authority);
 
+    if (info->custodian) {
+      item = transaction_summary_general_item();
+      summary_item_set_pubkey(item, "Custodian", info->custodian);
+    }
+
     return 0;
 }
 
@@ -477,18 +484,37 @@ int print_stake_initialize_info(
         );
     }
 
-    item = transaction_summary_general_item();
-    summary_item_set_timestamp(
-        item,
-        "Lockup time",
-        info->lockup.unix_timestamp
-    );
+    int64_t lockup_time = info->lockup.unix_timestamp;
+    uint64_t lockup_epoch = info->lockup.epoch;
+    if (lockup_time > 0 || lockup_epoch > 0) {
+        if (lockup_time > 0) {
+            item = transaction_summary_general_item();
+            summary_item_set_timestamp(
+                item,
+                "Lockup time",
+                lockup_time
+            );
+        }
 
-    item = transaction_summary_general_item();
-    summary_item_set_u64(item, "Lockup epoch", info->lockup.epoch);
+        if (lockup_epoch > 0) {
+            item = transaction_summary_general_item();
+            summary_item_set_u64(item, "Lockup epoch", lockup_epoch);
+        }
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Lockup authority", info->lockup.custodian);
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(
+            item,
+            "Lockup authority",
+            info->lockup.custodian
+        );
+    } else {
+        item = transaction_summary_general_item();
+        summary_item_set_string(
+            item,
+            "Lockup",
+            "None"
+        );
+    }
 
     return 0;
 }

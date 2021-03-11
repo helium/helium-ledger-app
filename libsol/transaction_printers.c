@@ -170,6 +170,17 @@ const InstructionBrief spl_token_create_account_brief[] = {
         infos_length                                        \
     )
 
+const InstructionBrief spl_token_create_account2_brief[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccount),
+    SPL_TOKEN_IX_BRIEF(SplTokenKind(InitializeAccount2)),
+};
+#define is_spl_token_create_account2(infos, infos_length)    \
+    instruction_infos_match_briefs(                         \
+        infos,                                              \
+        spl_token_create_account2_brief,                    \
+        infos_length                                        \
+    )
+
 const InstructionBrief spl_token_create_account_with_seed_brief[] = {
     SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
     SPL_TOKEN_IX_BRIEF(SplTokenKind(InitializeAccount)),
@@ -178,6 +189,17 @@ const InstructionBrief spl_token_create_account_with_seed_brief[] = {
     instruction_infos_match_briefs(                                 \
         infos,                                                      \
         spl_token_create_account_with_seed_brief,                   \
+        infos_length                                                \
+    )
+
+const InstructionBrief spl_token_create_account2_with_seed_brief[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
+    SPL_TOKEN_IX_BRIEF(SplTokenKind(InitializeAccount2)),
+};
+#define is_spl_token_create_account2_with_seed(infos, infos_length)  \
+    instruction_infos_match_briefs(                                 \
+        infos,                                                      \
+        spl_token_create_account2_with_seed_brief,                  \
         infos_length                                                \
     )
 
@@ -308,6 +330,15 @@ static int print_stake_authorize_both(
             item,
             "New withdraw auth",
             withdrawer_info->new_authority
+        );
+    }
+
+    if (withdrawer_info->custodian) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(
+            item,
+            "Custodian",
+            withdrawer_info->custodian
         );
     }
 
@@ -696,7 +727,9 @@ int print_transaction(
                 );
             } else if (is_spl_token_create_mint(infos, infos_length)) {
                 return print_spl_token_create_mint(header, infos, infos_length);
-            } else if (is_spl_token_create_account(infos, infos_length)) {
+            } else if (is_spl_token_create_account(infos, infos_length)
+                ||  is_spl_token_create_account2(infos, infos_length)
+            ) {
                 return print_spl_token_create_account(
                     header,
                     infos,
@@ -710,7 +743,9 @@ int print_transaction(
                 );
             } else if (is_spl_token_create_mint_with_seed(infos, infos_length)) {
                 return print_spl_token_create_mint_with_seed(header, infos, infos_length);
-            } else if (is_spl_token_create_account_with_seed(infos, infos_length)) {
+            } else if (is_spl_token_create_account_with_seed(infos, infos_length)
+                ||  is_spl_token_create_account2_with_seed(infos, infos_length)
+            ) {
                 return print_spl_token_create_account_with_seed(
                     header,
                     infos,

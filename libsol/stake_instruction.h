@@ -66,6 +66,7 @@ typedef struct StakeAuthorizeInfo {
     const Pubkey* account;
     const Pubkey* authority;
     const Pubkey* new_authority;
+    const Pubkey* custodian;
     enum StakeAuthorize authorize;
 } StakeAuthorizeInfo;
 

@@ -22,19 +22,20 @@ fn get_ledger() -> (Arc<LedgerWallet>, Pubkey) {
     wallet_manager.update_devices().expect(NO_DEVICE_HELP);
     assert!(!wallet_manager.list_devices().is_empty(), NO_DEVICE_HELP);
 
-    // Fetch the base pubkey of a connected ledger device
-    let ledger_base_pubkey = wallet_manager
+    // Fetch the device path and base pubkey of a connected ledger device
+    let (base_pubkey, device_path) = wallet_manager
         .list_devices()
         .iter()
         .find(|d| d.manufacturer == "ledger")
-        .map(|d| d.pubkey)
+        .cloned()
+        .map(|d| (d.pubkey, d.host_device_path))
         .expect("No ledger device detected");
 
     let ledger = wallet_manager
-        .get_ledger(&ledger_base_pubkey)
+        .get_ledger(&device_path)
         .expect("get device");
 
-    (ledger, ledger_base_pubkey)
+    (ledger, base_pubkey)
 }
 
 fn test_ledger_pubkey() {
@@ -107,7 +108,7 @@ fn test_ledger_sign_transaction() {
     assert!(signature.verify(&from.as_ref(), &message));
 
     // Test large transaction
-    let recipients: Vec<(Pubkey, u64)> = (0..10).map(|_| (Pubkey::new_rand(), 42)).collect();
+    let recipients: Vec<(Pubkey, u64)> = (0..10).map(|_| (Pubkey::new_unique(), 42)).collect();
     let instructions = system_instruction::transfer_many(&from, &recipients);
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     let hash = solana_sdk::hash::hash(&message);
@@ -130,7 +131,7 @@ fn test_ledger_sign_transaction_too_big() {
     let from = ledger
         .get_pubkey(&derivation_path, false)
         .expect("get pubkey");
-    let recipients: Vec<(Pubkey, u64)> = (0..100).map(|_| (Pubkey::new_rand(), 42)).collect();
+    let recipients: Vec<(Pubkey, u64)> = (0..100).map(|_| (Pubkey::new_unique(), 42)).collect();
     let instructions = system_instruction::transfer_many(&from, &recipients);
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     ledger.sign_message(&derivation_path, &message).unwrap_err();
@@ -292,6 +293,40 @@ fn test_create_stake_account_with_seed_and_nonce() {
 
 // This test requires interactive approval of message signing on the ledger.
 fn test_create_stake_account() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+
+    let from = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let stake_account = ledger_base_pubkey;
+    let authorized = stake_state::Authorized {
+        staker: Pubkey::new(&[3u8; 32]),
+        withdrawer: Pubkey::new(&[4u8; 32]),
+    };
+    let instructions = stake_instruction::create_account(
+        &from,
+        &stake_account,
+        &authorized,
+        &stake_state::Lockup {
+            epoch: 1,
+            unix_timestamp: 1,
+            ..stake_state::Lockup::default()
+        },
+        42,
+    );
+    let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&from.as_ref(), &message));
+}
+
+fn test_create_stake_account_no_lockup() {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -583,6 +618,7 @@ fn test_stake_authorize() {
         &stake_authority,
         &new_authority,
         stake_state::StakeAuthorize::Staker,
+        None,
     );
 
     // Authorize staker
@@ -592,28 +628,32 @@ fn test_stake_authorize() {
         .expect("sign transaction");
     assert!(signature.verify(&stake_authority.as_ref(), &message));
 
-    let new_authority = Pubkey::new(&[2u8; 32]);
-    let withdraw_auth = stake_instruction::authorize(
-        &stake_account,
-        &stake_authority,
-        &new_authority,
-        stake_state::StakeAuthorize::Withdrawer,
-    );
+    let custodian = Pubkey::new_unique();
+    for maybe_custodian in &[None, Some(&custodian)] {
+        let new_authority = Pubkey::new(&[2u8; 32]);
+        let withdraw_auth = stake_instruction::authorize(
+            &stake_account,
+            &stake_authority,
+            &new_authority,
+            stake_state::StakeAuthorize::Withdrawer,
+            *maybe_custodian,
+        );
 
-    // Authorize withdrawer
-    let message = Message::new(&[withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
-    assert!(signature.verify(&stake_authority.as_ref(), &message));
+        // Authorize withdrawer
+        let message = Message::new(&[withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
+        let signature = ledger
+            .sign_message(&derivation_path, &message)
+            .expect("sign transaction");
+        assert!(signature.verify(&stake_authority.as_ref(), &message));
 
-    // Authorize both
-    // Note: Instruction order must match CLI; staker first, withdrawer second
-    let message = Message::new(&[stake_auth, withdraw_auth], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
-    assert!(signature.verify(&stake_authority.as_ref(), &message));
+        // Authorize both
+        // Note: Instruction order must match CLI; staker first, withdrawer second
+        let message = Message::new(&[stake_auth.clone(), withdraw_auth], Some(&ledger_base_pubkey)).serialize();
+        let signature = ledger
+            .sign_message(&derivation_path, &message)
+            .expect("sign transaction");
+        assert!(signature.verify(&stake_authority.as_ref(), &message));
+    }
 }
 
 // This test requires interactive approval of message signing on the ledger.
@@ -684,6 +724,29 @@ fn test_vote_update_validator_identity() {
     let new_node = Pubkey::new(&[1u8; 32]);
     let instruction =
         vote_instruction::update_validator_identity(&vote_account, &vote_authority, &new_node);
+    let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&vote_authority.as_ref(), &message));
+}
+
+// This test requires interactive approval of message signing on the ledger.
+fn test_vote_update_commission() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+
+    let vote_account = ledger_base_pubkey;
+    let vote_authority = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let new_commission = 42u8;
+    let instruction =
+        vote_instruction::update_commission(&vote_account, &vote_authority, new_commission);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger
         .sign_message(&derivation_path, &message)
@@ -871,6 +934,37 @@ fn test_spl_token_create_account() {
     assert!(signature.verify(&owner.as_ref(), &message));
 }
 
+fn test_spl_token_create_account2() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let owner = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("ledger get pubkey");
+    let account = Pubkey::new(&[1u8; 32]);
+    let mint = Pubkey::new(&[2u8; 32]);
+
+    let instructions = vec![
+        system_instruction::create_account(
+            &owner,
+            &account,
+            501,
+            std::mem::size_of::<spl_token::state::Mint>() as u64,
+            &spl_token::id(),
+        ),
+        spl_token::instruction::initialize_account2(&spl_token::id(), &account, &mint, &owner)
+            .unwrap(),
+    ];
+    let message = Message::new(&instructions, Some(&owner)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&owner.as_ref(), &message));
+}
+
 fn test_spl_token_create_multisig() {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
@@ -1038,7 +1132,7 @@ fn test_spl_token_transfer() {
     let recipient = Pubkey::new(&[2u8; 32]);
     let mint = spl_token::native_mint::id();
 
-    let instruction = spl_token::instruction::transfer2(
+    let instruction = spl_token::instruction::transfer_checked(
         &spl_token::id(),
         &sender,
         &mint,
@@ -1070,7 +1164,7 @@ fn test_spl_token_approve() {
     let delegate = Pubkey::new(&[2u8; 32]);
     let mint = spl_token::native_mint::id();
 
-    let instruction = spl_token::instruction::approve2(
+    let instruction = spl_token::instruction::approve_checked(
         &spl_token::id(),
         &account,
         &mint,
@@ -1152,7 +1246,7 @@ fn test_spl_token_mint_to() {
     let account = Pubkey::new(&[2u8; 32]);
 
     let instruction =
-        spl_token::instruction::mint_to2(&spl_token::id(), &mint, &account, &owner, &[], 42, 9)
+        spl_token::instruction::mint_to_checked(&spl_token::id(), &mint, &account, &owner, &[], 42, 9)
             .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger
@@ -1175,7 +1269,7 @@ fn test_spl_token_burn() {
     let mint = spl_token::native_mint::id();
 
     let instruction =
-        spl_token::instruction::burn2(&spl_token::id(), &account, &mint, &owner, &[], 42, 9)
+        spl_token::instruction::burn_checked(&spl_token::id(), &account, &mint, &owner, &[], 42, 9)
             .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger
@@ -1228,7 +1322,7 @@ fn test_spl_token_transfer_multisig() {
     let mint = Pubkey::new(&[4u8; 32]); // Bad mint show symbol "???"
     let signers = [Pubkey::new(&[5u8; 32]), signer];
 
-    let instruction = spl_token::instruction::transfer2(
+    let instruction = spl_token::instruction::transfer_checked(
         &spl_token::id(),
         &sender,
         &mint,
@@ -1262,7 +1356,7 @@ fn test_spl_token_approve_multisig() {
     let mint = Pubkey::new(&[4u8; 32]);
     let signers = [Pubkey::new(&[5u8; 32]), signer];
 
-    let instruction = spl_token::instruction::approve2(
+    let instruction = spl_token::instruction::approve_checked(
         &spl_token::id(),
         &account,
         &mint,
@@ -1354,7 +1448,7 @@ fn test_spl_token_mint_to_multisig() {
     let account = Pubkey::new(&[3u8; 32]);
     let signers = [Pubkey::new(&[4u8; 32]), signer];
 
-    let instruction = spl_token::instruction::mint_to2(
+    let instruction = spl_token::instruction::mint_to_checked(
         &spl_token::id(),
         &mint,
         &account,
@@ -1386,7 +1480,7 @@ fn test_spl_token_burn_multisig() {
     let signers = [Pubkey::new(&[3u8; 32]), signer];
     let mint = Pubkey::new(&[4u8; 32]);
 
-    let instruction = spl_token::instruction::burn2(
+    let instruction = spl_token::instruction::burn_checked(
         &spl_token::id(),
         &account,
         &mint,
@@ -1575,6 +1669,7 @@ fn main() {
     run!(test_spl_token_create_account_with_seed);
     run!(test_spl_token_create_multisig_with_seed);
     run!(test_spl_token_create_account);
+    run!(test_spl_token_create_account2);
     run!(test_spl_token_create_multisig);
     run!(test_spl_token_revoke);
     run!(test_spl_token_close_account);
@@ -1583,6 +1678,8 @@ fn main() {
     run!(test_stake_split_with_seed);
     run!(test_stake_set_lockup);
     run!(test_stake_deactivate);
+    run!(test_stake_authorize);
+    run!(test_vote_update_commission);
     run!(test_vote_update_validator_identity);
     run!(test_vote_authorize);
     run!(test_stake_authorize);
@@ -1595,6 +1692,7 @@ fn main() {
     run!(test_create_nonce_account);
     run!(test_create_nonce_account_with_seed);
     run!(test_create_stake_account);
+    run!(test_create_stake_account_no_lockup);
     run!(test_ledger_pubkey);
     run!(test_ledger_sign_transaction);
     run!(test_ledger_sign_transaction_too_big);

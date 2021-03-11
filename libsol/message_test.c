@@ -180,8 +180,8 @@ void test_process_message_body_nonced_stake_create_with_seed() {
                 0, 0, 0, 0,
                 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
                 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-                0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0,
+                1, 0, 0, 0, 0, 0, 0, 0,
+                1, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
 
@@ -216,12 +216,48 @@ void test_process_message_body_create_stake_account() {
                 0, 0, 0, 0,
                 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
                 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+                1, 0, 0, 0, 0, 0, 0, 0,
+                1, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
+
+    process_message_body_and_sanity_check(message, sizeof(message), 8);
+}
+
+void test_process_message_body_create_stake_account_no_lockup() {
+    uint8_t message[] = {
+        2, 0, 3,
+        5,
+            18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
+            112, 173, 25, 161, 89, 143, 220, 223, 128, 33, 149, 41, 12, 152, 202, 202, 203, 163, 182, 246, 158, 15, 22, 77, 171, 71, 63, 249, 10, 117, 172, 52,
+            6, 167, 213, 23, 25, 44, 92, 81, 33, 140, 201, 76, 61, 74, 241, 127, 88, 218, 238, 8, 155, 161, 253, 68, 227, 219, 217, 138, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        2,
+            // system - create account
+            3,
+            2,
+                0, 1,
+            52,
+                0, 0, 0, 0,
+                42, 0, 0, 0, 0, 0, 0, 0,
+                200, 0, 0, 0, 0, 0, 0, 0,
+                6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
+            // stake - initialize
+            4,
+            2,
+                1, 2,
+            116,
+                0, 0, 0, 0,
+                3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+                4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
 
-    process_message_body_and_sanity_check(message, sizeof(message), 8);
+    process_message_body_and_sanity_check(message, sizeof(message), 6);
 }
 
 void test_process_message_body_create_nonce_account() {
@@ -464,7 +500,7 @@ void test_process_message_body_stake_authorize_staker() {
             18, 67, 85, 168, 124, 173, 88, 142, 77, 171, 80, 178, 8, 218, 230, 68, 85, 231, 39, 54, 184, 42, 162, 85, 172, 139, 54, 173, 194, 7, 64, 250,
             112, 173, 25, 161, 89, 143, 220, 223, 128, 33, 149, 41, 12, 152, 202, 202, 203, 163, 182, 246, 158, 15, 22, 77, 171, 71, 63, 249, 10, 117, 172, 52,
             6, 167, 213, 23, 24, 199, 116, 201, 40, 86, 99, 152, 105, 29, 94, 182, 139, 94, 184, 163, 155, 75, 109, 92, 115, 85, 91, 33, 0, 0, 0, 0,
-            7, 97, 72, 29, 53, 116, 116, 187, 124, 77, 118, 36, 235, 211, 189, 179, 216, 53, 94, 115, 209, 16, 67, 252, 13, 163, 83, 128, 0, 0, 0, 0,
+            PROGRAM_ID_STAKE,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         1,
             // stake - authorize
@@ -501,6 +537,30 @@ void test_process_message_body_stake_authorize_withdrawer() {
     };
 
     process_message_body_and_sanity_check(message, sizeof(message), 4);
+}
+
+void test_process_message_body_stake_authorize_withdrawer_with_custodian() {
+    uint8_t message[] = {
+      3, 2, 2,
+      5,
+          19, 144, 25, 80, 156, 114, 186, 66, 29, 241, 166, 151, 127, 235, 131, 211, 64, 194, 62, 195, 227, 161, 166, 82, 59, 204, 214, 44, 193, 158, 63, 169,
+          10, 197, 71, 166, 84, 143, 238, 106, 60, 71, 210, 140, 50, 46, 5, 64, 197, 233, 184, 185, 240, 1, 189, 60, 85, 208, 255, 255, 23, 193, 128, 222,
+          1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          6, 167, 213, 23, 24, 199, 116, 201, 40, 86, 99, 152, 105, 29, 94, 182, 139, 94, 184, 163, 155, 75, 109, 92, 115, 85, 91, 33, 0, 0, 0, 0,
+          6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1,
+          // stake - authorize
+          4,
+          4,
+              0, 3, 1, 2,
+          40,
+              1, 0, 0, 0,
+              2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+              1, 0, 0, 0 // withdrawer
+    };
+
+    process_message_body_and_sanity_check(message, sizeof(message), 5);
 }
 
 void test_process_message_body_stake_authorize_both() {
@@ -675,6 +735,26 @@ void test_process_message_body_vote_update_node_v1_0_8() {
 
     transaction_summary_display_item(1, DisplayFlagNone); // node id
     assert_string_equal(G_transaction_summary_text, expected);
+}
+
+void test_process_message_body_vote_update_commission() {
+    uint8_t message[] = {
+        2, 1, 1,
+        3,
+            19, 144, 25, 80, 156, 114, 186, 66, 29, 241, 166, 151, 127, 235, 131, 211, 64, 194, 62, 195, 227, 161, 166, 82, 59, 204, 214, 44, 193, 158, 63, 169,
+            10, 197, 71, 166, 84, 143, 238, 106, 60, 71, 210, 140, 50, 46, 5, 64, 197, 233, 184, 185, 240, 1, 189, 60, 85, 208, 255, 255, 23, 193, 128, 222,
+            7, 97, 72, 29, 53, 116, 116, 187, 124, 77, 118, 36, 235, 211, 189, 179, 216, 53, 94, 115, 209, 16, 67, 252, 13, 163, 83, 128, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        1,
+            2,
+            2,
+                0, 1,
+            5,
+                5, 0, 0, 0,
+                42
+    };
+
+    process_message_body_and_sanity_check(message, sizeof(message), 4);
 }
 
 void test_process_message_body_stake_deactivate() {
@@ -953,6 +1033,38 @@ void test_process_message_body_spl_token_create_account() {
     process_message_body_and_sanity_check(message, sizeof(message), 6);
 }
 
+void test_process_message_body_spl_token_create_account2() {
+    uint8_t message[] = {
+        0x02, 0x00, 0x04,
+        0x06,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            MINT_ACCOUNT,
+            SYSVAR_RENT,
+            PROGRAM_ID_SYSTEM,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        0x02,
+            // SystemCreateAccount
+            0x04,
+            0x02,
+                0x00, 0x01,
+            0x34,
+                0x00, 0x00, 0x00, 0x00,
+                0x80, 0x56, 0x1a, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                PROGRAM_ID_SPL_TOKEN,
+            // SplTokenInitializeAccount
+            0x05,
+            0x03,
+                0x01, 0x02, 0x00,
+            0x21,
+                0x10,
+                OWNER_ACCOUNT,
+    };
+    process_message_body_and_sanity_check(message, sizeof(message), 6);
+}
+
 void test_process_message_body_spl_token_create_multisig() {
     uint8_t message[] = {
         2, 0, 5,
@@ -1172,6 +1284,7 @@ void test_process_message_body_spl_token_thaw_account() {
 int main() {
     test_process_message_body_spl_token_create_token();
     test_process_message_body_spl_token_create_account();
+    test_process_message_body_spl_token_create_account2();
     test_process_message_body_spl_token_create_multisig();
     test_process_message_body_spl_token_transfer();
     test_process_message_body_spl_token_approve();
@@ -1193,6 +1306,7 @@ int main() {
     test_process_message_body_xfer_w_nonce_ok();
     test_process_message_body_nonced_stake_create_with_seed();
     test_process_message_body_create_stake_account();
+    test_process_message_body_create_stake_account_no_lockup();
     test_process_message_body_create_nonce_account_with_seed();
     test_process_message_body_create_nonce_account();
     test_process_message_body_create_vote_account_with_seed();
@@ -1203,10 +1317,12 @@ int main() {
     test_process_message_body_system_nonce_authorize();
     test_process_message_body_stake_authorize_staker();
     test_process_message_body_stake_authorize_withdrawer();
+    test_process_message_body_stake_authorize_withdrawer_with_custodian();
     test_process_message_body_stake_authorize_both();
     test_process_message_body_vote_authorize_voter();
     test_process_message_body_vote_authorize_withdrawer();
     test_process_message_body_vote_authorize_both();
+    test_process_message_body_vote_update_commission();
     test_process_message_body_vote_update_node_v1_0_7();
     test_process_message_body_vote_update_node_v1_0_8();
     test_process_message_body_stake_deactivate();
