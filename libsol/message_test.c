@@ -956,7 +956,7 @@ void test_process_message_body_stake_split_with_seed_v1_2() {
             42, 0, 0, 0, 0, 0, 0, 0
     };
 
-    process_message_body_and_sanity_check(message, sizeof(message), 9);
+    process_message_body_and_sanity_check(message, sizeof(message), 7);
 }
 
 #define BLOCKHASH       BYTES32_BS58_1

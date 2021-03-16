@@ -262,33 +262,36 @@ static int print_create_stake_account_with_seed(
     return 0;
 }
 
-static int print_stake_split_with_seed_v1_1(
+static int print_stake_split_with_seed(
     const MessageHeader* header,
     const InstructionInfo* infos,
-    size_t infos_length
+    size_t infos_length,
+    bool legacy
 ) {
-    const SystemAllocateWithSeedInfo* aws_info =
-        &infos[0].system.allocate_with_seed;
+    const Pubkey* base = NULL;
+    const SizedString* seed = NULL;
+
+    if (legacy) {
+      const SystemAllocateWithSeedInfo* aws_info =
+          &infos[0].system.allocate_with_seed;
+      base = aws_info->base;
+      seed = &aws_info->seed;
+    } else {
+      const SystemCreateAccountWithSeedInfo* cws_info =
+          &infos[0].system.create_account_with_seed;
+      base = cws_info->base;
+      seed = &cws_info->seed;
+    }
+
     const StakeSplitInfo* ss_info = &infos[1].stake.split;
 
     BAIL_IF(print_stake_split_info1(ss_info, header));
-    BAIL_IF(print_system_allocate_with_seed_info(NULL, aws_info, header));
-    BAIL_IF(print_stake_split_info2(ss_info, header));
 
-    return 0;
-}
+    SummaryItem* item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Base", base);
+    item = transaction_summary_general_item();
+    summary_item_set_sized_string(item, "Seed", seed);
 
-static int print_stake_split_with_seed_v1_2(
-    const MessageHeader* header,
-    const InstructionInfo* infos,
-    size_t infos_length
-) {
-    const SystemCreateAccountWithSeedInfo* cws_info =
-        &infos[0].system.create_account_with_seed;
-    const StakeSplitInfo* ss_info = &infos[1].stake.split;
-
-    BAIL_IF(print_stake_split_info1(ss_info, header));
-    BAIL_IF(print_system_create_account_with_seed_info(NULL, cws_info, header));
     BAIL_IF(print_stake_split_info2(ss_info, header));
 
     return 0;
@@ -709,10 +712,11 @@ int print_transaction(
             } else if (is_vote_authorize_both(infos, infos_length)) {
                 return print_vote_authorize_both(header, infos, infos_length);
             } else if (is_stake_split_with_seed_v1_1(infos, infos_length)) {
-                return print_stake_split_with_seed_v1_1(
+                return print_stake_split_with_seed(
                     header,
                     infos,
-                    infos_length
+                    infos_length,
+                    true
                 );
             } else if (is_stake_split_v1_2(infos, infos_length)) {
                 // System create account is issued with zero lamports in this
@@ -720,10 +724,11 @@ int print_transaction(
                 // split as if it were a single instruction
                 return print_stake_info(&infos[1].stake, header);
             } else if (is_stake_split_with_seed_v1_2(infos, infos_length)) {
-                return print_stake_split_with_seed_v1_2(
+                return print_stake_split_with_seed(
                     header,
                     infos,
-                    infos_length
+                    infos_length,
+                    false
                 );
             } else if (is_spl_token_create_mint(infos, infos_length)) {
                 return print_spl_token_create_mint(header, infos, infos_length);
