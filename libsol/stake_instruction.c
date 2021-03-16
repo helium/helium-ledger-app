@@ -25,6 +25,8 @@ static int parse_stake_instruction_kind(
         case StakeWithdraw:
         case StakeDeactivate:
         case StakeSetLockup:
+        case StakeMerge:
+        case StakeAuthorizeWithSeed:
             *kind = (enum StakeInstructionKind) maybe_kind;
             return 0;
     }
@@ -216,6 +218,25 @@ static int parse_stake_split_instruction(
     return 0;
 }
 
+static int parse_stake_merge_instruction(
+    const Instruction* instruction,
+    const MessageHeader* header,
+    StakeMergeInfo* info
+) {
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->destination));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->source));
+    // Skip clock sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    // Skip stake history sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
+
+    return 0;
+}
+
 int parse_stake_instructions(
     const Instruction* instruction,
     const MessageHeader* header,
@@ -274,6 +295,14 @@ int parse_stake_instructions(
                 header,
                 &info->split
             );
+        case StakeMerge:
+            return parse_stake_merge_instruction(
+                instruction,
+                header,
+                &info->merge
+            );
+        // Unsupported instructions
+        case StakeAuthorizeWithSeed:
             break;
     }
 
@@ -424,6 +453,24 @@ static int print_stake_split_info(
     return print_stake_split_info2(info, header);
 }
 
+static int print_stake_merge_info(
+    const StakeMergeInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Merge", info->source);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Into", info->destination);
+
+    item = transaction_summary_general_item();
+    summary_item_set_pubkey(item, "Authorized by", info->authority);
+
+    return 0;
+}
+
 int print_stake_info(
     const StakeInfo* info,
     const MessageHeader* header
@@ -447,6 +494,10 @@ int print_stake_info(
             return print_stake_set_lockup_info(&info->set_lockup, header);
         case StakeSplit:
             return print_stake_split_info(&info->split, header);
+        case StakeMerge:
+            return print_stake_merge_info(&info->merge, header);
+        // Unsupported instructions
+        case StakeAuthorizeWithSeed:
             break;
     }
 

@@ -860,6 +860,32 @@ fn test_stake_split_with_seed() {
     assert!(signature.verify(&stake_authority.as_ref(), &message));
 }
 
+fn test_stake_merge() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+
+    let stake_authority = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let source = Pubkey::new_unique();
+    let destination = Pubkey::new_unique();
+
+    let instructions = stake_instruction::merge(
+        &destination,
+        &source,
+        &stake_authority,
+    );
+    let message = Message::new(&instructions, Some(&stake_authority)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&stake_authority.as_ref(), &message));
+}
+
 fn test_ledger_reject_unexpected_signer() {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
@@ -1648,6 +1674,7 @@ macro_rules! run {
 }
 fn main() {
     solana_logger::setup();
+    run!(test_stake_merge);
     run!(test_spl_token_freeze_account);
     run!(test_spl_token_freeze_account_multisig);
     run!(test_spl_token_thaw_account);
