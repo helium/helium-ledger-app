@@ -538,13 +538,19 @@ static int print_spl_token_initialize_multisig_info(
     return 0;
 }
 
-static int print_spl_token_transfer_info(
+int print_spl_token_transfer_info(
     const SplTokenTransferInfo* info,
-    const MessageHeader* header
+    const MessageHeader* header,
+    bool primary
 ) {
     SummaryItem* item;
 
-    item = transaction_summary_primary_item();
+    if (primary) {
+        item = transaction_summary_primary_item();
+    } else {
+        item = transaction_summary_general_item();
+    }
+
     const char* symbol = get_token_symbol(info->mint_account);
     summary_item_set_token_amount(
         item,
@@ -770,7 +776,7 @@ int print_spl_token_info(
         case SplTokenKind(ThawAccount):
             return print_spl_token_thaw_account_info(&info->thaw_account, header);
         case SplTokenKind(TransferChecked):
-            return print_spl_token_transfer_info(&info->transfer, header);
+            return print_spl_token_transfer_info(&info->transfer, header, true);
         case SplTokenKind(ApproveChecked):
             return print_spl_token_approve_info(&info->approve, header);
         case SplTokenKind(MintToChecked):

@@ -153,3 +153,8 @@ const Pubkey* spl_token_option_pubkey_get(
     const SplTokenOptionPubkey* option_pubkey
 );
 
+int print_spl_token_transfer_info(
+    const SplTokenTransferInfo* info,
+    const MessageHeader* header,
+    bool primary
+);

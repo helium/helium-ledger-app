@@ -18,6 +18,12 @@ enum ProgramId instruction_program_id(
         return ProgramIdVote;
     } else if (memcmp(program_id, &spl_token_program_id, PUBKEY_SIZE) == 0) {
         return ProgramIdSplToken;
+    } else if (memcmp(
+        program_id,
+        &spl_associated_token_account_program_id,
+        PUBKEY_SIZE
+    ) == 0) {
+        return ProgramIdSplAssociatedTokenAccount;
     }
 
     return ProgramIdUnknown;
@@ -44,6 +50,7 @@ bool instruction_info_matches_brief(
 ) {
     if (brief->program_id == info->kind) {
         switch (brief->program_id) {
+            case ProgramIdSplAssociatedTokenAccount: return true;
             case ProgramIdSplToken: return (brief->spl_token == info->spl_token.kind);
             case ProgramIdStake: return (brief->stake == info->stake.kind);
             case ProgramIdSystem: return (brief->system == info->system.kind);

@@ -1,6 +1,8 @@
 #include "instruction.h"
 #include "sol/parser.h"
 #include "sol/message.h"
+#include "spl_associated_token_account_instruction.h"
+#include "spl_token_instruction.h"
 #include "system_instruction.h"
 #include "stake_instruction.h"
 #include "vote_instruction.h"
@@ -38,6 +40,17 @@ int process_message_body(
             header
         );
         switch (program_id) {
+            case ProgramIdSplAssociatedTokenAccount: {
+                if (parse_spl_associated_token_account_instructions(
+                        &instruction,
+                        header,
+                        &info->spl_associated_token_account
+                    ) == 0
+                ) {
+                    info->kind = program_id;
+                }
+                break;
+            }
             case ProgramIdSplToken:
                 if (parse_spl_token_instructions(
                         &instruction, header,

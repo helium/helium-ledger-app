@@ -225,6 +225,19 @@ const InstructionBrief spl_token_create_multisig_with_seed_brief[] = {
         infos_length                                                \
     )
 
+const InstructionBrief
+spl_associated_token_account_create_with_transfer_brief[] = {
+    SPL_ASSOCIATED_TOKEN_ACCOUNT_IX_BRIEF,
+    SPL_TOKEN_IX_BRIEF(SplTokenKind(TransferChecked)),
+};
+#define \
+is_spl_associated_token_account_create_with_transfer(infos, infos_length) \
+    instruction_infos_match_briefs(                                       \
+        infos,                                                            \
+        spl_associated_token_account_create_with_transfer_brief,          \
+        infos_length                                                      \
+    )
+
 static int print_create_stake_account(
     const MessageHeader* header,
     const InstructionInfo* infos,
@@ -652,6 +665,21 @@ static int print_spl_token_create_multisig_with_seed(
     return 0;
 }
 
+static int print_spl_associated_token_account_create_with_transfer(
+    const MessageHeader* header,
+    const InstructionInfo* infos,
+    size_t infos_length
+) {
+    const SplAssociatedTokenAccountCreateInfo* c_info =
+        &infos[0].spl_associated_token_account.create;
+    const SplTokenTransferInfo* t_info = &infos[1].spl_token.transfer;
+
+    print_spl_associated_token_account_create_info(c_info, header);
+    print_spl_token_transfer_info(t_info, header, false);
+
+    return 0;
+}
+
 int print_transaction(
     const MessageHeader* header,
     const InstructionInfo* infos,
@@ -678,6 +706,11 @@ int print_transaction(
                     return print_vote_info(&infos->vote, header);
                 case ProgramIdSplToken:
                     return print_spl_token_info(&infos->spl_token, header);
+                case ProgramIdSplAssociatedTokenAccount:
+                    return print_spl_associated_token_account_info(
+                        &infos->spl_associated_token_account,
+                        header
+                    );
                 case ProgramIdUnknown:
                     break;
             }
@@ -758,6 +791,15 @@ int print_transaction(
                 );
             } else if (is_spl_token_create_multisig_with_seed(infos, infos_length)) {
                 return print_spl_token_create_multisig_with_seed(
+                    header,
+                    infos,
+                    infos_length
+                );
+            } else if (is_spl_associated_token_account_create_with_transfer(
+                  infos,
+                  infos_length
+            )) {
+                return print_spl_associated_token_account_create_with_transfer(
                     header,
                     infos,
                     infos_length

@@ -11,6 +11,7 @@ use solana_sdk::{
 };
 use solana_stake_program::{stake_instruction, stake_state};
 use solana_vote_program::{vote_instruction, vote_state};
+use spl_associated_token_account::*;
 use std::collections::HashSet;
 use std::sync::Arc;
 
@@ -1666,6 +1667,59 @@ fn test_spl_token_thaw_account_multisig() {
     assert!(signature.verify(&signer.as_ref(), &message));
 }
 
+fn test_spl_associated_token_account_create() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let owner = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("ledger get pubkey");
+    let mint = Pubkey::new_unique();
+    let instruction = create_associated_token_account(&owner, &owner, &mint);
+    let message = Message::new(&[instruction], Some(&owner)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&owner.as_ref(), &message));
+}
+
+fn test_spl_associated_token_account_create_with_transfer_checked() {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let sender = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("ledger get pubkey");
+    let mint = Pubkey::new_unique();
+    let sender_holder = get_associated_token_address(&sender, &mint);
+    let recipient = Pubkey::new_unique();
+    let recipient_holder = get_associated_token_address(&recipient, &mint);
+    let instructions = vec![
+        create_associated_token_account(&sender, &recipient, &mint),
+        spl_token::instruction::transfer_checked(
+            &spl_token::id(),
+            &sender_holder,
+            &mint,
+            &recipient_holder,
+            &sender,
+            &[],
+            42,
+            9,
+        ).unwrap(),
+    ];
+    let message = Message::new(&instructions, Some(&sender)).serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&sender.as_ref(), &message));
+}
+
 macro_rules! run {
     ($test:ident) => {
         println!(" >>> Running {} <<<", stringify!($test));
@@ -1674,6 +1728,8 @@ macro_rules! run {
 }
 fn main() {
     solana_logger::setup();
+    run!(test_spl_associated_token_account_create_with_transfer_checked);
+    run!(test_spl_associated_token_account_create);
     run!(test_stake_merge);
     run!(test_spl_token_freeze_account);
     run!(test_spl_token_freeze_account_multisig);
