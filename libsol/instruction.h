@@ -1,5 +1,6 @@
 #pragma once
 
+#include "serum_assert_owner_instruction.h"
 #include "sol/parser.h"
 #include "spl_associated_token_account_instruction.h"
 #include "spl_token_instruction.h"
@@ -15,11 +16,13 @@ enum ProgramId {
     ProgramIdVote,
     ProgramIdSplToken,
     ProgramIdSplAssociatedTokenAccount,
+    ProgramIdSerumAssertOwner,
 };
 
 typedef struct InstructionInfo {
     enum ProgramId kind;
     union {
+        SerumAssertOwnerInfo serum_assert_owner;
         SplAssociatedTokenAccountInfo spl_associated_token_account;
         SplTokenInfo spl_token;
         StakeInfo stake;
@@ -49,6 +52,7 @@ typedef struct InstructionBrief {
     };
 } InstructionBrief;
 
+#define SERUM_ASSERT_OWNER_IX_BRIEF { ProgramIdSerumAssertOwner, .none = 0 }
 #define SPL_ASSOCIATED_TOKEN_ACCOUNT_IX_BRIEF { ProgramIdSplAssociatedTokenAccount, .none = 0 }
 #define SPL_TOKEN_IX_BRIEF(spl_token_ix) { ProgramIdSplToken, .spl_token = (spl_token_ix) }
 #define SYSTEM_IX_BRIEF(system_ix) { ProgramIdSystem, .system = (system_ix) }

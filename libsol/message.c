@@ -1,4 +1,5 @@
 #include "instruction.h"
+#include "serum_assert_owner_instruction.h"
 #include "sol/parser.h"
 #include "sol/message.h"
 #include "spl_associated_token_account_instruction.h"
@@ -40,6 +41,17 @@ int process_message_body(
             header
         );
         switch (program_id) {
+            case ProgramIdSerumAssertOwner: {
+                if (parse_serum_assert_owner_instructions(
+                        &instruction,
+                        header,
+                        &info->serum_assert_owner
+                    ) == 0
+                ) {
+                    info->kind = program_id;
+                }
+                break;
+            }
             case ProgramIdSplAssociatedTokenAccount: {
                 if (parse_spl_associated_token_account_instructions(
                         &instruction,

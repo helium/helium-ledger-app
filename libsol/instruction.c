@@ -24,6 +24,10 @@ enum ProgramId instruction_program_id(
         PUBKEY_SIZE
     ) == 0) {
         return ProgramIdSplAssociatedTokenAccount;
+    } else if (
+        memcmp(program_id, &serum_assert_owner_program_id, PUBKEY_SIZE) == 0
+    ) {
+        return ProgramIdSerumAssertOwner;
     }
 
     return ProgramIdUnknown;
@@ -50,6 +54,7 @@ bool instruction_info_matches_brief(
 ) {
     if (brief->program_id == info->kind) {
         switch (brief->program_id) {
+            case ProgramIdSerumAssertOwner: return true;
             case ProgramIdSplAssociatedTokenAccount: return true;
             case ProgramIdSplToken: return (brief->spl_token == info->spl_token.kind);
             case ProgramIdStake: return (brief->stake == info->stake.kind);
