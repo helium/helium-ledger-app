@@ -60,6 +60,11 @@ int process_message_body(
                 }
                 break;
             }
+            case ProgramIdSplMemo: {
+                // SPL Memo only has one instruction and we ignore it for now
+                info->kind = program_id;
+                break;
+            }
             case ProgramIdSplToken:
                 if (parse_spl_token_instructions(
                         &instruction, header,
@@ -117,6 +122,7 @@ int process_message_body(
                 break;
             // Ignored instructions
             case ProgramIdSerumAssertOwner:
+            case ProgramIdSplMemo:
                 break;
         }
     }

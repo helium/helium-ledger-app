@@ -15,6 +15,7 @@ enum ProgramId {
     ProgramIdVote,
     ProgramIdSplToken,
     ProgramIdSplAssociatedTokenAccount,
+    ProgramIdSplMemo,
     ProgramIdSerumAssertOwner,
 };
 

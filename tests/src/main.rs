@@ -1776,6 +1776,32 @@ fn test_spl_associated_token_account_create_with_transfer_checked_and_serum_asse
     assert!(signature.verify(&sender.as_ref(), &message));
 }
 
+// This test requires interactive approval of message signing on the ledger.
+fn test_ledger_transfer_with_memos() {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+
+    let from = ledger
+        .get_pubkey(&derivation_path, false)
+        .expect("get pubkey");
+    let instructions = vec![
+        spl_memo::build_memo(b"hello", &[]),
+        system_instruction::transfer(&from, &ledger_base_pubkey, 42),
+        spl_memo::build_memo(b"world", &[]),
+    ];
+    let message =
+        Message::new(&instructions, Some(&from))
+            .serialize();
+    let signature = ledger
+        .sign_message(&derivation_path, &message)
+        .expect("sign transaction");
+    assert!(signature.verify(&from.as_ref(), &message));
+}
+
 macro_rules! run {
     ($test:ident) => {
         println!(" >>> Running {} <<<", stringify!($test));
@@ -1784,6 +1810,7 @@ macro_rules! run {
 }
 fn main() {
     solana_logger::setup();
+    run!(test_ledger_transfer_with_memos);
     run!(test_spl_associated_token_account_create_with_transfer_checked_and_serum_assert_owner);
     run!(test_spl_associated_token_account_create_with_transfer_checked);
     run!(test_spl_associated_token_account_create);

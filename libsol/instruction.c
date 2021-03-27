@@ -1,5 +1,6 @@
 #include "instruction.h"
 #include "serum_assert_owner_instruction.h"
+#include "spl_memo_instruction.h"
 #include "spl_token_instruction.h"
 #include "stake_instruction.h"
 #include "system_instruction.h"
@@ -29,6 +30,8 @@ enum ProgramId instruction_program_id(
         memcmp(program_id, &serum_assert_owner_program_id, PUBKEY_SIZE) == 0
     ) {
         return ProgramIdSerumAssertOwner;
+    } else if (memcmp(program_id, &spl_memo_program_id, PUBKEY_SIZE) == 0) {
+        return ProgramIdSplMemo;
     }
 
     return ProgramIdUnknown;
@@ -57,6 +60,7 @@ bool instruction_info_matches_brief(
         switch (brief->program_id) {
             case ProgramIdSerumAssertOwner: return true;
             case ProgramIdSplAssociatedTokenAccount: return true;
+            case ProgramIdSplMemo: return true;
             case ProgramIdSplToken: return (brief->spl_token == info->spl_token.kind);
             case ProgramIdStake: return (brief->stake == info->stake.kind);
             case ProgramIdSystem: return (brief->system == info->system.kind);

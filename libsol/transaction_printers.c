@@ -714,6 +714,7 @@ int print_transaction(
                         header
                     );
                 case ProgramIdSerumAssertOwner:
+                case ProgramIdSplMemo:
                 case ProgramIdUnknown:
                     break;
             }
