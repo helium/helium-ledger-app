@@ -2,6 +2,6 @@
 
 int print_transaction(
     const MessageHeader* header,
-    const InstructionInfo* infos,
+    InstructionInfo* const * infos,
     size_t infos_length
 );

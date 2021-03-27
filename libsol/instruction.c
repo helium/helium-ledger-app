@@ -67,13 +67,13 @@ bool instruction_info_matches_brief(
 }
 
 bool instruction_infos_match_briefs(
-    const InstructionInfo* infos,
+    InstructionInfo* const * infos,
     const InstructionBrief* briefs,
     size_t len
 ) {
     size_t i;
     for (i = 0; i < len; i++) {
-        if (!instruction_info_matches_brief(&infos[i], &briefs[i])) {
+        if (!instruction_info_matches_brief(infos[i], &briefs[i])) {
             break;
         }
     }

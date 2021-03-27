@@ -21,11 +21,14 @@ int process_message_body(
     BAIL_IF(header->instructions_length == 0);
     BAIL_IF(header->instructions_length > MAX_INSTRUCTIONS);
 
+    size_t instruction_count = 0;
     InstructionInfo instruction_info[MAX_INSTRUCTIONS];
     explicit_bzero(instruction_info, sizeof(InstructionInfo) * MAX_INSTRUCTIONS);
 
+    size_t display_instruction_count = 0;
+    InstructionInfo* display_instruction_info[MAX_INSTRUCTIONS];
+
     Parser parser = {message_body, message_body_length};
-    size_t instruction_count = 0;
     for (
         ;
         instruction_count < header->instructions_length;
@@ -109,6 +112,17 @@ int process_message_body(
             case ProgramIdUnknown:
                 break;
         }
+        switch (info->kind) {
+            case ProgramIdSerumAssertOwner:
+            case ProgramIdSplAssociatedTokenAccount:
+            case ProgramIdSplToken:
+            case ProgramIdSystem:
+            case ProgramIdStake:
+            case ProgramIdVote:
+            case ProgramIdUnknown:
+                display_instruction_info[display_instruction_count++] = info;
+                break;
+        }
     }
 
     // Ensure we've consumed the entire message body
@@ -119,5 +133,5 @@ int process_message_body(
         BAIL_IF(instruction_info[i].kind == ProgramIdUnknown);
     }
 
-    return print_transaction(header, instruction_info, instruction_count);
+    return print_transaction(header, display_instruction_info, display_instruction_count);
 }

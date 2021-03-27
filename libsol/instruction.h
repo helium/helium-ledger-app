@@ -64,7 +64,7 @@ bool instruction_info_matches_brief(
     const InstructionBrief* brief
 );
 bool instruction_infos_match_briefs(
-    const InstructionInfo* infos,
+    InstructionInfo* const *infos,
     const InstructionBrief* briefs,
     size_t len
 );
