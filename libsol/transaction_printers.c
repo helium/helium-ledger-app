@@ -238,22 +238,6 @@ is_spl_associated_token_account_create_with_transfer(infos, infos_length) \
         infos_length                                                      \
     )
 
-const InstructionBrief
-spl_associated_token_account_create_with_transfer_and_assert_owner_brief[] = {
-    SERUM_ASSERT_OWNER_IX_BRIEF,
-    SPL_ASSOCIATED_TOKEN_ACCOUNT_IX_BRIEF,
-    SPL_TOKEN_IX_BRIEF(SplTokenKind(TransferChecked)),
-};
-#define \
-is_spl_associated_token_account_create_with_transfer_and_assert_owner(    \
-    infos, infos_length                                                   \
-)                                                                         \
-    instruction_infos_match_briefs(                                       \
-        infos,                                                            \
-        spl_associated_token_account_create_with_transfer_and_assert_owner_brief, \
-        infos_length                                                      \
-    )
-
 static int print_create_stake_account(
     const MessageHeader* header,
     InstructionInfo* const * infos,
@@ -832,16 +816,6 @@ int print_transaction(
                 // System allocate/assign have no interesting info, print
                 // stake split as if it were a single instruction
                 return print_stake_info(&infos[2]->stake, header);
-            } else if (is_spl_associated_token_account_create_with_transfer_and_assert_owner(
-                  infos,
-                  infos_length
-            )) {
-                // Assert owner has nothing of interest to the user. Skip it
-                return print_spl_associated_token_account_create_with_transfer(
-                    header,
-                    &infos[1],
-                    infos_length - 1
-                );
             }
             break;
         }

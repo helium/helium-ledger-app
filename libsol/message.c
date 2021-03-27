@@ -45,14 +45,8 @@ int process_message_body(
         );
         switch (program_id) {
             case ProgramIdSerumAssertOwner: {
-                if (parse_serum_assert_owner_instructions(
-                        &instruction,
-                        header,
-                        &info->serum_assert_owner
-                    ) == 0
-                ) {
-                    info->kind = program_id;
-                }
+                // Serum assert-owner only has one instruction and we ignore it
+                info->kind = program_id;
                 break;
             }
             case ProgramIdSplAssociatedTokenAccount: {
@@ -113,7 +107,6 @@ int process_message_body(
                 break;
         }
         switch (info->kind) {
-            case ProgramIdSerumAssertOwner:
             case ProgramIdSplAssociatedTokenAccount:
             case ProgramIdSplToken:
             case ProgramIdSystem:
@@ -121,6 +114,9 @@ int process_message_body(
             case ProgramIdVote:
             case ProgramIdUnknown:
                 display_instruction_info[display_instruction_count++] = info;
+                break;
+            // Ignored instructions
+            case ProgramIdSerumAssertOwner:
                 break;
         }
     }

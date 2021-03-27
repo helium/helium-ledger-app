@@ -1,4 +1,5 @@
 #include "instruction.h"
+#include "serum_assert_owner_instruction.h"
 #include "spl_token_instruction.h"
 #include "stake_instruction.h"
 #include "system_instruction.h"
