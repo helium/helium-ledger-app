@@ -27,19 +27,19 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Check formatting
-        run: cargo fmt  -- --check
         working-directory: ${{env.working-directory}}
+        run: cargo fmt  -- --check
 
       - name: Clippy
         uses: actions-rs/clippy-check@v1
+        working-directory: ${{env.working-directory}}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: -- -Dclippy::all
-        working-directory: ${{env.working-directory}}
 
       - name: Build
-        run: cargo build --all --release
         working-directory: ${{env.working-directory}}
+        run: cargo build --all --release
 
       - name: Name Release
         if: startsWith(github.ref, 'refs/tags/')
