@@ -28,15 +28,18 @@ jobs:
 
       - name: Check formatting
         run: cargo fmt  -- --check
+        working-directory: ${{env.working-directory}}
 
       - name: Clippy
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: -- -Dclippy::all
+        working-directory: ${{env.working-directory}}
 
       - name: Build
         run: cargo build --all --release
+        working-directory: ${{env.working-directory}}
 
       - name: Name Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -47,6 +50,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         env:
           NAME: ${{ steps.name_release.outputs.RELEASE }}
+        working-directory: ${{env.working-directory}}
         run: |
           mkdir $NAME
           mv target/release/helium-ledger-app $NAME/
@@ -56,6 +60,7 @@ jobs:
       - name: Push Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
+        working-directory: ${{env.working-directory}}
         with:
           files: |
             ${{ steps.name_release.outputs.RELEASE }}.tar.gz
@@ -82,6 +87,7 @@ jobs:
 
       - name: Build
         run: cargo build --all --release
+        working-directory: ${{env.working-directory}}
 
       - name: Name Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -90,6 +96,7 @@ jobs:
 
       - name: Prepare Release
         if: startsWith(github.ref, 'refs/tags/')
+        working-directory: ${{env.working-directory}}
         env:
           NAME: ${{ steps.name_release.outputs.RELEASE }}
         run: |
@@ -99,6 +106,7 @@ jobs:
           cp LICENSE $NAME/
           tar -zcvf $NAME.tar.gz $NAME/
       - name: Push Release
+        working-directory: ${{env.working-directory}}
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
@@ -127,14 +135,17 @@ jobs:
 
       - name: Build
         run: cargo build --all --release
+        working-directory: ${{env.working-directory}}
 
       - name: Name Release
         if: startsWith(github.ref, 'refs/tags/')
+        working-directory: ${{env.working-directory}}
         id: name_release
         run: echo ::set-output name=RELEASE::helium-ledger-app-$(echo $GITHUB_REF | cut -d / -f 3)-x86-64-win
 
       - name: Prepare Release
         if: startsWith(github.ref, 'refs/tags/')
+        working-directory: ${{env.working-directory}}
         env:
           NAME: ${{ steps.name_release.outputs.RELEASE }}
         run: |
@@ -145,6 +156,7 @@ jobs:
           tar -zcvf $NAME.tar.gz $NAME/
       - name: Push Release
         uses: softprops/action-gh-release@v1
+        working-directory: ${{env.working-directory}}
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
