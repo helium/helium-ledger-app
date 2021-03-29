@@ -1,5 +1,5 @@
 use super::Result;
-use helium_api::{blockchain_txn::Txn, BlockchainTxn, BlockchainTxnPaymentV1};
+use helium_proto::{blockchain_txn::Txn, BlockchainTxn, BlockchainTxnPaymentV1};
 use prost::Message;
 
 const TXN_FEE_SIGNATURE_SIZE: usize = 64;
