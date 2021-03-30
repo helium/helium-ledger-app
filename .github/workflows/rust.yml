@@ -138,9 +138,8 @@ jobs:
         working-directory: ${{env.working-directory}}
 
       - name: Name Release
-        working-directory: ${{env.working-directory}}
         id: name_release
-        run: echo ::set-output name=RELEASE::helium-ledger-app-$(echo $GITHUB_REF | cut -d / -f 3)-x86-64-win
+        run: echo ::set-output name=RELEASE::helium-ledger-app-test-x86-64-win
 
       - name: Prepare Release
         working-directory: ${{env.working-directory}}
