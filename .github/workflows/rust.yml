@@ -145,11 +145,11 @@ jobs:
       - name: Prepare Release
         working-directory: ${{env.working-directory}}
         run: |
-          mkdir $NAME
+          mkdir ${{ steps.name_release.outputs.RELEASE }}
           mv target/release/helium-ledger-app.exe ${{ steps.name_release.outputs.RELEASE }}/
           cp README.md ${{ steps.name_release.outputs.RELEASE }}/
           cp LICENSE ${{ steps.name_release.outputs.RELEASE }}/
-          7z a $NAME.zip ${{ steps.name_release.outputs.RELEASE }}/
+          7z a ${{ steps.name_release.outputs.RELEASE }}.zip ${{ steps.name_release.outputs.RELEASE }}/
 
 #      - name: Push Release
 #        uses: softprops/action-gh-release@v1
