@@ -30,6 +30,9 @@ jobs:
         working-directory: ${{env.working-directory}}
         run: cargo fmt  -- --check
 
+      - name: Install libudev
+        run: udo apt-get install libudev-dev
+
       - name: Clippy
         uses: actions-rs/clippy-check@v1
         with:
