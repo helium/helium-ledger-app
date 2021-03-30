@@ -4,14 +4,13 @@ mod ledger_api;
 mod payment_txn;
 mod pubkeybin;
 
-use helium_api::{Hnt, pending_transactions::PendingTxnStatus};
+use helium_api::{pending_transactions::PendingTxnStatus, Hnt};
+use helium_proto::{BlockchainTxn, BlockchainTxnPaymentV1};
 use ledger_api::*;
 use pubkeybin::{PubKeyBin, B58};
 use qr2term::print_qr;
 use std::process;
 use structopt::StructOpt;
-use helium_proto::{BlockchainTxnPaymentV1, BlockchainTxn};
-
 
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -128,7 +127,6 @@ async fn print_balance(pubkey: &PubKeyBin) -> Result {
     table.printstd();
     Ok(())
 }
-
 
 pub fn print_txn(txn: &BlockchainTxnPaymentV1, hash: &str) -> Result<()> {
     let mut table = Table::new();

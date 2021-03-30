@@ -1,6 +1,8 @@
-use crate::{payment_txn::Fee, pubkeybin::PubKeyBin, pubkeybin::B58, Result, HELIUM_API_BASE_URL, submit_txn};
+use crate::{
+    payment_txn::Fee, pubkeybin::PubKeyBin, pubkeybin::B58, submit_txn, Result, HELIUM_API_BASE_URL,
+};
 use byteorder::{LittleEndian as LE, WriteBytesExt};
-use helium_api::{Client, Hnt, accounts};
+use helium_api::{accounts, Client, Hnt};
 use helium_proto::BlockchainTxnPaymentV1;
 use ledger::*;
 use prost::Message;
@@ -60,10 +62,7 @@ pub(crate) async fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     let nonce: u64 = account.speculative_nonce + 1;
 
     if account.balance.get_decimal() < Hnt::from(amount).get_decimal() {
-        return Ok(PayResponse::InsufficientBalance(
-            account.balance,
-            amount,
-        ));
+        return Ok(PayResponse::InsufficientBalance(account.balance, amount));
     }
 
     // serialize payee
