@@ -32,7 +32,6 @@ jobs:
 
       - name: Clippy
         uses: actions-rs/clippy-check@v1
-        working-directory: ${{env.working-directory}}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: -- -Dclippy::all
