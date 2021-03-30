@@ -93,7 +93,7 @@ jobs:
       - name: Name Release
         if: startsWith(github.ref, 'refs/tags/')
         id: name_release
-        run: echo ::set-output name=RELEASE::helium-ledger-app-$(echo $GITHUB_REF | cut -d / -f 3)-x86-64-macos
+        run: echo ::set-output name=RELEASE::
 
       - name: Prepare Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -139,16 +139,19 @@ jobs:
 
       - name: Name Release
         id: name_release
+        working-directory: ${{env.working-directory}}
         run: echo ::set-output name=RELEASE::helium-ledger-app-test-x86-64-win
 
       - name: Prepare Release
         working-directory: ${{env.working-directory}}
+        env:
+          NAME: helium-ledger-app-test-x86-64-win
         run: |
-          mkdir ${{ steps.name_release.outputs.RELEASE }}
-          mv target/release/helium-ledger-app.exe ${{ steps.name_release.outputs.RELEASE }}/
-          cp README.md ${{ steps.name_release.outputs.RELEASE }}/
-          cp LICENSE ${{ steps.name_release.outputs.RELEASE }}/
-          7z a ${{ steps.name_release.outputs.RELEASE }}.zip ${{ steps.name_release.outputs.RELEASE }}/
+          mkdir %NAME%
+          mv target/release/helium-ledger-app.exe %NAME%/
+          cp README.md %NAME%/
+          cp LICENSE %NAME%/
+          7z a %NAME%.zip %NAME%/
 
 #      - name: Push Release
 #        uses: softprops/action-gh-release@v1
