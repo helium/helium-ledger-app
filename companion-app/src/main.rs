@@ -117,7 +117,7 @@ async fn print_balance(pubkey: &PubKeyBin) -> Result {
     match result {
         Ok(account) => table.add_row(row![
             address,
-            Hnt::from(account.balance),
+            account.balance,
             account.dc_balance,
             account.sec_balance
         ]),

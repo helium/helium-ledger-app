@@ -61,7 +61,7 @@ pub(crate) async fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     let account = accounts::get(&client, &keypair.to_b58()?).await?;
     let nonce: u64 = account.speculative_nonce + 1;
 
-    if account.balance.get_decimal() < Hnt::from(amount).get_decimal() {
+    if account.balance.get_decimal() < amount.get_decimal() {
         return Ok(PayResponse::InsufficientBalance(account.balance, amount));
     }
 
