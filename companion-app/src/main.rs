@@ -4,12 +4,14 @@ mod ledger_api;
 mod payment_txn;
 mod pubkeybin;
 
-use helium_api::Hnt;
+use helium_api::{pending_transactions::PendingTxnStatus, Hnt};
+use helium_proto::{BlockchainTxn, BlockchainTxnPaymentV1};
 use ledger_api::*;
 use pubkeybin::{PubKeyBin, B58};
 use qr2term::print_qr;
 use std::process;
 use structopt::StructOpt;
+
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 static HELIUM_API_BASE_URL: &str = "https://api.helium.io/v1/";
@@ -42,23 +44,25 @@ enum Cli {
         units: Units,
     },
 }
-fn main() {
+
+#[tokio::main]
+async fn main() {
     println!("Communicating with Ledger - follow prompts on screen");
 
     let cli = Cli::from_args();
-    if let Err(e) = run(cli) {
+    if let Err(e) = run(cli).await {
         println!("error: {}", e);
         process::exit(1);
     }
 }
 
-fn run(cli: Cli) -> Result {
+async fn run(cli: Cli) -> Result {
     match cli {
         Cli::Balance { qr_code } => {
             // get pubkey and display it on Ledger Screen
             let pubkey = ledger_api::get_pubkey(PubkeyDisplay::On)?;
 
-            print_balance(&pubkey)?;
+            print_balance(&pubkey).await?;
             if qr_code {
                 print_qr(&pubkey.to_b58()?)?;
             }
@@ -67,15 +71,15 @@ fn run(cli: Cli) -> Result {
         Cli::Pay { address, units } => {
             let amount = match units {
                 Units::Hnt { hnt } => hnt,
-                Units::Bones { bones } => Hnt::from_bones(bones),
+                Units::Bones { bones } => Hnt::from(bones),
             };
 
             println!("Creating transaction for:");
             println!("      {:0.*} HNT", 8, amount.get_decimal());
             println!("        =");
-            println!("      {:} Bones", amount.to_bones());
+            println!("      {:} Bones", u64::from(amount));
 
-            match ledger_api::pay(address, amount)? {
+            match ledger_api::pay(address, amount).await? {
                 PayResponse::Txn(txn, hash) => print_txn(&txn, &hash).unwrap(),
                 PayResponse::InsufficientBalance(balance, send_request) => {
                     println!(
@@ -93,13 +97,13 @@ fn run(cli: Cli) -> Result {
     }
 }
 
-use helium_api::Client;
+use helium_api::{accounts, Client};
 use prettytable::{format, Table};
 
-fn print_balance(pubkey: &PubKeyBin) -> Result {
+async fn print_balance(pubkey: &PubKeyBin) -> Result {
     let client = Client::new_with_base_url(HELIUM_API_BASE_URL.to_string());
     let address = pubkey.to_b58()?;
-    let result = client.get_account(&address);
+    let result = accounts::get(&client, &address).await;
 
     let mut table = Table::new();
     table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
@@ -113,7 +117,7 @@ fn print_balance(pubkey: &PubKeyBin) -> Result {
     match result {
         Ok(account) => table.add_row(row![
             address,
-            Hnt::from_bones(account.balance),
+            account.balance,
             account.dc_balance,
             account.sec_balance
         ]),
@@ -124,15 +128,22 @@ fn print_balance(pubkey: &PubKeyBin) -> Result {
     Ok(())
 }
 
-use helium_api::BlockchainTxnPaymentV1;
-
 pub fn print_txn(txn: &BlockchainTxnPaymentV1, hash: &str) -> Result<()> {
     let mut table = Table::new();
     table.add_row(row!["Payee", "Amount HNT", "Nonce", "Hash"]);
 
     let payee = PubKeyBin::copy_from_slice(txn.payee.as_slice()).to_b58()?;
 
-    table.add_row(row![payee, Hnt::from_bones(txn.amount), txn.nonce, hash]);
+    table.add_row(row![payee, Hnt::from(txn.amount), txn.nonce, hash]);
     table.printstd();
     Ok(())
+}
+
+pub async fn submit_txn(client: &Client, txn: &BlockchainTxn) -> Result<PendingTxnStatus> {
+    use helium_proto::Message;
+    let mut data = vec![];
+    txn.encode(&mut data)?;
+    helium_api::pending_transactions::submit(client, &data)
+        .await
+        .map_err(|e| e.into())
 }
