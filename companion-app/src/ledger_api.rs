@@ -1,7 +1,11 @@
-use crate::{payment_txn::Fee, pubkeybin::PubKeyBin, pubkeybin::B58, Result, HELIUM_API_BASE_URL};
+use crate::{
+    payment_txn::Fee, pubkeybin::PubKeyBin, pubkeybin::B58, submit_txn, Result, HELIUM_API_BASE_URL,
+};
 use byteorder::{LittleEndian as LE, WriteBytesExt};
-use helium_api::{BlockchainTxnPaymentV1, Client, Hnt};
+use helium_api::{accounts, Client, Hnt};
+use helium_proto::BlockchainTxnPaymentV1;
 use ledger::*;
+use ledger_apdu::{APDUAnswer, APDUCommand};
 use prost::Message;
 use std::error;
 use std::fmt;
@@ -23,17 +27,16 @@ enum Error {
 }
 
 pub fn get_pubkey(display: PubkeyDisplay) -> Result<PubKeyBin> {
-    let ledger = LedgerApp::new()?;
+    let ledger = TransportNativeHID::new()?;
     exchange_get_pubkey(&ledger, display)
 }
 
-fn exchange_get_pubkey(ledger: &LedgerApp, display: PubkeyDisplay) -> Result<PubKeyBin> {
-    let get_public_key = ApduCommand {
+fn exchange_get_pubkey(ledger: &TransportNativeHID, display: PubkeyDisplay) -> Result<PubKeyBin> {
+    let get_public_key = APDUCommand {
         cla: 0xe0,
         ins: INS_GET_PUBLIC_KEY,
         p1: display as u8,
         p2: 0x00,
-        length: 0,
         data: Vec::new(),
     };
 
@@ -44,25 +47,23 @@ fn exchange_get_pubkey(ledger: &LedgerApp, display: PubkeyDisplay) -> Result<Pub
 
 pub enum PayResponse {
     Txn(BlockchainTxnPaymentV1, String),
-    InsufficientBalance(u64, u64), // provides balance and send request
+    InsufficientBalance(Hnt, Hnt), // provides balance and send request
     UserDeniedTransaction,
 }
 
-pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
-    let ledger = LedgerApp::new()?;
+pub(crate) async fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
+    let ledger = TransportNativeHID::new()?;
+
     let client = Client::new_with_base_url(HELIUM_API_BASE_URL.to_string());
     let mut data: Vec<u8> = Vec::new();
 
     // get nonce
     let keypair = exchange_get_pubkey(&ledger, PubkeyDisplay::Off)?;
-    let account = client.get_account(&keypair.to_b58()?)?;
+    let account = accounts::get(&client, &keypair.to_b58()?).await?;
     let nonce: u64 = account.speculative_nonce + 1;
 
-    if account.balance < amount.to_bones() {
-        return Ok(PayResponse::InsufficientBalance(
-            account.balance,
-            amount.to_bones(),
-        ));
+    if account.balance.get_decimal() < amount.get_decimal() {
+        return Ok(PayResponse::InsufficientBalance(account.balance, amount));
     }
 
     // serialize payee
@@ -73,7 +74,7 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     let fee = BlockchainTxnPaymentV1 {
         payee: payee_bin.0.to_vec(),
         payer: payer_bin.0.to_vec(),
-        amount: amount.to_bones(),
+        amount: u64::from(amount),
         nonce,
         fee: 0,
         signature: vec![],
@@ -83,19 +84,18 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     println!("Transaction fee: {} DC (1 DC = $.00001)", fee);
     println!("If account has no DCs, HNT will be burned automatically to fund transaction based on current oracle price");
 
-    data.write_u64::<LE>(amount.to_bones())?;
+    data.write_u64::<LE>(u64::from(amount))?;
     data.write_u64::<LE>(fee)?;
     data.write_u64::<LE>(nonce)?;
 
     data.push(0);
     data.extend(payee_bin.0.iter());
 
-    let exchange_pay_txn = ApduCommand {
+    let exchange_pay_txn = APDUCommand {
         cla: 0xe0,
         ins: INS_SIGN_PAYMENT_TXN,
         p1: 0x00,
         p2: 0x00,
-        length: 0,
         data,
     };
 
@@ -106,9 +106,9 @@ pub fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
     }
 
     let txn = BlockchainTxnPaymentV1::decode(exchange_pay_tx_result.data.as_slice())?;
-
+    let envelope = txn.in_envelope();
     // submit the signed tansaction to the API
-    let pending_txn_status = client.submit_txn(&txn.in_envelope())?;
+    let pending_txn_status = submit_txn(&client, &envelope).await?;
 
     Ok(PayResponse::Txn(txn, pending_txn_status.hash))
 }
@@ -134,11 +134,11 @@ impl fmt::Display for Error {
 }
 
 fn read_from_ledger(
-    ledger: &LedgerApp,
-    command: ApduCommand,
-) -> std::result::Result<ledger::ApduAnswer, Error> {
+    ledger: &TransportNativeHID,
+    command: APDUCommand,
+) -> std::result::Result<APDUAnswer, Error> {
     let answer = ledger
-        .exchange(command)
+        .exchange(&command)
         .or(Err(Error::CouldNotFindLedger))?;
 
     if answer.data.is_empty() {
