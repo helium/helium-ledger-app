@@ -1,5 +1,5 @@
 use rand::prelude::{RngCore, SeedableRng, StdRng};
-use solana_remote_wallet::ledger::LedgerWallet;
+use solana_remote_wallet::ledger::{LedgerSettings, LedgerWallet};
 use solana_remote_wallet::ledger_error::LedgerError;
 use solana_remote_wallet::remote_wallet::{
     initialize_wallet_manager, DerivationPath, RemoteWallet, RemoteWalletError,
@@ -1623,6 +1623,20 @@ fn test_ledger_transfer_with_memos() -> Result<(), RemoteWalletError> {
     Ok(())
 }
 
+fn ensure_blind_signing() -> Result<(), RemoteWalletError> {
+    let (ledger, _pubkey) = get_ledger();
+    let LedgerSettings {
+        enable_blind_signing,
+        ..
+    } = ledger.get_settings()?;
+    if !enable_blind_signing {
+        println!(
+            " >>> Please enable Blind Signing in app settings before running this test suite <<<"
+        );
+        std::process::exit(1);
+    }
+    Ok(())
+}
 fn main() {
     solana_logger::setup();
     match do_run_tests() {
@@ -1641,6 +1655,8 @@ macro_rules! run {
     };
 }
 fn do_run_tests() -> Result<(), RemoteWalletError> {
+    ensure_blind_signing()?;
+
     run!(test_ledger_transfer_with_memos);
     run!(test_spl_associated_token_account_create_with_transfer_checked_and_serum_assert_owner);
     run!(test_spl_associated_token_account_create_with_transfer_checked);
