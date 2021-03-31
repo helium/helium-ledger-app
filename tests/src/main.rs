@@ -1559,7 +1559,7 @@ mod serum_assert_owner_program {
         use super::*;
 
         pub fn check(account: &Pubkey, expected_program_id: &Pubkey) -> Instruction {
-            Instruction::new(
+            Instruction::new_with_bincode(
                 super::id(),
                 expected_program_id,
                 vec![AccountMeta::new_readonly(*account, false)],
