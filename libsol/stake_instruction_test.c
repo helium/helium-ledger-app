@@ -170,8 +170,20 @@ void test_parse_stake_instruction_kind() {
     assert(parse_stake_instruction_kind(&parser, &kind) == 0);
     assert(kind == StakeSetLockup);
 
-    // Fail the first unused enum value to be sure this test gets updated
     buf[0] = 7;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_stake_instruction_kind(&parser, &kind) == 0);
+    assert(kind == StakeMerge);
+
+    buf[0] = 8;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_stake_instruction_kind(&parser, &kind) == 0);
+    assert(kind == StakeAuthorizeWithSeed);
+
+    // Fail the first unused enum value to be sure this test gets updated
+    buf[0] = 9;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_stake_instruction_kind(&parser, &kind) == 1);

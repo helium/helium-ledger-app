@@ -13,6 +13,8 @@ enum StakeInstructionKind {
     StakeWithdraw,
     StakeDeactivate,
     StakeSetLockup,
+    StakeMerge,
+    StakeAuthorizeWithSeed,
 };
 
 typedef struct StakeDelegateInfo {
@@ -88,6 +90,12 @@ typedef struct StakeSplitInfo {
     uint64_t lamports;
 } StakeSplitInfo;
 
+typedef struct StakeMergeInfo {
+    const Pubkey* destination;
+    const Pubkey* source;
+    const Pubkey* authority;
+} StakeMergeInfo;
+
 typedef struct StakeInfo {
     enum StakeInstructionKind kind;
     union {
@@ -98,6 +106,7 @@ typedef struct StakeInfo {
         StakeDeactivateInfo deactivate;
         StakeSetLockupInfo set_lockup;
         StakeSplitInfo split;
+        StakeMergeInfo merge;
     };
 } StakeInfo;
 

@@ -112,11 +112,13 @@ void test_instruction_infos_match_briefs() {
         SYSTEM_IX_BRIEF(SystemTransfer),
         STAKE_IX_BRIEF(StakeSplit),
     };
+    InstructionInfo* display_infos[] = { &infos[0], &infos[1] };
     size_t infos_len = ARRAY_LEN(infos);
+    assert(infos_len == ARRAY_LEN(display_infos));
     assert(infos_len == ARRAY_LEN(briefs));
     assert(infos_len == ARRAY_LEN(bad_briefs));
-    assert(instruction_infos_match_briefs(infos, briefs, infos_len));
-    assert(!instruction_infos_match_briefs(infos, bad_briefs, infos_len));
+    assert(instruction_infos_match_briefs(display_infos, briefs, infos_len));
+    assert(!instruction_infos_match_briefs(display_infos, bad_briefs, infos_len));
 }
 
 void test_instruction_accounts_iterator_next() {

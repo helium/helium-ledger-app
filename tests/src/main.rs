@@ -1,7 +1,8 @@
 use rand::prelude::{RngCore, SeedableRng, StdRng};
-use solana_remote_wallet::ledger::LedgerWallet;
+use solana_remote_wallet::ledger::{LedgerSettings, LedgerWallet};
+use solana_remote_wallet::ledger_error::LedgerError;
 use solana_remote_wallet::remote_wallet::{
-    initialize_wallet_manager, DerivationPath, RemoteWallet,
+    initialize_wallet_manager, DerivationPath, RemoteWallet, RemoteWalletError,
 };
 use solana_sdk::{
     instruction::{AccountMeta, Instruction},
@@ -11,6 +12,7 @@ use solana_sdk::{
 };
 use solana_stake_program::{stake_instruction, stake_state};
 use solana_vote_program::{vote_instruction, vote_state};
+use spl_associated_token_account::*;
 use std::collections::HashSet;
 use std::sync::Arc;
 
@@ -31,65 +33,56 @@ fn get_ledger() -> (Arc<LedgerWallet>, Pubkey) {
         .map(|d| (d.pubkey, d.host_device_path))
         .expect("No ledger device detected");
 
-    let ledger = wallet_manager
-        .get_ledger(&device_path)
-        .expect("get device");
+    let ledger = wallet_manager.get_ledger(&device_path).expect("get device");
 
     (ledger, base_pubkey)
 }
 
-fn test_ledger_pubkey() {
+fn test_ledger_pubkey() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let mut pubkey_set = HashSet::new();
     pubkey_set.insert(ledger_base_pubkey);
 
-    let pubkey_0_0 = ledger
-        .get_pubkey(
-            &DerivationPath {
-                account: Some(0.into()),
-                change: Some(0.into()),
-            },
-            false,
-        )
-        .expect("get pubkey");
+    let pubkey_0_0 = ledger.get_pubkey(
+        &DerivationPath {
+            account: Some(0.into()),
+            change: Some(0.into()),
+        },
+        false,
+    )?;
     pubkey_set.insert(pubkey_0_0);
-    let pubkey_0_1 = ledger
-        .get_pubkey(
-            &DerivationPath {
-                account: Some(0.into()),
-                change: Some(1.into()),
-            },
-            false,
-        )
-        .expect("get pubkey");
+    let pubkey_0_1 = ledger.get_pubkey(
+        &DerivationPath {
+            account: Some(0.into()),
+            change: Some(1.into()),
+        },
+        false,
+    )?;
     pubkey_set.insert(pubkey_0_1);
-    let pubkey_1 = ledger
-        .get_pubkey(
-            &DerivationPath {
-                account: Some(1.into()),
-                change: None,
-            },
-            false,
-        )
-        .expect("get pubkey");
+    let pubkey_1 = ledger.get_pubkey(
+        &DerivationPath {
+            account: Some(1.into()),
+            change: None,
+        },
+        false,
+    )?;
     pubkey_set.insert(pubkey_1);
-    let pubkey_1_0 = ledger
-        .get_pubkey(
-            &DerivationPath {
-                account: Some(1.into()),
-                change: Some(0.into()),
-            },
-            false,
-        )
-        .expect("get pubkey");
+    let pubkey_1_0 = ledger.get_pubkey(
+        &DerivationPath {
+            account: Some(1.into()),
+            change: Some(0.into()),
+        },
+        false,
+    )?;
     pubkey_set.insert(pubkey_1_0);
 
     assert_eq!(pubkey_set.len(), 5); // Ensure keys at various derivation paths are unique
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_ledger_sign_transaction() {
+fn test_ledger_sign_transaction() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -97,14 +90,10 @@ fn test_ledger_sign_transaction() {
         change: None,
     };
 
-    let from = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let from = ledger.get_pubkey(&derivation_path, false)?;
     let instruction = system_instruction::transfer(&from, &ledger_base_pubkey, 42);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&from.as_ref(), &message));
 
     // Test large transaction
@@ -113,13 +102,12 @@ fn test_ledger_sign_transaction() {
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     let hash = solana_sdk::hash::hash(&message);
     println!("Expected hash: {}", hash);
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
 }
 
-fn test_ledger_sign_transaction_too_big() {
+fn test_ledger_sign_transaction_too_big() -> Result<(), RemoteWalletError> {
     // Test too big of a transaction
     let (ledger, ledger_base_pubkey) = get_ledger();
 
@@ -128,17 +116,16 @@ fn test_ledger_sign_transaction_too_big() {
         change: None,
     };
 
-    let from = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let from = ledger.get_pubkey(&derivation_path, false)?;
     let recipients: Vec<(Pubkey, u64)> = (0..100).map(|_| (Pubkey::new_unique(), 42)).collect();
     let instructions = system_instruction::transfer_many(&from, &recipients);
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     ledger.sign_message(&derivation_path, &message).unwrap_err();
+    Ok(())
 }
 
 /// This test requires interactive approval of message signing on the ledger.
-fn test_ledger_delegate_stake() {
+fn test_ledger_delegate_stake() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -146,22 +133,19 @@ fn test_ledger_delegate_stake() {
         change: None,
     };
 
-    let authorized_pubkey = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let authorized_pubkey = ledger.get_pubkey(&derivation_path, false)?;
     let stake_pubkey = ledger_base_pubkey;
     let vote_pubkey = Pubkey::default();
     let instruction =
         stake_instruction::delegate_stake(&stake_pubkey, &authorized_pubkey, &vote_pubkey);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
+    Ok(())
 }
 
 /// This test requires interactive approval of message signing on the ledger.
-fn test_ledger_delegate_stake_with_nonce() {
+fn test_ledger_delegate_stake_with_nonce() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -169,9 +153,7 @@ fn test_ledger_delegate_stake_with_nonce() {
         change: None,
     };
 
-    let authorized_pubkey = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let authorized_pubkey = ledger.get_pubkey(&derivation_path, false)?;
     let stake_pubkey = ledger_base_pubkey;
     let vote_pubkey = Pubkey::new(&[1u8; 32]);
     let instruction =
@@ -180,14 +162,13 @@ fn test_ledger_delegate_stake_with_nonce() {
     let message =
         Message::new_with_nonce(vec![instruction], None, &nonce_account, &authorized_pubkey)
             .serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
+    Ok(())
 }
 
 /// This test requires interactive approval of message signing on the ledger.
-fn test_ledger_advance_nonce_account() {
+fn test_ledger_advance_nonce_account() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -195,20 +176,17 @@ fn test_ledger_advance_nonce_account() {
         change: None,
     };
 
-    let authorized_pubkey = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let authorized_pubkey = ledger.get_pubkey(&derivation_path, false)?;
     let nonce_account = Pubkey::new(&[1u8; 32]);
     let instruction = system_instruction::advance_nonce_account(&nonce_account, &authorized_pubkey);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
+    Ok(())
 }
 
 /// This test requires interactive approval of message signing on the ledger.
-fn test_ledger_advance_nonce_account_separate_fee_payer() {
+fn test_ledger_advance_nonce_account_separate_fee_payer() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -216,21 +194,18 @@ fn test_ledger_advance_nonce_account_separate_fee_payer() {
         change: None,
     };
 
-    let authorized_pubkey = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let authorized_pubkey = ledger.get_pubkey(&derivation_path, false)?;
     let nonce_account = Pubkey::new(&[1u8; 32]);
     let fee_payer = Pubkey::new(&[2u8; 32]);
     let instruction = system_instruction::advance_nonce_account(&nonce_account, &authorized_pubkey);
     let message = Message::new(&[instruction], Some(&fee_payer)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_ledger_transfer_with_nonce() {
+fn test_ledger_transfer_with_nonce() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -238,23 +213,20 @@ fn test_ledger_transfer_with_nonce() {
         change: None,
     };
 
-    let from = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let from = ledger.get_pubkey(&derivation_path, false)?;
     let nonce_account = Pubkey::new(&[1u8; 32]);
     let nonce_authority = Pubkey::new(&[2u8; 32]);
     let instruction = system_instruction::transfer(&from, &ledger_base_pubkey, 42);
     let message =
         Message::new_with_nonce(vec![instruction], None, &nonce_account, &nonce_authority)
             .serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_create_stake_account_with_seed_and_nonce() {
+fn test_create_stake_account_with_seed_and_nonce() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -262,9 +234,7 @@ fn test_create_stake_account_with_seed_and_nonce() {
         change: None,
     };
 
-    let from = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let from = ledger.get_pubkey(&derivation_path, false)?;
     let nonce_account = Pubkey::new(&[1u8; 32]);
     let nonce_authority = Pubkey::new(&[2u8; 32]);
     let base = from;
@@ -285,14 +255,13 @@ fn test_create_stake_account_with_seed_and_nonce() {
     );
     let message =
         Message::new_with_nonce(instructions, None, &nonce_account, &nonce_authority).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_create_stake_account() {
+fn test_create_stake_account() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -300,9 +269,7 @@ fn test_create_stake_account() {
         change: None,
     };
 
-    let from = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let from = ledger.get_pubkey(&derivation_path, false)?;
     let stake_account = ledger_base_pubkey;
     let authorized = stake_state::Authorized {
         staker: Pubkey::new(&[3u8; 32]),
@@ -320,13 +287,12 @@ fn test_create_stake_account() {
         42,
     );
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
 }
 
-fn test_create_stake_account_no_lockup() {
+fn test_create_stake_account_no_lockup() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -334,9 +300,7 @@ fn test_create_stake_account_no_lockup() {
         change: None,
     };
 
-    let from = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let from = ledger.get_pubkey(&derivation_path, false)?;
     let stake_account = ledger_base_pubkey;
     let authorized = stake_state::Authorized {
         staker: Pubkey::new(&[3u8; 32]),
@@ -350,14 +314,13 @@ fn test_create_stake_account_no_lockup() {
         42,
     );
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_create_nonce_account_with_seed() {
+fn test_create_nonce_account_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -365,9 +328,7 @@ fn test_create_nonce_account_with_seed() {
         change: None,
     };
 
-    let from = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let from = ledger.get_pubkey(&derivation_path, false)?;
     let base = from;
     let seed = "seedseedseedseedseedseedseedseed";
     let nonce_account = Pubkey::create_with_seed(&base, seed, &system_program::id()).unwrap();
@@ -380,14 +341,13 @@ fn test_create_nonce_account_with_seed() {
         42,
     );
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_create_nonce_account() {
+fn test_create_nonce_account() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -395,9 +355,7 @@ fn test_create_nonce_account() {
         change: None,
     };
 
-    let from = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let from = ledger.get_pubkey(&derivation_path, false)?;
     let nonce_account = ledger_base_pubkey;
     let instructions = system_instruction::create_nonce_account(
         &from,
@@ -406,14 +364,13 @@ fn test_create_nonce_account() {
         42,
     );
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_sign_full_shred_of_garbage_tx() {
+fn test_sign_full_shred_of_garbage_tx() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -421,9 +378,7 @@ fn test_sign_full_shred_of_garbage_tx() {
         change: None,
     };
 
-    let from = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let from = ledger.get_pubkey(&derivation_path, false)?;
 
     let program_id = Pubkey::new(&[1u8; 32]);
     let mut data = [0u8; 1232 - 106].to_vec();
@@ -437,14 +392,13 @@ fn test_sign_full_shred_of_garbage_tx() {
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     let hash = solana_sdk::hash::hash(&message);
     println!("Expected hash: {}", hash);
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_create_vote_account() {
+fn test_create_vote_account() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -452,9 +406,7 @@ fn test_create_vote_account() {
         change: None,
     };
 
-    let from = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let from = ledger.get_pubkey(&derivation_path, false)?;
     let vote_account = ledger_base_pubkey;
     let vote_init = vote_state::VoteInit {
         node_pubkey: Pubkey::new(&[1u8; 32]),
@@ -464,14 +416,13 @@ fn test_create_vote_account() {
     };
     let instructions = vote_instruction::create_account(&from, &vote_account, &vote_init, 42);
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_create_vote_account_with_seed() {
+fn test_create_vote_account_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -479,9 +430,7 @@ fn test_create_vote_account_with_seed() {
         change: None,
     };
 
-    let from = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let from = ledger.get_pubkey(&derivation_path, false)?;
     let base = from;
     let seed = "seedseedseedseedseedseedseedseed";
     let vote_account = Pubkey::create_with_seed(&base, seed, &solana_vote_program::id()).unwrap();
@@ -500,14 +449,13 @@ fn test_create_vote_account_with_seed() {
         42,
     );
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_nonce_withdraw() {
+fn test_nonce_withdraw() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -516,21 +464,18 @@ fn test_nonce_withdraw() {
     };
 
     let nonce_account = ledger_base_pubkey;
-    let nonce_authority = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let nonce_authority = ledger.get_pubkey(&derivation_path, false)?;
     let to = Pubkey::new(&[1u8; 32]);
     let instruction =
         system_instruction::withdraw_nonce_account(&nonce_account, &nonce_authority, &to, 42);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&nonce_authority.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_stake_withdraw() {
+fn test_stake_withdraw() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -539,20 +484,17 @@ fn test_stake_withdraw() {
     };
 
     let stake_account = ledger_base_pubkey;
-    let stake_authority = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
     let to = Pubkey::new(&[1u8; 32]);
     let instruction = stake_instruction::withdraw(&stake_account, &stake_authority, &to, 42, None);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&stake_authority.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_vote_withdraw() {
+fn test_vote_withdraw() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -561,20 +503,17 @@ fn test_vote_withdraw() {
     };
 
     let vote_account = ledger_base_pubkey;
-    let vote_authority = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let vote_authority = ledger.get_pubkey(&derivation_path, false)?;
     let to = Pubkey::new(&[1u8; 32]);
     let instruction = vote_instruction::withdraw(&vote_account, &vote_authority, 42, &to);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&vote_authority.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_nonce_authorize() {
+fn test_nonce_authorize() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -583,9 +522,7 @@ fn test_nonce_authorize() {
     };
 
     let nonce_account = ledger_base_pubkey;
-    let nonce_authority = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let nonce_authority = ledger.get_pubkey(&derivation_path, false)?;
     let new_authority = Pubkey::new(&[1u8; 32]);
     let instruction = system_instruction::authorize_nonce_account(
         &nonce_account,
@@ -593,14 +530,13 @@ fn test_nonce_authorize() {
         &new_authority,
     );
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&nonce_authority.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_stake_authorize() {
+fn test_stake_authorize() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -609,9 +545,7 @@ fn test_stake_authorize() {
     };
 
     let stake_account = ledger_base_pubkey;
-    let stake_authority = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
     let new_authority = Pubkey::new(&[1u8; 32]);
     let stake_auth = stake_instruction::authorize(
         &stake_account,
@@ -623,9 +557,7 @@ fn test_stake_authorize() {
 
     // Authorize staker
     let message = Message::new(&[stake_auth.clone()], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&stake_authority.as_ref(), &message));
 
     let custodian = Pubkey::new_unique();
@@ -641,23 +573,24 @@ fn test_stake_authorize() {
 
         // Authorize withdrawer
         let message = Message::new(&[withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
-        let signature = ledger
-            .sign_message(&derivation_path, &message)
-            .expect("sign transaction");
+        let signature = ledger.sign_message(&derivation_path, &message)?;
         assert!(signature.verify(&stake_authority.as_ref(), &message));
 
         // Authorize both
         // Note: Instruction order must match CLI; staker first, withdrawer second
-        let message = Message::new(&[stake_auth.clone(), withdraw_auth], Some(&ledger_base_pubkey)).serialize();
-        let signature = ledger
-            .sign_message(&derivation_path, &message)
-            .expect("sign transaction");
+        let message = Message::new(
+            &[stake_auth.clone(), withdraw_auth],
+            Some(&ledger_base_pubkey),
+        )
+        .serialize();
+        let signature = ledger.sign_message(&derivation_path, &message)?;
         assert!(signature.verify(&stake_authority.as_ref(), &message));
     }
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_vote_authorize() {
+fn test_vote_authorize() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -666,9 +599,7 @@ fn test_vote_authorize() {
     };
 
     let vote_account = ledger_base_pubkey;
-    let vote_authority = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let vote_authority = ledger.get_pubkey(&derivation_path, false)?;
     let new_authority = Pubkey::new(&[1u8; 32]);
     let vote_auth = vote_instruction::authorize(
         &vote_account,
@@ -679,9 +610,7 @@ fn test_vote_authorize() {
 
     // Authorize voter
     let message = Message::new(&[vote_auth.clone()], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&vote_authority.as_ref(), &message));
 
     let new_authority = Pubkey::new(&[2u8; 32]);
@@ -694,22 +623,19 @@ fn test_vote_authorize() {
 
     // Authorize withdrawer
     let message = Message::new(&[withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&vote_authority.as_ref(), &message));
 
     // Authorize both
     // Note: Instruction order must match CLI; voter first, withdrawer second
     let message = Message::new(&[vote_auth, withdraw_auth], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&vote_authority.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_vote_update_validator_identity() {
+fn test_vote_update_validator_identity() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -718,21 +644,18 @@ fn test_vote_update_validator_identity() {
     };
 
     let vote_account = ledger_base_pubkey;
-    let vote_authority = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let vote_authority = ledger.get_pubkey(&derivation_path, false)?;
     let new_node = Pubkey::new(&[1u8; 32]);
     let instruction =
         vote_instruction::update_validator_identity(&vote_account, &vote_authority, &new_node);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&vote_authority.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_vote_update_commission() {
+fn test_vote_update_commission() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -741,21 +664,18 @@ fn test_vote_update_commission() {
     };
 
     let vote_account = ledger_base_pubkey;
-    let vote_authority = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let vote_authority = ledger.get_pubkey(&derivation_path, false)?;
     let new_commission = 42u8;
     let instruction =
         vote_instruction::update_commission(&vote_account, &vote_authority, new_commission);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&vote_authority.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_stake_deactivate() {
+fn test_stake_deactivate() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -764,19 +684,16 @@ fn test_stake_deactivate() {
     };
 
     let stake_account = ledger_base_pubkey;
-    let stake_authority = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
     let instruction = stake_instruction::deactivate_stake(&stake_account, &stake_authority);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&stake_authority.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_stake_set_lockup() {
+fn test_stake_set_lockup() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -785,9 +702,7 @@ fn test_stake_set_lockup() {
     };
 
     let stake_account = ledger_base_pubkey;
-    let stake_custodian = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let stake_custodian = ledger.get_pubkey(&derivation_path, false)?;
     let new_custodian = Pubkey::new(&[1u8; 32]);
     let lockup = stake_instruction::LockupArgs {
         unix_timestamp: Some(1),
@@ -796,15 +711,14 @@ fn test_stake_set_lockup() {
     };
     let instruction = stake_instruction::set_lockup(&stake_account, &lockup, &stake_custodian);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&stake_custodian.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
 // Add a nonce here to exercise worst case instruction usage
-fn test_stake_split_with_nonce() {
+fn test_stake_split_with_nonce() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -812,9 +726,7 @@ fn test_stake_split_with_nonce() {
         change: None,
     };
 
-    let stake_authority = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
     let stake_account = ledger_base_pubkey;
     let split_account = Pubkey::new(&[1u8; 32]);
     let nonce_account = Pubkey::new(&[2u8; 32]);
@@ -823,14 +735,13 @@ fn test_stake_split_with_nonce() {
         stake_instruction::split(&stake_account, &stake_authority, 42, &split_account);
     let message =
         Message::new_with_nonce(instructions, None, &nonce_account, &nonce_authority).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&stake_authority.as_ref(), &message));
+    Ok(())
 }
 
 // This test requires interactive approval of message signing on the ledger.
-fn test_stake_split_with_seed() {
+fn test_stake_split_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -838,9 +749,7 @@ fn test_stake_split_with_seed() {
         change: None,
     };
 
-    let stake_authority = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("get pubkey");
+    let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
     let stake_account = ledger_base_pubkey;
     let base = stake_authority;
     let seed = "seedseedseedseedseedseedseedseed";
@@ -854,13 +763,32 @@ fn test_stake_split_with_seed() {
         seed,
     );
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&stake_authority.as_ref(), &message));
+    Ok(())
 }
 
-fn test_ledger_reject_unexpected_signer() {
+fn test_stake_merge() -> Result<(), RemoteWalletError> {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+
+    let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
+    let source = Pubkey::new_unique();
+    let destination = Pubkey::new_unique();
+
+    let instructions = stake_instruction::merge(&destination, &source, &stake_authority);
+    let message = Message::new(&instructions, Some(&stake_authority)).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(&stake_authority.as_ref(), &message));
+    Ok(())
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn test_ledger_reject_unexpected_signer() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
@@ -872,18 +800,17 @@ fn test_ledger_reject_unexpected_signer() {
     let instruction = system_instruction::transfer(&from, &ledger_base_pubkey, 42);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     assert!(ledger.sign_message(&derivation_path, &message).is_err());
+    Ok(())
 }
 
-fn test_spl_token_create_mint() {
+fn test_spl_token_create_mint() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let mint = Pubkey::new(&[1u8; 32]);
 
     let instructions = vec![
@@ -897,22 +824,19 @@ fn test_spl_token_create_mint() {
         spl_token::instruction::initialize_mint(&spl_token::id(), &mint, &owner, None, 2).unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_create_account() {
+fn test_spl_token_create_account() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let mint = Pubkey::new(&[2u8; 32]);
 
@@ -928,22 +852,19 @@ fn test_spl_token_create_account() {
             .unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_create_account2() {
+fn test_spl_token_create_account2() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let mint = Pubkey::new(&[2u8; 32]);
 
@@ -959,22 +880,19 @@ fn test_spl_token_create_account2() {
             .unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_create_multisig() {
+fn test_spl_token_create_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let signers = [
         Pubkey::new(&[2u8; 32]),
@@ -999,22 +917,19 @@ fn test_spl_token_create_multisig() {
         .unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_create_mint_with_seed() {
+fn test_spl_token_create_mint_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let base = owner;
     let seed = "seedseedseedseedseedseedseedseed";
     let mint = Pubkey::create_with_seed(&base, seed, &spl_token::id()).unwrap();
@@ -1032,22 +947,19 @@ fn test_spl_token_create_mint_with_seed() {
         spl_token::instruction::initialize_mint(&spl_token::id(), &mint, &owner, None, 2).unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_create_account_with_seed() {
+fn test_spl_token_create_account_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let base = owner;
     let seed = "seedseedseedseedseedseedseedseed";
     let mint = Pubkey::new(&[1u8; 32]);
@@ -1067,22 +979,19 @@ fn test_spl_token_create_account_with_seed() {
             .unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_create_multisig_with_seed() {
+fn test_spl_token_create_multisig_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let base = owner;
     let seed = "seedseedseedseedseedseedseedseed";
     let mint = Pubkey::new(&[1u8; 32]);
@@ -1112,22 +1021,19 @@ fn test_spl_token_create_multisig_with_seed() {
         .unwrap(),
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_transfer() {
+fn test_spl_token_transfer() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let sender = Pubkey::new(&[1u8; 32]);
     let recipient = Pubkey::new(&[2u8; 32]);
     let mint = spl_token::native_mint::id();
@@ -1144,22 +1050,19 @@ fn test_spl_token_transfer() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_approve() {
+fn test_spl_token_approve() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let delegate = Pubkey::new(&[2u8; 32]);
     let mint = spl_token::native_mint::id();
@@ -1176,43 +1079,37 @@ fn test_spl_token_approve() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_revoke() {
+fn test_spl_token_revoke() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
 
     let instruction =
         spl_token::instruction::revoke(&spl_token::id(), &account, &owner, &[]).unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_set_authority() {
+fn test_spl_token_set_authority() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let new_owner = Pubkey::new(&[2u8; 32]);
 
@@ -1226,45 +1123,46 @@ fn test_spl_token_set_authority() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_mint_to() {
+fn test_spl_token_mint_to() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let mint = spl_token::native_mint::id();
     let account = Pubkey::new(&[2u8; 32]);
 
-    let instruction =
-        spl_token::instruction::mint_to_checked(&spl_token::id(), &mint, &account, &owner, &[], 42, 9)
-            .unwrap();
+    let instruction = spl_token::instruction::mint_to_checked(
+        &spl_token::id(),
+        &mint,
+        &account,
+        &owner,
+        &[],
+        42,
+        9,
+    )
+    .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_burn() {
+fn test_spl_token_burn() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let mint = spl_token::native_mint::id();
 
@@ -1272,22 +1170,19 @@ fn test_spl_token_burn() {
         spl_token::instruction::burn_checked(&spl_token::id(), &account, &mint, &owner, &[], 42, 9)
             .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_close_account() {
+fn test_spl_token_close_account() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let owner = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let destination = Pubkey::new(&[2u8; 32]);
 
@@ -1300,22 +1195,19 @@ fn test_spl_token_close_account() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_transfer_multisig() {
+fn test_spl_token_transfer_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let signer = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let sender = Pubkey::new(&[2u8; 32]);
     let recipient = Pubkey::new(&[3u8; 32]);
@@ -1334,22 +1226,19 @@ fn test_spl_token_transfer_multisig() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&signer.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_approve_multisig() {
+fn test_spl_token_approve_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let signer = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
     let delegate = Pubkey::new(&[3u8; 32]);
@@ -1368,22 +1257,19 @@ fn test_spl_token_approve_multisig() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&signer.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_revoke_multisig() {
+fn test_spl_token_revoke_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let signer = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
     let signers = [Pubkey::new(&[3u8; 32]), signer];
@@ -1396,22 +1282,19 @@ fn test_spl_token_revoke_multisig() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&signer.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_set_authority_multisig() {
+fn test_spl_token_set_authority_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let signer = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
     let new_owner = Pubkey::new(&[3u8; 32]);
@@ -1427,22 +1310,19 @@ fn test_spl_token_set_authority_multisig() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&signer.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_mint_to_multisig() {
+fn test_spl_token_mint_to_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let signer = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let mint = Pubkey::new(&[2u8; 32]);
     let account = Pubkey::new(&[3u8; 32]);
@@ -1459,22 +1339,19 @@ fn test_spl_token_mint_to_multisig() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&signer.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_burn_multisig() {
+fn test_spl_token_burn_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let signer = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
     let signers = [Pubkey::new(&[3u8; 32]), signer];
@@ -1491,22 +1368,19 @@ fn test_spl_token_burn_multisig() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&signer.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_close_account_multisig() {
+fn test_spl_token_close_account_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let signer = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
     let destination = Pubkey::new(&[3u8; 32]);
@@ -1521,22 +1395,19 @@ fn test_spl_token_close_account_multisig() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&signer.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_freeze_account() {
+fn test_spl_token_freeze_account() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let signer = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let signer = ledger.get_pubkey(&derivation_path, false)?;
     let freeze_auth = signer;
     let account = Pubkey::new(&[1u8; 32]);
     let mint = Pubkey::new(&[2u8; 32]);
@@ -1550,22 +1421,19 @@ fn test_spl_token_freeze_account() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&signer.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_freeze_account_multisig() {
+fn test_spl_token_freeze_account_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let signer = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let signer = ledger.get_pubkey(&derivation_path, false)?;
     let freeze_auth = signer;
     let account = Pubkey::new(&[1u8; 32]);
     let mint = Pubkey::new(&[2u8; 32]);
@@ -1580,22 +1448,19 @@ fn test_spl_token_freeze_account_multisig() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&signer.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_thaw_account() {
+fn test_spl_token_thaw_account() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let signer = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let signer = ledger.get_pubkey(&derivation_path, false)?;
     let thaw_auth = signer;
     let account = Pubkey::new(&[1u8; 32]);
     let mint = Pubkey::new(&[2u8; 32]);
@@ -1604,22 +1469,19 @@ fn test_spl_token_thaw_account() {
         spl_token::instruction::thaw_account(&spl_token::id(), &account, &mint, &thaw_auth, &[])
             .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&signer.as_ref(), &message));
+    Ok(())
 }
 
-fn test_spl_token_thaw_account_multisig() {
+fn test_spl_token_thaw_account_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
     let derivation_path = DerivationPath {
         account: Some(12345.into()),
         change: None,
     };
-    let signer = ledger
-        .get_pubkey(&derivation_path, false)
-        .expect("ledger get pubkey");
+    let signer = ledger.get_pubkey(&derivation_path, false)?;
     let thaw_auth = signer;
     let account = Pubkey::new(&[1u8; 32]);
     let mint = Pubkey::new(&[2u8; 32]);
@@ -1634,20 +1496,172 @@ fn test_spl_token_thaw_account_multisig() {
     )
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
-    let signature = ledger
-        .sign_message(&derivation_path, &message)
-        .expect("sign transaction");
+    let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(&signer.as_ref(), &message));
+    Ok(())
+}
+
+fn test_spl_associated_token_account_create() -> Result<(), RemoteWalletError> {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let owner = ledger.get_pubkey(&derivation_path, false)?;
+    let mint = Pubkey::new_unique();
+    let instruction = create_associated_token_account(&owner, &owner, &mint);
+    let message = Message::new(&[instruction], Some(&owner)).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(&owner.as_ref(), &message));
+    Ok(())
+}
+
+fn test_spl_associated_token_account_create_with_transfer_checked() -> Result<(), RemoteWalletError>
+{
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let sender = ledger.get_pubkey(&derivation_path, false)?;
+    let mint = Pubkey::new_unique();
+    let sender_holder = get_associated_token_address(&sender, &mint);
+    let recipient = Pubkey::new_unique();
+    let recipient_holder = get_associated_token_address(&recipient, &mint);
+    let instructions = vec![
+        create_associated_token_account(&sender, &recipient, &mint),
+        spl_token::instruction::transfer_checked(
+            &spl_token::id(),
+            &sender_holder,
+            &mint,
+            &recipient_holder,
+            &sender,
+            &[],
+            42,
+            9,
+        )
+        .unwrap(),
+    ];
+    let message = Message::new(&instructions, Some(&sender)).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(&sender.as_ref(), &message));
+    Ok(())
+}
+
+mod serum_assert_owner_program {
+    use super::*;
+
+    solana_sdk::declare_id!("4MNPdKu9wFMvEeZBMt3Eipfs5ovVWTJb31pEXDJAAxX5");
+
+    pub mod instruction {
+        use super::*;
+
+        pub fn check(account: &Pubkey, expected_program_id: &Pubkey) -> Instruction {
+            Instruction::new_with_bincode(
+                super::id(),
+                expected_program_id,
+                vec![AccountMeta::new_readonly(*account, false)],
+            )
+        }
+    }
+}
+
+fn test_spl_associated_token_account_create_with_transfer_checked_and_serum_assert_owner(
+) -> Result<(), RemoteWalletError> {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+    let sender = ledger.get_pubkey(&derivation_path, false)?;
+    let mint = Pubkey::new_unique();
+    let sender_holder = get_associated_token_address(&sender, &mint);
+    let recipient = Pubkey::new_unique();
+    let recipient_holder = get_associated_token_address(&recipient, &mint);
+    let instructions = vec![
+        serum_assert_owner_program::instruction::check(&recipient, &system_program::id()),
+        create_associated_token_account(&sender, &recipient, &mint),
+        spl_token::instruction::transfer_checked(
+            &spl_token::id(),
+            &sender_holder,
+            &mint,
+            &recipient_holder,
+            &sender,
+            &[],
+            42,
+            9,
+        )
+        .unwrap(),
+    ];
+    let message = Message::new(&instructions, Some(&sender)).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(&sender.as_ref(), &message));
+    Ok(())
+}
+
+// This test requires interactive approval of message signing on the ledger.
+fn test_ledger_transfer_with_memos() -> Result<(), RemoteWalletError> {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath {
+        account: Some(12345.into()),
+        change: None,
+    };
+
+    let from = ledger.get_pubkey(&derivation_path, false)?;
+    let instructions = vec![
+        spl_memo::build_memo(b"hello", &[]),
+        system_instruction::transfer(&from, &ledger_base_pubkey, 42),
+        spl_memo::build_memo(b"world", &[]),
+    ];
+    let message = Message::new(&instructions, Some(&from)).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
+}
+
+fn ensure_blind_signing() -> Result<(), RemoteWalletError> {
+    let (ledger, _pubkey) = get_ledger();
+    let LedgerSettings {
+        enable_blind_signing,
+        ..
+    } = ledger.get_settings()?;
+    if !enable_blind_signing {
+        println!(
+            " >>> Please enable Blind Signing in app settings before running this test suite <<<"
+        );
+        std::process::exit(1);
+    }
+    Ok(())
+}
+fn main() {
+    solana_logger::setup();
+    match do_run_tests() {
+        Err(e @ RemoteWalletError::LedgerError(LedgerError::UserCancel)) => {
+            println!(" >>> {} <<<", e);
+        }
+        Err(e) => Err(e).unwrap(),
+        Ok(()) => (),
+    }
 }
 
 macro_rules! run {
     ($test:ident) => {
         println!(" >>> Running {} <<<", stringify!($test));
-        $test();
+        $test()?;
     };
 }
-fn main() {
-    solana_logger::setup();
+fn do_run_tests() -> Result<(), RemoteWalletError> {
+    ensure_blind_signing()?;
+
+    run!(test_ledger_transfer_with_memos);
+    run!(test_spl_associated_token_account_create_with_transfer_checked_and_serum_assert_owner);
+    run!(test_spl_associated_token_account_create_with_transfer_checked);
+    run!(test_spl_associated_token_account_create);
+    run!(test_stake_merge);
     run!(test_spl_token_freeze_account);
     run!(test_spl_token_freeze_account_multisig);
     run!(test_spl_token_thaw_account);
@@ -1703,4 +1717,5 @@ fn main() {
     run!(test_ledger_transfer_with_nonce);
     run!(test_create_stake_account_with_seed_and_nonce);
     run!(test_sign_full_shred_of_garbage_tx);
+    Ok(())
 }

@@ -1,6 +1,9 @@
 #include "instruction.h"
+#include "serum_assert_owner_instruction.h"
 #include "sol/parser.h"
 #include "sol/message.h"
+#include "spl_associated_token_account_instruction.h"
+#include "spl_token_instruction.h"
 #include "system_instruction.h"
 #include "stake_instruction.h"
 #include "vote_instruction.h"
@@ -18,11 +21,14 @@ int process_message_body(
     BAIL_IF(header->instructions_length == 0);
     BAIL_IF(header->instructions_length > MAX_INSTRUCTIONS);
 
+    size_t instruction_count = 0;
     InstructionInfo instruction_info[MAX_INSTRUCTIONS];
     explicit_bzero(instruction_info, sizeof(InstructionInfo) * MAX_INSTRUCTIONS);
 
+    size_t display_instruction_count = 0;
+    InstructionInfo* display_instruction_info[MAX_INSTRUCTIONS];
+
     Parser parser = {message_body, message_body_length};
-    size_t instruction_count = 0;
     for (
         ;
         instruction_count < header->instructions_length;
@@ -38,6 +44,27 @@ int process_message_body(
             header
         );
         switch (program_id) {
+            case ProgramIdSerumAssertOwner: {
+                // Serum assert-owner only has one instruction and we ignore it
+                info->kind = program_id;
+                break;
+            }
+            case ProgramIdSplAssociatedTokenAccount: {
+                if (parse_spl_associated_token_account_instructions(
+                        &instruction,
+                        header,
+                        &info->spl_associated_token_account
+                    ) == 0
+                ) {
+                    info->kind = program_id;
+                }
+                break;
+            }
+            case ProgramIdSplMemo: {
+                // SPL Memo only has one instruction and we ignore it for now
+                info->kind = program_id;
+                break;
+            }
             case ProgramIdSplToken:
                 if (parse_spl_token_instructions(
                         &instruction, header,
@@ -84,6 +111,20 @@ int process_message_body(
             case ProgramIdUnknown:
                 break;
         }
+        switch (info->kind) {
+            case ProgramIdSplAssociatedTokenAccount:
+            case ProgramIdSplToken:
+            case ProgramIdSystem:
+            case ProgramIdStake:
+            case ProgramIdVote:
+            case ProgramIdUnknown:
+                display_instruction_info[display_instruction_count++] = info;
+                break;
+            // Ignored instructions
+            case ProgramIdSerumAssertOwner:
+            case ProgramIdSplMemo:
+                break;
+        }
     }
 
     // Ensure we've consumed the entire message body
@@ -94,5 +135,5 @@ int process_message_body(
         BAIL_IF(instruction_info[i].kind == ProgramIdUnknown);
     }
 
-    return print_transaction(header, instruction_info, instruction_count);
+    return print_transaction(header, display_instruction_info, display_instruction_count);
 }

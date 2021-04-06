@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sol/parser.h"
+#include "spl_associated_token_account_instruction.h"
 #include "spl_token_instruction.h"
 #include "stake_instruction.h"
 #include "system_instruction.h"
@@ -13,11 +14,15 @@ enum ProgramId {
     ProgramIdSystem,
     ProgramIdVote,
     ProgramIdSplToken,
+    ProgramIdSplAssociatedTokenAccount,
+    ProgramIdSplMemo,
+    ProgramIdSerumAssertOwner,
 };
 
 typedef struct InstructionInfo {
     enum ProgramId kind;
     union {
+        SplAssociatedTokenAccountInfo spl_associated_token_account;
         SplTokenInfo spl_token;
         StakeInfo stake;
         SystemInfo system;
@@ -38,6 +43,7 @@ int instruction_validate(
 typedef struct InstructionBrief {
     enum ProgramId program_id;
     union {
+        int none;
         SplTokenInstructionKind spl_token;
         enum SystemInstructionKind system;
         enum StakeInstructionKind stake;
@@ -45,6 +51,7 @@ typedef struct InstructionBrief {
     };
 } InstructionBrief;
 
+#define SPL_ASSOCIATED_TOKEN_ACCOUNT_IX_BRIEF { ProgramIdSplAssociatedTokenAccount, .none = 0 }
 #define SPL_TOKEN_IX_BRIEF(spl_token_ix) { ProgramIdSplToken, .spl_token = (spl_token_ix) }
 #define SYSTEM_IX_BRIEF(system_ix) { ProgramIdSystem, .system = (system_ix) }
 #define STAKE_IX_BRIEF(stake_ix) { ProgramIdStake, .stake = (stake_ix) }
@@ -55,7 +62,7 @@ bool instruction_info_matches_brief(
     const InstructionBrief* brief
 );
 bool instruction_infos_match_briefs(
-    const InstructionInfo* infos,
+    InstructionInfo* const *infos,
     const InstructionBrief* briefs,
     size_t len
 );
