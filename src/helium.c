@@ -63,12 +63,19 @@ uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n){
 }
 
 
-void derive_helium_keypair(uint32_t index, cx_ecfp_private_key_t *privateKey, cx_ecfp_public_key_t *publicKey) {
+#ifdef HELIUM_TESTNET
+#define SLIP 905
+#else
+#define SLIP 904
+#endif
+
+void derive_helium_public_key
+(uint32_t index, cx_ecfp_private_key_t *privateKey, cx_ecfp_public_key_t *publicKey) {
 	uint8_t keySeed[32];
 	static cx_ecfp_private_key_t pk;
 
-	// bip32 path for 44'/904'/n'/0'/0'
-	uint32_t bip32Path[] = {44 | 0x80000000, 904 | 0x80000000, index | 0x80000000, 0x80000000, 0x80000000};
+    uint32_t bip32Path[] = {44 | 0x80000000, SLIP | 0x80000000, index | 0x80000000, 0x80000000, 0x80000000};
+
 	os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32Path, 5, keySeed, NULL, NULL, 0);
 
 	cx_ecfp_init_private_key(CX_CURVE_Ed25519, keySeed, sizeof(keySeed), &pk);
@@ -91,7 +98,7 @@ void derive_helium_keypair(uint32_t index, cx_ecfp_private_key_t *privateKey, cx
 
 void sign_tx(uint8_t *dst, uint32_t index, const uint8_t *tx, uint16_t length) {
 	cx_ecfp_private_key_t privateKey;
-	derive_helium_keypair(index, &privateKey, NULL);
+    derive_helium_public_key(index, &privateKey, NULL);
 	cx_eddsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA512, tx, length, NULL, 0, dst, 64, NULL);
 	os_memset(&privateKey, 0, sizeof(privateKey));
 }
@@ -101,7 +108,11 @@ uint32_t create_helium_transaction(){
 	pb_ostream_t ostream ;
 
 	unsigned char payer[SIZEOF_HELIUM_KEY];
-	payer[0] = 1;
+#ifdef HELIUM_TESTNET
+    payer[0] = NETTYPE_TEST | KEYTYPE_ED25519;;
+#else
+    payer[0] = NETTYPE_MAIN | KEYTYPE_ED25519;;
+#endif
 	get_pubkey_bytes(&payer[1]);
 
 	unsigned char signature[SIZEOF_SIGNATURE];
@@ -257,6 +268,7 @@ int btchip_encode_base58(const unsigned char *in, size_t length,
 void __attribute__ ((noinline)) get_pubkey_bytes(uint8_t * out){
 	cx_ecfp_public_key_t publicKey;
 
-	derive_helium_keypair(SLOT_INDEX, NULL, &publicKey);
+    derive_helium_public_key
+(SLOT_INDEX, NULL, &publicKey);
 	extract_pubkey_bytes(out, &publicKey);
 }

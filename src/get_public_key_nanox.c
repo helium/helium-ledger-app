@@ -44,7 +44,11 @@ void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t
 	uint16_t adpu_tx = 2;
 
 	G_io_apdu_buffer[0] = 0; // prepend 0 byte to signify b58 format
-	G_io_apdu_buffer[1] = 1; // set wallet type prefix to KEYTYPE_ED25519
+#ifdef HELIUM_TESTNET
+	G_io_apdu_buffer[1] = NETTYPE_TEST | KEYTYPE_ED25519;
+#else
+	G_io_apdu_buffer[1] = NETTYPE_MAIN | KEYTYPE_ED25519;
+#endif
 	get_pubkey_bytes(&G_io_apdu_buffer[adpu_tx]);
 	adpu_tx += SIZE_OF_PUB_KEY_BIN;
 

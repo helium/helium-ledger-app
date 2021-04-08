@@ -166,7 +166,11 @@ static const bagl_element_t ui_displayAmount[] = {
 	UI_BACKGROUND(),
 	UI_ICON_LEFT(0x01, BAGL_GLYPH_ICON_LEFT),
 	UI_ICON_RIGHT(0x02, BAGL_GLYPH_ICON_RIGHT),
+#ifdef HELIUM_TESTNET
+	UI_TEXT(0x00, 0, 12, 128, "Amount TNT"),
+#else
 	UI_TEXT(0x00, 0, 12, 128, "Amount HNT"),
+#endif
 	// The visible portion of the amount
 	UI_TEXT(0x00, 0, 26, 128, global.calcTxnHashContext.partialStr),
 };
