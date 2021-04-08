@@ -1,14 +1,16 @@
-use crate::{
-    payment_txn::Fee, pubkeybin::PubKeyBin, pubkeybin::B58, submit_txn, Result, HELIUM_API_BASE_URL,
-};
+use crate::{api_url, submit_txn, Result};
 use byteorder::{LittleEndian as LE, WriteBytesExt};
 use helium_api::{accounts, Client, Hnt};
+use helium_crypto::{public_key::PublicKey, Network};
 use helium_proto::BlockchainTxnPaymentV1;
+use helium_wallet::{
+    cmd::get_txn_fees,
+    traits::{TxnEnvelope, TxnFee},
+};
 use ledger::*;
 use ledger_apdu::{APDUAnswer, APDUCommand};
 use prost::Message;
-use std::error;
-use std::fmt;
+use std::{convert::TryFrom, error, fmt, str::FromStr};
 
 const INS_GET_PUBLIC_KEY: u8 = 0x02;
 const INS_SIGN_PAYMENT_TXN: u8 = 0x08;
@@ -26,12 +28,12 @@ enum Error {
     AppNotRunning,
 }
 
-pub fn get_pubkey(display: PubkeyDisplay) -> Result<PubKeyBin> {
+pub fn get_pubkey(display: PubkeyDisplay) -> Result<PublicKey> {
     let ledger = TransportNativeHID::new()?;
     exchange_get_pubkey(&ledger, display)
 }
 
-fn exchange_get_pubkey(ledger: &TransportNativeHID, display: PubkeyDisplay) -> Result<PubKeyBin> {
+fn exchange_get_pubkey(ledger: &TransportNativeHID, display: PubkeyDisplay) -> Result<PublicKey> {
     let get_public_key = APDUCommand {
         cla: 0xe0,
         ins: INS_GET_PUBLIC_KEY,
@@ -41,8 +43,7 @@ fn exchange_get_pubkey(ledger: &TransportNativeHID, display: PubkeyDisplay) -> R
     };
 
     let public_key_result = read_from_ledger(ledger, get_public_key)?;
-    // TODO: verify validity before returning by checking the sha256 checksum
-    Ok(PubKeyBin::copy_from_slice(&public_key_result.data[1..34]))
+    Ok(PublicKey::try_from(&public_key_result.data[1..34])?)
 }
 
 pub enum PayResponse {
@@ -51,45 +52,48 @@ pub enum PayResponse {
     UserDeniedTransaction,
 }
 
-pub(crate) async fn pay(payee: String, amount: Hnt) -> Result<PayResponse> {
+pub(crate) async fn pay(payee: PublicKey, amount: Hnt) -> Result<PayResponse> {
     let ledger = TransportNativeHID::new()?;
+    // get nonce
+    let pubkey = exchange_get_pubkey(&ledger, PubkeyDisplay::Off)?;
 
-    let client = Client::new_with_base_url(HELIUM_API_BASE_URL.to_string());
+    let client = Client::new_with_base_url(api_url(pubkey.network));
     let mut data: Vec<u8> = Vec::new();
 
-    // get nonce
-    let keypair = exchange_get_pubkey(&ledger, PubkeyDisplay::Off)?;
-    let account = accounts::get(&client, &keypair.to_b58()?).await?;
+    let account = accounts::get(&client, &pubkey.to_string()).await?;
     let nonce: u64 = account.speculative_nonce + 1;
 
     if account.balance.get_decimal() < amount.get_decimal() {
         return Ok(PayResponse::InsufficientBalance(account.balance, amount));
     }
-
-    // serialize payee
-    let payee_bin = PubKeyBin::from_b58(payee)?;
-    let payer_bin = PubKeyBin::from_b58(account.address)?;
+    // serialize payer
+    let payer = PublicKey::from_str(&account.address)?;
 
     // calculate fee
     let fee = BlockchainTxnPaymentV1 {
-        payee: payee_bin.0.to_vec(),
-        payer: payer_bin.0.to_vec(),
+        payee: payee.to_vec(),
+        payer: payer.to_vec(),
         amount: u64::from(amount),
         nonce,
         fee: 0,
         signature: vec![],
     }
-    .fee()?;
+    .txn_fee(&get_txn_fees(&client).await?)?;
+
+    let units = match payer.network {
+        Network::TestNet => "TNT",
+        Network::MainNet => "HNT",
+    };
 
     println!("Transaction fee: {} DC (1 DC = $.00001)", fee);
-    println!("If account has no DCs, HNT will be burned automatically to fund transaction based on current oracle price");
+    println!("If account has no DCs, {} will be burned automatically to fund transaction based on current oracle price", units);
 
     data.write_u64::<LE>(u64::from(amount))?;
     data.write_u64::<LE>(fee)?;
     data.write_u64::<LE>(nonce)?;
 
     data.push(0);
-    data.extend(payee_bin.0.iter());
+    data.extend(payee.to_vec());
 
     let exchange_pay_txn = APDUCommand {
         cla: 0xe0,

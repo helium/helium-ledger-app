@@ -20,7 +20,11 @@ static const bagl_element_t ui_getPublicKey[] = {
 	UI_BACKGROUND(),
 	UI_ICON_LEFT(0x01, BAGL_GLYPH_ICON_LEFT),
 	UI_ICON_RIGHT(0x02, BAGL_GLYPH_ICON_RIGHT),
+#ifdef HELIUM_TESTNET
+	UI_TEXT(0x00, 0, 12, 128, "TNT Pub Key"),
+#else
 	UI_TEXT(0x00, 0, 12, 128, "HNT Pub Key"),
+#endif
 	// The visible portion of the public key or address.
 	UI_TEXT(0x00, 0, 26, 128, global.getPublicKeyContext.partialStr),
 };
@@ -81,7 +85,11 @@ void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t
 	uint16_t adpu_tx = 2;
 
 	G_io_apdu_buffer[0] = 0; // prepend 0 byte to signify b58 format
-	G_io_apdu_buffer[1] = 1; // set wallet type prefix to KEYTYPE_ED25519
+#ifdef HELIUM_TESTNET
+	G_io_apdu_buffer[1] = NETTYPE_TEST | KEYTYPE_ED25519;
+#else
+	G_io_apdu_buffer[1] = NETTYPE_MAIN | KEYTYPE_ED25519;
+#endif
 	get_pubkey_bytes(&G_io_apdu_buffer[adpu_tx]);
 	adpu_tx += SIZE_OF_PUB_KEY_BIN;
 

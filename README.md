@@ -14,3 +14,9 @@ included in this repository.
 The most recent release of the Helium Ledger Companion App is available [here](https://github.com/helium/helium-ledger-app/releases). 
 
 Please [follow instructions here](https://docs.helium.com/wallets/ledger) to learn how to use it!
+
+# Development
+
+```
+BOLOS_SDK=~/nanos-secure-sdk make TESTNET=true load
+```

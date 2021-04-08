@@ -39,6 +39,10 @@ uint32_t create_helium_transaction();
 #define SIZEOF_HELIUM_KEY	SIZE_OF_PUB_KEY_BIN + 1
 #define SIZEOF_SIGNATURE	64
 
+#define KEYTYPE_ED25519 0x01
+#define NETTYPE_MAIN 0x00
+#define NETTYPE_TEST 0x10
+
 #define P1_PUBKEY_DISPLAY_ON	0x01
 #define P1_PUBKEY_DISPLAY_OFF 	0x00
 

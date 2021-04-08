@@ -31,7 +31,9 @@ jobs:
         run: cargo fmt  -- --check
 
       - name: Install libudev
-        run: sudo apt-get install libudev-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install libudev-dev
 
       - name: Clippy
         uses: actions-rs/clippy-check@v1
@@ -159,4 +161,3 @@ jobs:
             ${{ steps.get_version.outputs.VERSION }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

@@ -81,7 +81,11 @@ UX_STEP_NOCB_INIT(
     bnnn_paging,
     init_amount(),
     {
+#ifdef HELIUM_TESTNET
+      .title = "Amount TNT",
+#else
       .title = "Amount HNT",
+#endif
 	.text = (char *)global.calcTxnHashContext.fullStr
     });
 
