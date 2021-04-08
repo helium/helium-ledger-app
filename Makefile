@@ -20,11 +20,20 @@ $(error Environment variable BOLOS_SDK is not set)
 endif
 include $(BOLOS_SDK)/Makefile.defines
 
+ifeq ($(TESTNET),true)
+DEFINES += HELIUM_TESTNET
+endif
+
 #########
 #  App  #
 #########
-
+# The --path argument here restricts which BIP32 paths the app is allowed to derive.
+ifeq ($(TESTNET),true)
+APPNAME    = TNT
+else
 APPNAME    = Helium
+endif
+
 
 ifeq ($(TARGET_NAME),TARGET_NANOX)
 	ICONNAME   = nanox_app_helium.gif
@@ -35,7 +44,12 @@ endif
 APPVERSION = 1.0.1
 
 # The --path argument here restricts which BIP32 paths the app is allowed to derive.
+ifeq ($(TESTNET),true)
+APP_LOAD_PARAMS = --appFlags 0x240 --path "44'/905'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
+else
 APP_LOAD_PARAMS = --appFlags 0x240 --path "44'/904'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
+endif
+
 APP_SOURCE_PATH = src
 SDK_SOURCE_PATH = lib_stusb lib_stusb_impl
 

@@ -1,20 +1,19 @@
 #[macro_use]
 extern crate prettytable;
-mod ledger_api;
-mod payment_txn;
-mod pubkeybin;
 
 use helium_api::{pending_transactions::PendingTxnStatus, Hnt};
+use helium_crypto::{public_key::PublicKey, Network};
 use helium_proto::{BlockchainTxn, BlockchainTxnPaymentV1};
 use ledger_api::*;
-use pubkeybin::{PubKeyBin, B58};
 use qr2term::print_qr;
-use std::process;
+use std::{env, process};
 use structopt::StructOpt;
+
+mod ledger_api;
 
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-static HELIUM_API_BASE_URL: &str = "https://api.helium.io/v1/";
+const DEFAULT_TESTNET_BASE_URL: &str = "https://testnet-api.helium.wtf/v1";
 
 #[derive(StructOpt, Debug)]
 enum Units {
@@ -26,6 +25,7 @@ enum Units {
 
 /// Interact with Ledger Nano S for hardware wallet management
 #[derive(Debug, StructOpt)]
+#[allow(clippy::large_enum_variant)]
 enum Cli {
     /// Get wallet information
     Balance {
@@ -36,13 +36,29 @@ enum Cli {
     /// Pay a given address.
     /// Use subcommand hnt or bones.
     /// Note that 1 HNT = 100,000,000 Bones = 100M Bones.
-    Pay {
-        /// Address of the payee
-        address: String,
-        /// Select HNT or Bones
-        #[structopt(subcommand)]
-        units: Units,
-    },
+    Pay { payee: Payee },
+}
+
+#[derive(Debug)]
+pub struct Payee {
+    address: PublicKey,
+    amount: Hnt,
+}
+
+use std::str::FromStr;
+
+impl FromStr for Payee {
+    type Err = Box<dyn std::error::Error>;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let pos = s
+            .find('=')
+            .ok_or_else(|| format!("invalid KEY=value: missing `=`  in `{}`", s))?;
+        Ok(Payee {
+            address: s[..pos].parse()?,
+            amount: s[pos + 1..].parse()?,
+        })
+    }
 }
 
 #[tokio::main]
@@ -64,18 +80,20 @@ async fn run(cli: Cli) -> Result {
 
             print_balance(&pubkey).await?;
             if qr_code {
-                print_qr(&pubkey.to_b58()?)?;
+                print_qr(&pubkey.to_string())?;
             }
             Ok(())
         }
-        Cli::Pay { address, units } => {
-            let amount = match units {
-                Units::Hnt { hnt } => hnt,
-                Units::Bones { bones } => Hnt::from(bones),
+        Cli::Pay { payee } => {
+            let address = payee.address;
+            let amount = payee.amount;
+            println!("Creating transaction for:");
+            let units = match address.network {
+                Network::TestNet => "TNT",
+                Network::MainNet => "HNT",
             };
 
-            println!("Creating transaction for:");
-            println!("      {:0.*} HNT", 8, amount.get_decimal());
+            println!("      {:0.*} {}", 8, amount, units);
             println!("        =");
             println!("      {:} Bones", u64::from(amount));
 
@@ -100,19 +118,19 @@ async fn run(cli: Cli) -> Result {
 use helium_api::{accounts, Client};
 use prettytable::{format, Table};
 
-async fn print_balance(pubkey: &PubKeyBin) -> Result {
-    let client = Client::new_with_base_url(HELIUM_API_BASE_URL.to_string());
-    let address = pubkey.to_b58()?;
+async fn print_balance(pubkey: &PublicKey) -> Result {
+    let client = Client::new_with_base_url(api_url(pubkey.network));
+    let address = pubkey.to_string();
     let result = accounts::get(&client, &address).await;
-
     let mut table = Table::new();
     table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
-    table.set_titles(row![
-        "Address",
-        "Balance HNT",
-        "Data Credits",
-        "Security Tokens"
-    ]);
+
+    let balance = match pubkey.network {
+        Network::TestNet => "Balance TNT",
+        Network::MainNet => "Balance HNT",
+    };
+
+    table.set_titles(row!["Address", balance, "Data Credits", "Security Tokens"]);
 
     match result {
         Ok(account) => table.add_row(row![
@@ -128,11 +146,13 @@ async fn print_balance(pubkey: &PubKeyBin) -> Result {
     Ok(())
 }
 
+use std::convert::TryFrom;
+
 pub fn print_txn(txn: &BlockchainTxnPaymentV1, hash: &str) -> Result<()> {
     let mut table = Table::new();
     table.add_row(row!["Payee", "Amount HNT", "Nonce", "Hash"]);
 
-    let payee = PubKeyBin::copy_from_slice(txn.payee.as_slice()).to_b58()?;
+    let payee = PublicKey::try_from(txn.payee.as_slice())?.to_string();
 
     table.add_row(row![payee, Hnt::from(txn.amount), txn.nonce, hash]);
     table.printstd();
@@ -146,4 +166,14 @@ pub async fn submit_txn(client: &Client, txn: &BlockchainTxn) -> Result<PendingT
     helium_api::pending_transactions::submit(client, &data)
         .await
         .map_err(|e| e.into())
+}
+
+fn api_url(network: Network) -> String {
+    match network {
+        Network::MainNet => {
+            env::var("HELIUM_API_URL").unwrap_or_else(|_| helium_api::DEFAULT_BASE_URL.to_string())
+        }
+        Network::TestNet => env::var("HELIUM_TESTNET_API_URL")
+            .unwrap_or_else(|_| DEFAULT_TESTNET_BASE_URL.to_string()),
+    }
 }
