@@ -17,6 +17,21 @@ Please [follow instructions here](https://docs.helium.com/wallets/ledger) to lea
 
 # Development
 
+You can follows the instructions [here](https://ledger.readthedocs.io/en/0/nanos/setup.html#first-app-hello-world
+) from Ledger docs
+
+Another way is to download the BOLOS_SDK for which you are compiling. For example, for Nano X, 
+clone the repo into your home directory
+
+```
+git clone git@github.com:LedgerHQ/nanos-secure-sdk.git
+```
+
+From this helium-ledger repo, you can now build and load the app for the testnet in the following
+way:
+
 ```
 BOLOS_SDK=~/nanos-secure-sdk make TESTNET=true load
 ```
+
+The load will fail unless you are on the app selection screen.
