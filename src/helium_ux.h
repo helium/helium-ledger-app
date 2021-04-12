@@ -22,6 +22,7 @@ typedef struct {
 	// to be scrolled.
 	uint8_t partialStr[13];
 	uint8_t fullStr_len;
+	uint8_t account_index;
 	uint64_t amount;
 	uint64_t nonce;
 	uint64_t fee;

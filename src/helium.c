@@ -8,10 +8,6 @@
 #include "pb_encode.h"
 #include "transactions/txn.pb.h"
 
-
-// currently only support single wallet at index = 0
-#define SLOT_INDEX 0
-
 uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n){
 	uint32_t len = bin2dec(dst, n);
 	// this will be used to drop useless 0s
@@ -64,17 +60,17 @@ uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n){
 
 
 #ifdef HELIUM_TESTNET
-#define SLIP 905
+#define INDEX 905
 #else
-#define SLIP 904
+#define INDEX 904
 #endif
 
 void derive_helium_public_key
-(uint32_t index, cx_ecfp_private_key_t *privateKey, cx_ecfp_public_key_t *publicKey) {
+(uint32_t account, cx_ecfp_private_key_t *privateKey, cx_ecfp_public_key_t *publicKey) {
 	uint8_t keySeed[32];
 	static cx_ecfp_private_key_t pk;
 
-    uint32_t bip32Path[] = {44 | 0x80000000, SLIP | 0x80000000, index | 0x80000000, 0x80000000, 0x80000000};
+    uint32_t bip32Path[] = {44 | 0x80000000, INDEX | 0x80000000, account | 0x80000000, 0x80000000, 0x80000000};
 
 	os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32Path, 5, keySeed, NULL, NULL, 0);
 
@@ -96,14 +92,14 @@ void derive_helium_public_key
 #include "helium_ux.h"
 
 
-void sign_tx(uint8_t *dst, uint32_t index, const uint8_t *tx, uint16_t length) {
+void sign_tx(uint8_t *dst, uint32_t account, const uint8_t *tx, uint16_t length) {
 	cx_ecfp_private_key_t privateKey;
-    derive_helium_public_key(index, &privateKey, NULL);
+    derive_helium_public_key(account, &privateKey, NULL);
 	cx_eddsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA512, tx, length, NULL, 0, dst, 64, NULL);
 	os_memset(&privateKey, 0, sizeof(privateKey));
 }
 
-uint32_t create_helium_transaction(){
+uint32_t create_helium_pay_txn(uint8_t account){
 	calcTxnHashContext_t * ctx = &global.calcTxnHashContext;
 	pb_ostream_t ostream ;
 
@@ -113,7 +109,7 @@ uint32_t create_helium_transaction(){
 #else
     payer[0] = NETTYPE_MAIN | KEYTYPE_ED25519;;
 #endif
-	get_pubkey_bytes(&payer[1]);
+	get_pubkey_bytes(account, &payer[1]);
 
 	unsigned char signature[SIZEOF_SIGNATURE];
 	memset(signature, 0, SIZEOF_SIGNATURE);
@@ -139,7 +135,7 @@ uint32_t create_helium_transaction(){
 		pb_encode_varint(&ostream, ctx->nonce);
 	}
 
-	sign_tx(signature, SLOT_INDEX, G_io_apdu_buffer, ostream.bytes_written);
+	sign_tx(signature, account, G_io_apdu_buffer, ostream.bytes_written);
 
 	ostream = pb_ostream_from_buffer(G_io_apdu_buffer, sizeof(G_io_apdu_buffer));
 
@@ -265,10 +261,8 @@ int btchip_encode_base58(const unsigned char *in, size_t length,
   return 0;
 }
 
-void __attribute__ ((noinline)) get_pubkey_bytes(uint8_t * out){
+void __attribute__ ((noinline)) get_pubkey_bytes(uint8_t account, uint8_t * out){
 	cx_ecfp_public_key_t publicKey;
-
-    derive_helium_public_key
-(SLOT_INDEX, NULL, &publicKey);
+    derive_helium_public_key(account, NULL, &publicKey);
 	extract_pubkey_bytes(out, &publicKey);
 }
