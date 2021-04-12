@@ -43,7 +43,7 @@ static unsigned int ui_signTxn_approve_button(unsigned int button_mask, unsigned
 
 	case BUTTON_RIGHT:
 	case BUTTON_EVT_FAST | BUTTON_RIGHT: // SEEK RIGHT
-		adpu_tx = create_helium_transaction();
+		adpu_tx = create_helium_pay_txn(ctx->account_index);
 		io_exchange_with_code(SW_OK, adpu_tx);
 		ui_idle();
 		break;
@@ -242,6 +242,7 @@ void handle_sign_payment_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16
 	ctx->amount = U8LE(dataBuffer, 0);
 	ctx->fee  = U8LE(dataBuffer, 8);
 	ctx->nonce = U8LE(dataBuffer, 16);
+	ctx->account_index = p1;
 	os_memmove(ctx->payee, &dataBuffer[24], sizeof(ctx->payee));
 
 	// display amount on screen
