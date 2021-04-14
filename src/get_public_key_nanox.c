@@ -49,7 +49,7 @@ void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t
 #else
 	G_io_apdu_buffer[1] = NETTYPE_MAIN | KEYTYPE_ED25519;
 #endif
-	get_pubkey_bytes(&G_io_apdu_buffer[adpu_tx]);
+	get_pubkey_bytes(p2, &G_io_apdu_buffer[adpu_tx]);
 	adpu_tx += SIZE_OF_PUB_KEY_BIN;
 
 	cx_sha256_t hash;
