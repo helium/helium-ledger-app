@@ -2,7 +2,7 @@
 
 This is the companion application to be run on a laptop or desktop running Linux, Mac, or Windows. It submits the parameters of your requests to the Ledger Nano S, which will then display the information for confirmation.
 
-It is important to use the Ledger Nano S is the source of truth when confirming transactions as it is much more secure than your laptop or desktop and a compromised version of this application could be running.
+It is important to use the Ledger Nano S as the source of truth when confirming transactions as it is much more secure than your laptop or desktop and a compromised version of this application could be running.
 
 # Features
 
@@ -36,7 +36,7 @@ You can optionally display a QR code by using the `helium-ledger-app balance --q
 helium-ledger-app pay <RECIPIENT> <AMOUNT>
 ```
 
-`<RECIPENT>` needs to be replaced with a base58 encoded Helium address and the intended `<AMOUNT>` should be given as an HNT value with or without decimals. Note that the actual type used on the blockchain is a unsigned 64-bit integer and that unit is a Bone. 1 HNT = 10e8 Bones = 100_000_000
+`<RECIPIENT>` needs to be replaced with a base58 encoded Helium address and the intended `<AMOUNT>` should be given as an HNT value with or without decimals. Note that the actual type used on the blockchain is a unsigned 64-bit integer and that unit is a Bone. 1 HNT = 10e8 Bones = 100_000_000
 
 After you press enter, the request will be submitted to the Ledger Nano S which will display these values for confirmation. Press both buttons on the Ledger Nano S at the same time to proceed through the screens and on the transaction confirmation screen, click on the right button.
 

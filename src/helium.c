@@ -6,11 +6,7 @@
 
 #include "pb.h"
 #include "pb_encode.h"
-#include "transactions/txn.pb.h"
-
-
-// currently only support single wallet at index = 0
-#define SLOT_INDEX 0
+#include "transactions/blockchain_txn.pb.h"
 
 uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n){
 	uint32_t len = bin2dec(dst, n);
@@ -63,12 +59,19 @@ uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n){
 }
 
 
-void derive_helium_keypair(uint32_t index, cx_ecfp_private_key_t *privateKey, cx_ecfp_public_key_t *publicKey) {
+#ifdef HELIUM_TESTNET
+#define INDEX 905
+#else
+#define INDEX 904
+#endif
+
+void derive_helium_public_key
+(uint32_t account, cx_ecfp_private_key_t *privateKey, cx_ecfp_public_key_t *publicKey) {
 	uint8_t keySeed[32];
 	static cx_ecfp_private_key_t pk;
 
-	// bip32 path for 44'/904'/n'/0'/0'
-	uint32_t bip32Path[] = {44 | 0x80000000, 904 | 0x80000000, index | 0x80000000, 0x80000000, 0x80000000};
+    uint32_t bip32Path[] = {44 | 0x80000000, INDEX | 0x80000000, account | 0x80000000, 0x80000000, 0x80000000};
+
 	os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32Path, 5, keySeed, NULL, NULL, 0);
 
 	cx_ecfp_init_private_key(CX_CURVE_Ed25519, keySeed, sizeof(keySeed), &pk);
@@ -84,74 +87,77 @@ void derive_helium_keypair(uint32_t index, cx_ecfp_private_key_t *privateKey, cx
 }
 
 #include "pb.h"
-#include "transactions/txn.pb.h"
 #include <os_io_seproxyhal.h>
 #include "helium_ux.h"
 
 
-void sign_tx(uint8_t *dst, uint32_t index, const uint8_t *tx, uint16_t length) {
+void sign_tx(uint8_t *dst, uint32_t account, const uint8_t *tx, uint16_t length) {
 	cx_ecfp_private_key_t privateKey;
-	derive_helium_keypair(index, &privateKey, NULL);
+    derive_helium_public_key(account, &privateKey, NULL);
 	cx_eddsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA512, tx, length, NULL, 0, dst, 64, NULL);
 	os_memset(&privateKey, 0, sizeof(privateKey));
 }
 
-uint32_t create_helium_transaction(){
+uint32_t create_helium_pay_txn(uint8_t account){
 	calcTxnHashContext_t * ctx = &global.calcTxnHashContext;
 	pb_ostream_t ostream ;
 
 	unsigned char payer[SIZEOF_HELIUM_KEY];
-	payer[0] = 1;
-	get_pubkey_bytes(&payer[1]);
+#ifdef HELIUM_TESTNET
+    payer[0] = NETTYPE_TEST | KEYTYPE_ED25519;;
+#else
+    payer[0] = NETTYPE_MAIN | KEYTYPE_ED25519;;
+#endif
+	get_pubkey_bytes(account, &payer[1]);
 
 	unsigned char signature[SIZEOF_SIGNATURE];
 	memset(signature, 0, SIZEOF_SIGNATURE);
 
 	ostream = pb_ostream_from_buffer(G_io_apdu_buffer, sizeof(G_io_apdu_buffer));
 
-	pb_encode_tag(&ostream, PB_WT_STRING, helium_txns_txn_payment_v1_payer_tag);
+	pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_payment_v1_payer_tag);
 	pb_encode_string(&ostream, (const pb_byte_t*)payer, SIZEOF_HELIUM_KEY);
 
-	pb_encode_tag(&ostream, PB_WT_STRING, helium_txns_txn_payment_v1_payee_tag);
+	pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_payment_v1_payee_tag);
 	pb_encode_string(&ostream, (const pb_byte_t*)&ctx->payee[1], SIZEOF_HELIUM_KEY);
 
-	pb_encode_tag(&ostream, PB_WT_VARINT, helium_txns_txn_payment_v1_amount_tag);
+	pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_payment_v1_amount_tag);
 	pb_encode_varint(&ostream, ctx->amount);
 
 	if(ctx->fee) {
-		pb_encode_tag(&ostream, PB_WT_VARINT, helium_txns_txn_payment_v1_fee_tag);
+		pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_payment_v1_fee_tag);
 		pb_encode_varint(&ostream, ctx->fee);
 	}
 
 	if(ctx->nonce) {
-		pb_encode_tag(&ostream, PB_WT_VARINT, helium_txns_txn_payment_v1_nonce_tag);
+		pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_payment_v1_nonce_tag);
 		pb_encode_varint(&ostream, ctx->nonce);
 	}
 
-	sign_tx(signature, SLOT_INDEX, G_io_apdu_buffer, ostream.bytes_written);
+	sign_tx(signature, account, G_io_apdu_buffer, ostream.bytes_written);
 
 	ostream = pb_ostream_from_buffer(G_io_apdu_buffer, sizeof(G_io_apdu_buffer));
 
-	pb_encode_tag(&ostream, PB_WT_STRING, helium_txns_txn_payment_v1_payer_tag);
+	pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_payment_v1_payer_tag);
 	pb_encode_string(&ostream, (const pb_byte_t*)payer, SIZEOF_HELIUM_KEY);
 
-	pb_encode_tag(&ostream, PB_WT_STRING, helium_txns_txn_payment_v1_payee_tag);
+	pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_payment_v1_payee_tag);
 	pb_encode_string(&ostream, (const pb_byte_t*)&ctx->payee[1], SIZEOF_HELIUM_KEY);
 
-	pb_encode_tag(&ostream, PB_WT_VARINT, helium_txns_txn_payment_v1_amount_tag);
+	pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_payment_v1_amount_tag);
 	pb_encode_varint(&ostream, ctx->amount);
 
 	if(ctx->fee) {
-		pb_encode_tag(&ostream, PB_WT_VARINT, helium_txns_txn_payment_v1_fee_tag);
+		pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_payment_v1_fee_tag);
 		pb_encode_varint(&ostream, ctx->fee);
 	}
 
 	if(ctx->nonce) {
-		pb_encode_tag(&ostream, PB_WT_VARINT, helium_txns_txn_payment_v1_nonce_tag);
+		pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_payment_v1_nonce_tag);
 		pb_encode_varint(&ostream, ctx->nonce);
 	}
 
-	pb_encode_tag(&ostream, PB_WT_STRING, helium_txns_txn_payment_v1_signature_tag);
+	pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_payment_v1_signature_tag);
 	pb_encode_string(&ostream, (const pb_byte_t*)signature, SIZEOF_SIGNATURE);
 
 	return ostream.bytes_written;
@@ -254,9 +260,8 @@ int btchip_encode_base58(const unsigned char *in, size_t length,
   return 0;
 }
 
-void __attribute__ ((noinline)) get_pubkey_bytes(uint8_t * out){
+void __attribute__ ((noinline)) get_pubkey_bytes(uint8_t account, uint8_t * out){
 	cx_ecfp_public_key_t publicKey;
-
-	derive_helium_keypair(SLOT_INDEX, NULL, &publicKey);
+    derive_helium_public_key(account, NULL, &publicKey);
 	extract_pubkey_bytes(out, &publicKey);
 }

@@ -81,7 +81,11 @@ UX_STEP_NOCB_INIT(
     bnnn_paging,
     init_amount(),
     {
+#ifdef HELIUM_TESTNET
+      .title = "Amount TNT",
+#else
       .title = "Amount HNT",
+#endif
 	.text = (char *)global.calcTxnHashContext.fullStr
     });
 
@@ -144,6 +148,7 @@ void handle_sign_payment_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16
 	ctx->amount = U8LE(dataBuffer, 0);
 	ctx->fee  = U8LE(dataBuffer, 8);
 	ctx->nonce = U8LE(dataBuffer, 16);
+	ctx->account_index = p1;
 	os_memmove(ctx->payee, &dataBuffer[24], sizeof(ctx->payee));
 
 	ui_sign_transaction();

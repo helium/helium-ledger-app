@@ -32,18 +32,21 @@ typedef struct transaction_arg_t {
 extern bool sign_transaction;
 extern uint16_t txn_length;
 
-uint32_t create_helium_transaction();
+uint32_t create_helium_pay_txn(uint8_t account_index);
 
 #define SIZE_OF_PUB_KEY_BIN 	32
 #define SIZE_OF_SHA_CHECKSUM 	4
 #define SIZEOF_HELIUM_KEY	SIZE_OF_PUB_KEY_BIN + 1
 #define SIZEOF_SIGNATURE	64
 
+#define KEYTYPE_ED25519 0x01
+#define NETTYPE_MAIN 0x00
+#define NETTYPE_TEST 0x10
+
 #define P1_PUBKEY_DISPLAY_ON	0x01
 #define P1_PUBKEY_DISPLAY_OFF 	0x00
 
-void get_pubkey_bytes(uint8_t * out);
-
+void get_pubkey_bytes(uint8_t account_index, uint8_t * out);
 #define MAX_ENC_INPUT_SIZE 120
 
 int btchip_encode_base58(const unsigned char *in, size_t length,
