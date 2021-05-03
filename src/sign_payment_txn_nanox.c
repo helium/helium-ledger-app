@@ -62,7 +62,7 @@ void validate_transaction(bool isApproved)
   int adpu_tx;
 
   if (isApproved) {
-    adpu_tx = create_helium_transaction();
+    adpu_tx = create_helium_pay_txn(ctx->account_index);
     io_exchange_with_code(SW_OK, adpu_tx);
   }
   else {
