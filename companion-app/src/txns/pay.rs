@@ -43,13 +43,12 @@ impl Cmd {
 
 
 async fn ledger(opts: Opts, cmd: Cmd) -> Result<Response<BlockchainTxnPaymentV1>> {
-    let ledger = TransportNativeHID::new()?;
-
+    let ledger_transport = get_ledger_transport(&opts).await?;
     let amount = cmd.payee.amount;
     let payee = cmd.payee.address;
 
     // get nonce
-    let pubkey = exchange_get_pubkey(opts.account, &ledger, PubkeyDisplay::Off)?;
+    let pubkey = get_pubkey(opts.account,  &ledger_transport,PubkeyDisplay::Off).await?;
     let client = Client::new_with_base_url(api_url(pubkey.network));
 
     let account = accounts::get(&client, &pubkey.to_string()).await?;
@@ -81,7 +80,7 @@ async fn ledger(opts: Opts, cmd: Cmd) -> Result<Response<BlockchainTxnPaymentV1>
 
     let adpu_cmd = txn.apdu_serialize(opts.account)?;
 
-    let exchange_pay_tx_result = read_from_ledger(&ledger, adpu_cmd)?;
+    let exchange_pay_tx_result = read_from_ledger(&ledger_transport, adpu_cmd).await?;
 
     if exchange_pay_tx_result.data.len() == 1 {
         return Ok(Response::UserDeniedTransaction);

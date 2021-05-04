@@ -39,10 +39,10 @@ pub(crate) async fn ledger(
     opts: Opts,
     stake: Cmd,
 ) -> Result<Response<BlockchainTxnStakeValidatorV1>> {
-    let ledger = TransportNativeHID::new()?;
+    let ledger_transport = get_ledger_transport(&opts).await?;
 
     // get account from API so we can get nonce and balance
-    let owner = exchange_get_pubkey(opts.account, &ledger, PubkeyDisplay::Off)?;
+    let owner = get_pubkey( opts.account, &ledger_transport, PubkeyDisplay::Off).await?;
 
     let client = Client::new_with_base_url(api_url(owner.network));
 
@@ -69,7 +69,7 @@ pub(crate) async fn ledger(
     print_proposed_transaction(&txn)?;
 
     let cmd = txn.apdu_serialize(opts.account)?;
-    let exchange_pay_tx_result = read_from_ledger(&ledger, cmd)?;
+    let exchange_pay_tx_result = read_from_ledger(&ledger_transport, cmd).await?;
 
     if exchange_pay_tx_result.data.len() == 1 {
         return Ok(Response::UserDeniedTransaction);

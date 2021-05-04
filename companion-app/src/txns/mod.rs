@@ -1,7 +1,6 @@
 use crate::*;
 use byteorder::{LittleEndian as LE, WriteBytesExt};
 use helium_api::{accounts, Client, Hnt};
-use helium_crypto::{public_key::PublicKey, Network};
 use helium_proto::{
     BlockchainTxnPaymentV1, BlockchainTxnStakeValidatorV1, BlockchainTxnTransferValidatorStakeV1,
     BlockchainTxnUnstakeValidatorV1,
@@ -9,6 +8,7 @@ use helium_proto::{
 use helium_wallet::{
     cmd::get_txn_fees,
     traits::{TxnEnvelope, TxnFee},
+    keypair::{PublicKey, Network}
 };
 use ledger::*;
 use ledger_apdu::{APDUAnswer, APDUCommand};
@@ -31,10 +31,18 @@ pub enum PubkeyDisplay {
     On = 1,
 }
 
-pub(crate) fn get_app_version() -> Result<Version> {
-    let ledger = TransportNativeHID::new()?;
+pub(crate) async fn get_ledger_transport(opts: &Opts) -> Result<Box<dyn LedgerTransport>> {
+    Ok(if opts.emulator {
+        Box::new(ledger_tcp::TransportTcp::new().await?)
+    } else {
+        Box::new(TransportNativeHID::new()?)
+    })
+}
+
+pub(crate) async fn get_app_version(opts: &Opts) -> Result<Version> {
+    let ledger =  get_ledger_transport(opts).await?;
     let request = VersionRequest.apdu_serialize(0)?;
-    let read = read_from_ledger(&ledger, request)?;
+    let read = read_from_ledger(&ledger, request).await?;
     let data = read.data;
     if data.len() == 3 && read.retcode == RETURN_CODE_OK {
         Ok(Version::from_bytes([data[0], data[1], data[2]]))
@@ -43,18 +51,13 @@ pub(crate) fn get_app_version() -> Result<Version> {
     }
 }
 
-pub(crate) fn get_pubkey(account: u8, display: PubkeyDisplay) -> Result<PublicKey> {
-    let ledger = TransportNativeHID::new()?;
-    exchange_get_pubkey(account, &ledger, display)
-}
-
-fn exchange_get_pubkey(
+async fn get_pubkey(
     account: u8,
-    ledger: &TransportNativeHID,
+    ledger: &Box<dyn LedgerTransport>,
     display: PubkeyDisplay,
 ) -> Result<PublicKey> {
     let cmd = PubkeyRequest { display }.apdu_serialize(account)?;
-    let public_key_result = read_from_ledger(ledger, cmd)?;
+    let public_key_result = read_from_ledger(ledger, cmd).await?;
     Ok(PublicKey::try_from(&public_key_result.data[1..34])?)
 }
 
@@ -64,10 +67,9 @@ pub enum Response<T> {
     UserDeniedTransaction,
 }
 
-fn read_from_ledger(ledger: &TransportNativeHID, command: APDUCommand) -> Result<APDUAnswer> {
+async fn read_from_ledger(ledger: &Box<dyn LedgerTransport>, command: APDUCommand) -> Result<APDUAnswer> {
     let answer = ledger
-        .exchange(&command)
-        .or(Err(Error::CouldNotFindLedger))?;
+        .exchange(&command).await?;
 
     if answer.data.is_empty() {
         Err(Error::AppNotRunning)

@@ -104,7 +104,7 @@ static void init_new_address(void)
   uint8_t * address_with_check = G_io_apdu_buffer;
 
   for(uint8_t i=0; i<2; i++){
-    os_memmove(address_with_check, CTX.old_address, 34);
+    os_memmove(address_with_check, CTX.new_address, 34);
 
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, address_with_check, 34, hash_buffer, 32);
@@ -202,7 +202,7 @@ UX_STEP_NOCB_INIT(
     bnnn_paging,
     init_new_address(),
     {
-      .title = "New Addres",
+      .title = "New Address",
       .text = (char *)CTX.fullStr
     });
 
