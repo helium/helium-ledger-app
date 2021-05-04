@@ -7,8 +7,8 @@ use helium_proto::{
 };
 use helium_wallet::{
     cmd::get_txn_fees,
+    keypair::{Network, PublicKey},
     traits::{TxnEnvelope, TxnFee},
-    keypair::{PublicKey, Network}
 };
 use ledger::*;
 use ledger_apdu::{APDUAnswer, APDUCommand};
@@ -40,7 +40,7 @@ pub(crate) async fn get_ledger_transport(opts: &Opts) -> Result<Box<dyn LedgerTr
 }
 
 pub(crate) async fn get_app_version(opts: &Opts) -> Result<Version> {
-    let ledger =  get_ledger_transport(opts).await?;
+    let ledger = get_ledger_transport(opts).await?;
     let request = VersionRequest.apdu_serialize(0)?;
     let read = read_from_ledger(&ledger, request).await?;
     let data = read.data;
@@ -50,7 +50,7 @@ pub(crate) async fn get_app_version(opts: &Opts) -> Result<Version> {
         Err(Error::VersionError)
     }
 }
-
+#[allow(clippy::borrowed_box)]
 async fn get_pubkey(
     account: u8,
     ledger: &Box<dyn LedgerTransport>,
@@ -67,9 +67,12 @@ pub enum Response<T> {
     UserDeniedTransaction,
 }
 
-async fn read_from_ledger(ledger: &Box<dyn LedgerTransport>, command: APDUCommand) -> Result<APDUAnswer> {
-    let answer = ledger
-        .exchange(&command).await?;
+#[allow(clippy::borrowed_box)]
+async fn read_from_ledger(
+    ledger: &Box<dyn LedgerTransport>,
+    command: APDUCommand,
+) -> Result<APDUAnswer> {
+    let answer = ledger.exchange(&command).await?;
 
     if answer.data.is_empty() {
         Err(Error::AppNotRunning)

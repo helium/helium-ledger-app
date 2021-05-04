@@ -11,7 +11,6 @@ pub struct Payee {
     pub amount: Hnt,
 }
 
-
 impl Cmd {
     pub(crate) async fn run(
         self,
@@ -23,9 +22,7 @@ impl Cmd {
         };
 
         match ledger(opts, self).await? {
-            Response::Txn(_txn, hash, network) => {
-                Ok(Some((hash, network)))
-            }
+            Response::Txn(_txn, hash, network) => Ok(Some((hash, network))),
             Response::InsufficientBalance(balance, send_request) => {
                 println!(
                     "Account balance insufficient. {} HNT on account but attempting to send {}",
@@ -41,14 +38,13 @@ impl Cmd {
     }
 }
 
-
 async fn ledger(opts: Opts, cmd: Cmd) -> Result<Response<BlockchainTxnPaymentV1>> {
     let ledger_transport = get_ledger_transport(&opts).await?;
     let amount = cmd.payee.amount;
     let payee = cmd.payee.address;
 
     // get nonce
-    let pubkey = get_pubkey(opts.account,  &ledger_transport,PubkeyDisplay::Off).await?;
+    let pubkey = get_pubkey(opts.account, &ledger_transport, PubkeyDisplay::Off).await?;
     let client = Client::new_with_base_url(api_url(pubkey.network));
 
     let account = accounts::get(&client, &pubkey.to_string()).await?;
@@ -120,7 +116,12 @@ pub fn print_proposed_txn(txn: &BlockchainTxnPaymentV1) -> Result {
 
     let mut table = Table::new();
     println!("Creating the following transaction:");
-    table.add_row(row!["Payee", &format!("Pay Amount {}", units), "Nonce", "DC Fee"]);
+    table.add_row(row![
+        "Payee",
+        &format!("Pay Amount {}", units),
+        "Nonce",
+        "DC Fee"
+    ]);
     table.add_row(row![payee, Hnt::from(txn.amount), txn.nonce, txn.fee]);
     table.printstd();
     println!(

@@ -4,10 +4,10 @@ extern crate prettytable;
 use helium_api::{pending_transactions::PendingTxnStatus, Hnt};
 use helium_crypto::Network;
 use helium_proto::BlockchainTxn;
+use ledger_transport::exchange::Exchange as LedgerTransport;
 use qr2term::print_qr;
 use std::{env, fmt, process};
 use structopt::StructOpt;
-use ledger_transport::exchange::Exchange as LedgerTransport;
 mod error;
 mod txns;
 

@@ -31,7 +31,8 @@ impl Cmd {
             }
             print_balance(&pubkeys).await?;
         } else {
-            let pubkey = super::get_pubkey( opts.account,&ledger_transport, PubkeyDisplay::On).await?;
+            let pubkey =
+                super::get_pubkey(opts.account, &ledger_transport, PubkeyDisplay::On).await?;
             let output = pubkey.to_string();
             print_balance(&vec![pubkey]).await?;
             if self.qr_code {
@@ -41,8 +42,6 @@ impl Cmd {
         Ok(None)
     }
 }
-
-
 
 async fn print_balance(pubkeys: &[PublicKey]) -> Result {
     // sample the first pubkey to determine network
