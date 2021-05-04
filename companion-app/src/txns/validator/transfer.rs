@@ -196,9 +196,8 @@ pub(crate) async fn ledger_accept(
     let new_owner = PublicKey::try_from(input_txn.new_owner.clone())?;
 
     // get Ledger account so that we can verify relevance
-    let ledger: Box<dyn LedgerTransport> = {
-        Box::new(TransportNativeHID::new()?)
-    };
+    let ledger = get_ledger_transport(&opts).await?;
+
     let this_wallet = get_pubkey(opts.account, &ledger, PubkeyDisplay::Off).await?;
 
     // verify that we are one of the parties involved
