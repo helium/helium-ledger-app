@@ -1151,6 +1151,7 @@ dependencies = [
 [[package]]
 name = "helium-wallet"
 version = "1.5.5-dev"
+source = "git+https://github.com/helium/helium-wallet-rs?branch=lthiery/add-memo-to-payments#3d4784aa6a3d49850785bb3d6feafd0fad15c49b"
 dependencies = [
  "aes-gcm",
  "angry-purple-tiger",
@@ -1467,10 +1468,12 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 [[package]]
 name = "ledger-apdu"
 version = "0.7.0"
+source = "git+https://github.com/helium/ledger-rs?branch=lthiery/tcp-transport#c1eb65394778ef520e0559a9f51aa50bad958d9b"
 
 [[package]]
 name = "ledger-transport"
 version = "0.7.0"
+source = "git+https://github.com/helium/ledger-rs?branch=lthiery/tcp-transport#c1eb65394778ef520e0559a9f51aa50bad958d9b"
 dependencies = [
  "byteorder",
  "futures",
@@ -1490,6 +1493,7 @@ dependencies = [
 [[package]]
 name = "ledger-transport-hid"
 version = "0.7.0"
+source = "git+https://github.com/helium/ledger-rs?branch=lthiery/tcp-transport#c1eb65394778ef520e0559a9f51aa50bad958d9b"
 dependencies = [
  "byteorder",
  "cfg-if 0.1.10",
@@ -1506,6 +1510,7 @@ dependencies = [
 [[package]]
 name = "ledger-transport-tcp"
 version = "0.7.0"
+source = "git+https://github.com/helium/ledger-rs?branch=lthiery/tcp-transport#c1eb65394778ef520e0559a9f51aa50bad958d9b"
 dependencies = [
  "byteorder",
  "cfg-if 0.1.10",
@@ -1523,6 +1528,7 @@ dependencies = [
 [[package]]
 name = "ledger-transport-zemu"
 version = "0.7.0"
+source = "git+https://github.com/helium/ledger-rs?branch=lthiery/tcp-transport#c1eb65394778ef520e0559a9f51aa50bad958d9b"
 dependencies = [
  "glob",
  "grpc",
