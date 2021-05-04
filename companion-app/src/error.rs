@@ -3,7 +3,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Could not find ledger. Is it disconnected or locked?")]
-    CouldNotFindLedger,
+    CouldNotFindLedger(#[from] ledger_transport::errors::TransportError),
     #[error("Ledger is connected but Helium application does not appear to be running")]
     AppNotRunning,
     #[error("Error getting version. App must be waiting for a command.")]
@@ -12,6 +12,8 @@ pub enum Error {
     Qr(#[from] qr2term::QrError),
     #[error("Error accessing Ledger HID Device")]
     Hid(#[from] ledger::LedgerHIDError),
+    #[error("Connection refused by Ledger emulator")]
+    Tcp(#[from] ledger_tcp::LedgerTcpError),
     #[error("Helium API Error")]
     HeliumApi(#[from] helium_api::Error),
     #[error("Helium Crypto Error")]

@@ -100,8 +100,8 @@ pub(crate) async fn ledger_create(
     opts: Opts,
     txfer_stake: Create,
 ) -> Result<Option<Response<BlockchainTxnTransferValidatorStakeV1>>> {
-    let ledger = TransportNativeHID::new()?;
-    let this_wallet = exchange_get_pubkey(opts.account, &ledger, PubkeyDisplay::Off)?;
+    let ledger = get_ledger_transport(&opts).await?;
+    let this_wallet = get_pubkey( opts.account,  &ledger,PubkeyDisplay::Off).await?;
 
     // old_owner defaults to self if not input
     let old_owner = if let Some(old_owner) = txfer_stake.old_owner {
@@ -154,7 +154,7 @@ pub(crate) async fn ledger_create(
     print_proposed_transaction(&txn)?;
 
     let cmd = txn.apdu_serialize(opts.account)?;
-    let result = read_from_ledger(&ledger, cmd)?;
+    let result = read_from_ledger(&ledger, cmd).await?;
     if result.data.len() == 1 {
         return Ok(Some(Response::UserDeniedTransaction));
     }
@@ -196,8 +196,10 @@ pub(crate) async fn ledger_accept(
     let new_owner = PublicKey::try_from(input_txn.new_owner.clone())?;
 
     // get Ledger account so that we can verify relevance
-    let ledger = TransportNativeHID::new()?;
-    let this_wallet = exchange_get_pubkey(opts.account, &ledger, PubkeyDisplay::Off)?;
+    let ledger: Box<dyn LedgerTransport> = {
+        Box::new(TransportNativeHID::new()?)
+    };
+    let this_wallet = get_pubkey(opts.account, &ledger, PubkeyDisplay::Off).await?;
 
     // verify that we are one of the parties involved
     if this_wallet != old_owner && this_wallet != new_owner {
@@ -206,7 +208,7 @@ pub(crate) async fn ledger_accept(
     }
 
     let cmd = input_txn.apdu_serialize(opts.account)?;
-    let result = read_from_ledger(&ledger, cmd)?;
+    let result = read_from_ledger(&ledger, cmd).await?;
 
     if result.data.len() == 1 {
         return Ok(Some(Response::UserDeniedTransaction));

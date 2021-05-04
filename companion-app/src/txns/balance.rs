@@ -20,18 +20,18 @@ impl Cmd {
         if version.major < 2 && opts.account != 0 {
             panic!("Upgrade the Helium Ledger App to use additional wallet accounts");
         };
-
+        let ledger_transport = get_ledger_transport(&opts).await?;
         if self.scan {
             if self.qr_code {
                 println!("WARNING: to output a QR Code, do not use scan")
             }
             let mut pubkeys = Vec::new();
             for i in 0..opts.account {
-                pubkeys.push(super::get_pubkey(i, PubkeyDisplay::Off)?);
+                pubkeys.push(super::get_pubkey(i, &ledger_transport, PubkeyDisplay::Off).await?);
             }
             print_balance(&pubkeys).await?;
         } else {
-            let pubkey = super::get_pubkey(opts.account, PubkeyDisplay::On)?;
+            let pubkey = super::get_pubkey( opts.account,&ledger_transport, PubkeyDisplay::On).await?;
             let output = pubkey.to_string();
             print_balance(&vec![pubkey]).await?;
             if self.qr_code {
