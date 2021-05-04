@@ -29,9 +29,7 @@ impl Cmd {
         _version: Version,
     ) -> Result<Option<(String, Network)>> {
         match ledger(opts, self).await? {
-            Response::Txn(_txn, hash, network) => {
-                Ok(Some((hash, network)))
-            }
+            Response::Txn(_txn, hash, network) => Ok(Some((hash, network))),
             Response::InsufficientBalance(balance, send_request) => {
                 println!(
                     "Account balance insufficient. {} HNT on account but attempting to stake {}",
@@ -131,4 +129,3 @@ pub fn print_proposed_txn(txn: &BlockchainTxnUnstakeValidatorV1) -> Result {
     );
     Ok(())
 }
-

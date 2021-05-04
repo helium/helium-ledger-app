@@ -14,11 +14,8 @@ impl Cmd {
         opts: Opts,
         _version: Version,
     ) -> Result<Option<(String, Network)>> {
-
         match ledger(opts, self).await? {
-            Response::Txn(_txn, hash, network) => {
-                Ok(Some((hash, network)))
-            }
+            Response::Txn(_txn, hash, network) => Ok(Some((hash, network))),
             Response::InsufficientBalance(balance, send_request) => {
                 println!(
                     "Account balance insufficient. {} HNT on account but attempting to stake {}",
@@ -34,7 +31,6 @@ impl Cmd {
     }
 }
 
-
 pub(crate) async fn ledger(
     opts: Opts,
     stake: Cmd,
@@ -42,7 +38,7 @@ pub(crate) async fn ledger(
     let ledger_transport = get_ledger_transport(&opts).await?;
 
     // get account from API so we can get nonce and balance
-    let owner = get_pubkey( opts.account, &ledger_transport, PubkeyDisplay::Off).await?;
+    let owner = get_pubkey(opts.account, &ledger_transport, PubkeyDisplay::Off).await?;
 
     let client = Client::new_with_base_url(api_url(owner.network));
 
@@ -84,7 +80,7 @@ pub(crate) async fn ledger(
 }
 
 fn print_proposed_transaction(stake: &BlockchainTxnStakeValidatorV1) -> Result {
-    let address =  PublicKey::try_from(stake.address.clone())?;
+    let address = PublicKey::try_from(stake.address.clone())?;
     let units = match address.network {
         Network::TestNet => "TNT",
         Network::MainNet => "HNT",

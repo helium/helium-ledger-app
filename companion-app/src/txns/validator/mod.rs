@@ -30,5 +30,4 @@ impl Cmd {
             Cmd::Unstake(unstake) => unstake.run(opts, version).await,
         }
     }
-
 }

@@ -101,7 +101,7 @@ pub(crate) async fn ledger_create(
     txfer_stake: Create,
 ) -> Result<Option<Response<BlockchainTxnTransferValidatorStakeV1>>> {
     let ledger = get_ledger_transport(&opts).await?;
-    let this_wallet = get_pubkey( opts.account,  &ledger,PubkeyDisplay::Off).await?;
+    let this_wallet = get_pubkey(opts.account, &ledger, PubkeyDisplay::Off).await?;
 
     // old_owner defaults to self if not input
     let old_owner = if let Some(old_owner) = txfer_stake.old_owner {
@@ -294,7 +294,11 @@ fn print_proposed_transaction(txn: &BlockchainTxnTransferValidatorStakeV1) -> Re
         &format!("Stake Amount {}", units),
         "DC Fee"
     ]);
-    table.add_row(row![Hnt::from(txn.payment_amount), Hnt::from(txn.stake_amount), txn.fee]);
+    table.add_row(row![
+        Hnt::from(txn.payment_amount),
+        Hnt::from(txn.stake_amount),
+        txn.fee
+    ]);
     table.printstd();
     println!(
         "WARNING: do not use this output as the source of truth. Instead, rely \
