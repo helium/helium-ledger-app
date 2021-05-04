@@ -12,11 +12,13 @@ thiserror = "1"
 byteorder = "1"
 structopt = "0"
 helium-api = "2.0.4"
-helium-wallet = { git = "https://github.com/helium/helium-wallet-rs", branch = "master" }
+#helium-wallet = { git = "https://github.com/helium/helium-wallet-rs", branch = "master" }
+helium-crypto = {git = "https://github.com/helium/helium-crypto-rs", tag="v0.0.7"}
+helium-wallet = { path = "../../helium-wallet-rs" }
 helium-proto = { git = "https://github.com/helium/proto", branch="master"}
 prettytable-rs = "0"
-ledger-transport-hid = { git = "https://github.com/helium/ledger-rs" }
-ledger-apdu = { git = "https://github.com/helium/ledger-rs" }
+ledger-transport-hid = { git = "https://github.com/helium/ledger-rs", branch = "lthiery/tcp-transport" }
+ledger-apdu = { git = "https://github.com/helium/ledger-rs", branch = "lthiery/tcp-transport" }
 bs58 = {version = "0", features=["check"]}
 base64 = "0"
 rust_decimal = "1"

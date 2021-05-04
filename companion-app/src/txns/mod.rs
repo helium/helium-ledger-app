@@ -1,7 +1,6 @@
 use crate::*;
 use byteorder::{LittleEndian as LE, WriteBytesExt};
 use helium_api::{accounts, Client, Hnt};
-use helium_crypto::{public_key::PublicKey, Network};
 use helium_proto::{
     BlockchainTxnPaymentV1, BlockchainTxnStakeValidatorV1, BlockchainTxnTransferValidatorStakeV1,
     BlockchainTxnUnstakeValidatorV1,
@@ -9,6 +8,7 @@ use helium_proto::{
 use helium_wallet::{
     cmd::get_txn_fees,
     traits::{TxnEnvelope, TxnFee},
+    keypair::{PublicKey, Network}
 };
 use ledger::*;
 use ledger_apdu::{APDUAnswer, APDUCommand};
