@@ -50,7 +50,7 @@ pub(crate) async fn get_app_version(opts: &Opts) -> Result<Version> {
         Err(Error::VersionError)
     }
 }
-
+#[allow(clippy::borrowed_box)]
 async fn get_pubkey(
     account: u8,
     ledger: &Box<dyn LedgerTransport>,
@@ -67,6 +67,7 @@ pub enum Response<T> {
     UserDeniedTransaction,
 }
 
+#[allow(clippy::borrowed_box)]
 async fn read_from_ledger(
     ledger: &Box<dyn LedgerTransport>,
     command: APDUCommand,
