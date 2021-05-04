@@ -11,8 +11,7 @@
 #include "helium_ux.h"
 
 // Get a pointer to getPublicKey's state variables.
-static getPublicKeyContext_t *ctx = &global.getPublicKeyContext;
-
+#define CTX global.getPublicKeyContext
 
 // Define the comparison screen. This is where the user will compare the
 // public key (or address) on their device to the one shown on the computer.
@@ -20,13 +19,9 @@ static const bagl_element_t ui_getPublicKey[] = {
 	UI_BACKGROUND(),
 	UI_ICON_LEFT(0x01, BAGL_GLYPH_ICON_LEFT),
 	UI_ICON_RIGHT(0x02, BAGL_GLYPH_ICON_RIGHT),
-#ifdef HELIUM_TESTNET
-	UI_TEXT(0x00, 0, 12, 128, "TNT Pub Key"),
-#else
-	UI_TEXT(0x00, 0, 12, 128, "HNT Pub Key"),
-#endif
+	UI_TEXT(0x00, 0, 12, 128, "Confirm Address"),
 	// The visible portion of the public key or address.
-	UI_TEXT(0x00, 0, 26, 128, global.getPublicKeyContext.partialStr),
+	UI_TEXT(0x00, 0, 26, 128, CTX.partialStr),
 };
 
 // Define the preprocessor for the comparison screen. As in signHash, this
@@ -34,9 +29,9 @@ static const bagl_element_t ui_getPublicKey[] = {
 // is that, since public keys and addresses have different lengths, checking
 // for the end of the string is slightly more complicated.
 static const bagl_element_t* ui_prepro_getPublicKey(const bagl_element_t *element) {
-	int fullSize =  ctx->fullStr_len;
-	if ((element->component.userid == 1 && ctx->displayIndex == 0) ||
-	    (element->component.userid == 2 && ctx->displayIndex == fullSize-12)) {
+	int fullSize =  CTX.fullStr_len;
+	if ((element->component.userid == 1 && CTX.displayIndex == 0) ||
+	    (element->component.userid == 2 && CTX.displayIndex == fullSize-12)) {
 		return NULL;
 	}
 	return element;
@@ -45,23 +40,23 @@ static const bagl_element_t* ui_prepro_getPublicKey(const bagl_element_t *elemen
 // Define the button handler for the comparison screen. Again, this is nearly
 // identical to the signHash comparison button handler.
 static unsigned int ui_getPublicKey_button(unsigned int button_mask, unsigned int button_mask_counter) {
-	int fullSize = ctx->fullStr_len;
+	int fullSize = CTX.fullStr_len;
 	switch (button_mask) {
 	case BUTTON_LEFT:
 	case BUTTON_EVT_FAST | BUTTON_LEFT: // SEEK LEFT
-		if (ctx->displayIndex > 0) {
-			ctx->displayIndex--;
+		if (CTX.displayIndex > 0) {
+			CTX.displayIndex--;
 		}
-		os_memmove(ctx->partialStr, ctx->fullStr+ctx->displayIndex, 12);
+		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
 	case BUTTON_RIGHT:
 	case BUTTON_EVT_FAST | BUTTON_RIGHT: // SEEK RIGHT
-		if (ctx->displayIndex < fullSize-12) {
-			ctx->displayIndex++;
+		if (CTX.displayIndex < fullSize-12) {
+			CTX.displayIndex++;
 		}
-		os_memmove(ctx->partialStr, ctx->fullStr+ctx->displayIndex, 12);
+		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -90,7 +85,8 @@ void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t
 #else
 	G_io_apdu_buffer[1] = NETTYPE_MAIN | KEYTYPE_ED25519;
 #endif
-	get_pubkey_bytes(p2, &G_io_apdu_buffer[adpu_tx]);
+	uint8_t account = p2;
+	get_pubkey_bytes(account, &G_io_apdu_buffer[adpu_tx]);
 	adpu_tx += SIZE_OF_PUB_KEY_BIN;
 
 	cx_sha256_t hash;
@@ -109,12 +105,12 @@ void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t
 		// for some reason this needs to run twice to get the display to work
 		// otherwise, first time running this command, key gets displayed blank
 		for(uint8_t i=0; i<2; i++){
-			btchip_encode_base58(G_io_apdu_buffer, adpu_tx, ctx->fullStr, &output_len);
-			ctx->fullStr[51] = '\0';
-			ctx->fullStr_len = output_len;
-			os_memmove(ctx->partialStr, ctx->fullStr, 12);
-			ctx->partialStr[12] = '\0';
-			ctx->displayIndex = 0;
+			btchip_encode_base58(G_io_apdu_buffer, adpu_tx, CTX.fullStr, &output_len);
+			CTX.fullStr[51] = '\0';
+			CTX.fullStr_len = output_len;
+			os_memmove(CTX.partialStr, CTX.fullStr, 12);
+			CTX.partialStr[12] = '\0';
+			CTX.displayIndex = 0;
 
 			// Display the comparison screen.
 			UX_DISPLAY(ui_getPublicKey, ui_prepro_getPublicKey);

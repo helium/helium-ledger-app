@@ -2,16 +2,15 @@
 extern crate prettytable;
 
 use helium_api::{pending_transactions::PendingTxnStatus, Hnt};
-use helium_crypto::{public_key::PublicKey, Network};
-use helium_proto::{BlockchainTxn, BlockchainTxnPaymentV1};
-use ledger_api::*;
+use helium_crypto::Network;
+use helium_proto::BlockchainTxn;
 use qr2term::print_qr;
 use std::{env, fmt, process};
 use structopt::StructOpt;
 
-mod ledger_api;
-
 mod error;
+mod txns;
+
 pub use error::Error;
 pub type Result<T = ()> = std::result::Result<T, Error>;
 
@@ -25,53 +24,36 @@ enum Units {
     Hnt { hnt: Hnt },
 }
 
+/// Common options for most wallet commands
+#[derive(Debug, StructOpt)]
+pub struct Opts {
+    /// File(s) to use
+    #[structopt(short = "a", long = "account", default_value = "0")]
+
+    /// Select account index to stake from
+    #[structopt(long = "account", default_value = "0")]
+    pub account: u8,
+}
+
+#[derive(Debug, StructOpt)]
+pub struct Cli {
+    #[structopt(flatten)]
+    opts: Opts,
+
+    #[structopt(flatten)]
+    cmd: Cmd,
+}
+
 /// Interact with Ledger Nano S for hardware wallet management
 #[derive(Debug, StructOpt)]
 #[allow(clippy::large_enum_variant)]
-enum Cli {
+enum Cmd {
     /// Get wallet information
-    Balance {
-        /// Display QR code for a given single wallet.
-        #[structopt(long = "qr")]
-        qr_code: bool,
-        /// Select account index to check balance for
-        /// With scan option, you can display many balances
-        #[structopt(long = "account", default_value = "0")]
-        account: u8,
-        /// Scans all accounts up until selected account index
-        /// This is useful for displaying all balances
-        #[structopt(long = "scan")]
-        scan: bool,
-    },
+    Balance(txns::balance::Cmd),
     /// Pay a given address.
-    Pay {
-        payee: Payee,
-        /// Select account index to check balance
-        #[structopt(long = "account", default_value = "0")]
-        account: u8,
-    },
-}
-
-#[derive(Debug)]
-pub struct Payee {
-    address: PublicKey,
-    amount: Hnt,
-}
-
-use std::str::FromStr;
-
-impl FromStr for Payee {
-    type Err = Box<dyn std::error::Error>;
-
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let pos = s
-            .find('=')
-            .ok_or_else(|| format!("invalid KEY=value: missing `=`  in `{}`", s))?;
-        Ok(Payee {
-            address: s[..pos].parse()?,
-            amount: s[pos + 1..].parse()?,
-        })
-    }
+    Pay(txns::pay::Cmd),
+    /// Stake a validator
+    Validator(txns::validator::Cmd),
 }
 
 #[tokio::main]
@@ -108,143 +90,31 @@ impl fmt::Display for Version {
 }
 
 async fn run(cli: Cli) -> Result {
-    let version = ledger_api::get_version()?;
-    println!("Ledger running Helium {}", version);
+    let version = txns::get_app_version()?;
+    println!("Ledger running Helium App {}\r\n", version);
 
-    match cli {
-        Cli::Balance {
-            qr_code,
-            account,
-            scan,
-        } => {
-            if version.major < 2 && account != 0 {
-                panic!("Upgrade your the Helium App to use additional wallet accounts");
-            };
-
-            if scan {
-                if qr_code {
-                    println!("WARNING: to output a QR Code, do not use scan")
-                }
-                let mut pubkeys = Vec::new();
-                for i in 0..account {
-                    pubkeys.push(ledger_api::get_pubkey(i, PubkeyDisplay::Off)?);
-                }
-                print_balance(&pubkeys).await?;
-            } else {
-                // get pubkey and display it on Ledger Screen
-                let pubkey = ledger_api::get_pubkey(account, PubkeyDisplay::On)?;
-                let output = pubkey.to_string();
-                print_balance(&vec![pubkey]).await?;
-                if qr_code {
-                    print_qr(&output)?;
-                }
-            }
-
-            Ok(())
-        }
-        Cli::Pay { payee, account } => {
-            if version.major < 2 && account != 0 {
-                panic!("Upgrade your the Helium App to use additional wallet accounts");
-            };
-            let address = payee.address;
-            let amount = payee.amount;
-            println!("Creating transaction for:");
-            let units = match address.network {
-                Network::TestNet => "TNT",
-                Network::MainNet => "HNT",
-            };
-
-            println!("      {:0.*} {}", 8, amount, units);
-            println!("        =");
-            println!("      {:} Bones", u64::from(amount));
-
-            match ledger_api::pay(account, address, amount).await? {
-                PayResponse::Txn(txn, hash) => print_txn(&txn, &hash).unwrap(),
-                PayResponse::InsufficientBalance(balance, send_request) => {
-                    println!(
-                        "Account balance insufficient. {} Bones on account but attempting to send {}",
-                        balance,
-                        send_request,
-                    );
-                }
-                PayResponse::UserDeniedTransaction => {
-                    println!("Transaction not confirmed");
-                }
-            };
-            Ok(())
-        }
-    }
-}
-
-use helium_api::{accounts, Client};
-use prettytable::{format, Table};
-
-async fn print_balance(pubkeys: &[PublicKey]) -> Result {
-    // sample the first pubkey to determine network
-    let network = pubkeys[0].network;
-
-    let client = Client::new_with_base_url(api_url(network));
-    let mut table = Table::new();
-    table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
-    let balance = match network {
-        Network::TestNet => "Balance TNT",
-        Network::MainNet => "Balance HNT",
+    let result = match cli.cmd {
+        Cmd::Balance(balance) => balance.run(cli.opts, version).await?,
+        Cmd::Pay(pay) => pay.run(cli.opts, version).await?,
+        Cmd::Validator(validator) => validator.run(cli.opts, version).await?,
     };
+    if let Some((hash, network)) = result {
+        println!("\nSuccessfully submitted transaction to API:");
 
-    if pubkeys.len() > 1 {
-        table.set_titles(row![
-            "Index",
-            "Address",
-            balance,
-            "Data Credits",
-            "Security Tokens"
-        ]);
-    } else {
-        table.set_titles(row!["Address", balance, "Data Credits", "Security Tokens"]);
-    }
-    for (account_index, pubkey) in pubkeys.iter().enumerate() {
-        let address = pubkey.to_string();
-        let result = accounts::get(&client, &address).await;
-        if pubkeys.len() > 1 {
-            match result {
-                Ok(account) => table.add_row(row![
-                    account_index,
-                    address,
-                    account.balance,
-                    account.dc_balance,
-                    account.sec_balance
-                ]),
-                Err(err) => table.add_row(row![account_index, address, H3 -> err.to_string()]),
-            };
-        } else {
-            match result {
-                Ok(account) => table.add_row(row![
-                    address,
-                    account.balance,
-                    account.dc_balance,
-                    account.sec_balance
-                ]),
-                Err(err) => table.add_row(row![address, H3 -> err.to_string()]),
-            };
-        }
+        let mut table = Table::new();
+        table.add_row(row!["Network", "Hash"]);
+        table.add_row(row![network, hash]);
+        table.printstd();
+
+        println!("To check on transaction status, monitor the following URL:");
+        println!("     {}/pending_transactions/{}", api_url(network), hash);
     }
 
-    table.printstd();
     Ok(())
 }
 
-use std::convert::TryFrom;
-
-pub fn print_txn(txn: &BlockchainTxnPaymentV1, hash: &str) -> Result<()> {
-    let mut table = Table::new();
-    table.add_row(row!["Payee", "Amount HNT", "Nonce", "Hash"]);
-
-    let payee = PublicKey::try_from(txn.payee.as_slice())?.to_string();
-
-    table.add_row(row![payee, Hnt::from(txn.amount), txn.nonce, hash]);
-    table.printstd();
-    Ok(())
-}
+use helium_api::Client;
+use prettytable::{format, Table};
 
 pub async fn submit_txn(client: &Client, txn: &BlockchainTxn) -> Result<PendingTxnStatus> {
     use helium_proto::Message;
