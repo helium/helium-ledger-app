@@ -24,10 +24,25 @@ pub enum Error {
     Decode(#[from] prost::DecodeError),
     #[error("Encoding Error")]
     Encode(#[from] prost::EncodeError),
+    #[error("Transaction Error")]
+    Txn,
+    #[error("Into Envelope Error")]
+    IntoEnvelope,
+    #[error("FromB64 Error")]
+    FromB64,
 }
 
 impl Error {
     pub fn getting_fees() -> Error {
         Error::GettingFees
+    }
+    pub fn txn() -> Error {
+        Error::Txn
+    }
+    pub fn into_envelope() -> Error {
+        Error::IntoEnvelope
+    }
+    pub fn from_b64() -> Error {
+        Error::FromB64
     }
 }

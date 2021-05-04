@@ -2,8 +2,8 @@
 #include <stdbool.h>
 #include <os.h>
 #include <os_io_seproxyhal.h>
-#include "helium.h"
-#include "helium_ux.h"
+#include "txns/helium.h"
+#include "ux/helium_ux.h"
 
 // handleGetVersion is the entry point for the getVersion command. It
 // unconditionally sends the app version.

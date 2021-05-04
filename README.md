@@ -9,6 +9,9 @@ When installed on a Nano S, the app allows you to view your Helium address,
 check your balance, and submit transactions while using the companion app, also
 included in this repository.
 
+The Helium Ledger App uses bip32 path `44'/904'/n'/0'/0'` for Mainnet and 
+`44'/905'/n'/0'/0'` for Testnet.
+
 ## How to use Helium on Ledger
 
 The most recent release of the Helium Ledger Companion App is available [here](https://github.com/helium/helium-ledger-app/releases). 

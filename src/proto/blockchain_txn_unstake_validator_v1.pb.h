@@ -16,6 +16,7 @@ typedef struct _helium_blockchain_txn_unstake_validator_v1 {
     pb_callback_t owner_signature; 
     uint64_t fee; 
     uint64_t stake_amount; 
+    uint64_t stake_release_height; 
 } helium_blockchain_txn_unstake_validator_v1;
 
 
@@ -24,8 +25,8 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define helium_blockchain_txn_unstake_validator_v1_init_default {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, 0, 0}
-#define helium_blockchain_txn_unstake_validator_v1_init_zero {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, 0, 0}
+#define helium_blockchain_txn_unstake_validator_v1_init_default {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, 0, 0, 0}
+#define helium_blockchain_txn_unstake_validator_v1_init_zero {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, 0, 0, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define helium_blockchain_txn_unstake_validator_v1_address_tag 1
@@ -33,6 +34,7 @@ extern "C" {
 #define helium_blockchain_txn_unstake_validator_v1_owner_signature_tag 3
 #define helium_blockchain_txn_unstake_validator_v1_fee_tag 4
 #define helium_blockchain_txn_unstake_validator_v1_stake_amount_tag 5
+#define helium_blockchain_txn_unstake_validator_v1_stake_release_height_tag 6
 
 /* Struct field encoding specification for nanopb */
 #define helium_blockchain_txn_unstake_validator_v1_FIELDLIST(X, a) \
@@ -40,7 +42,8 @@ X(a, CALLBACK, SINGULAR, BYTES,    address,           1) \
 X(a, CALLBACK, SINGULAR, BYTES,    owner,             2) \
 X(a, CALLBACK, SINGULAR, BYTES,    owner_signature,   3) \
 X(a, STATIC,   SINGULAR, UINT64,   fee,               4) \
-X(a, STATIC,   SINGULAR, UINT64,   stake_amount,      5)
+X(a, STATIC,   SINGULAR, UINT64,   stake_amount,      5) \
+X(a, STATIC,   SINGULAR, UINT64,   stake_release_height,   6)
 #define helium_blockchain_txn_unstake_validator_v1_CALLBACK pb_default_field_callback
 #define helium_blockchain_txn_unstake_validator_v1_DEFAULT NULL
 

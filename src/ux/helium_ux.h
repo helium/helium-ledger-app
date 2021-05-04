@@ -1,7 +1,9 @@
 
 #pragma once
-
 #include "ux.h"
+
+#define SIZEOF_B58_KEY 34
+
 // Each command has some state associated with it that sticks around for the
 // life of the command. A separate context_t struct should be defined for each
 // command.
@@ -27,14 +29,63 @@ typedef struct {
 	uint64_t nonce;
 	uint64_t fee;
 	unsigned char payee[34];
-} calcTxnHashContext_t;
+} paymentContext_t;
+
+typedef struct {
+    uint8_t displayIndex;
+    uint8_t fullStr[55]; // variable length
+    // partialStr contains 12 characters of a longer string. This allows text
+    // to be scrolled.
+    uint8_t partialStr[13];
+    uint8_t fullStr_len;
+    uint8_t account_index;
+    uint64_t stake_amount;
+    uint64_t nonce;
+    uint64_t fee;
+    unsigned char address[SIZEOF_B58_KEY];
+} stakeValidatorContext_t;
+
+typedef struct {
+    uint8_t displayIndex;
+    uint8_t fullStr[55]; // variable length
+    // partialStr contains 12 characters of a longer string. This allows text
+    // to be scrolled.
+    uint8_t partialStr[13];
+    uint8_t fullStr_len;
+    uint8_t account_index;
+    uint64_t stake_amount;
+    uint64_t stake_release_height;
+    uint64_t nonce;
+    uint64_t fee;
+    unsigned char address[SIZEOF_B58_KEY];
+} unstakeValidatorContext_t;
+
+typedef struct {
+    uint8_t displayIndex;
+    uint8_t fullStr[55]; // variable length
+    // partialStr contains 12 characters of a longer string. This allows text
+    // to be scrolled.
+    uint8_t partialStr[13];
+    uint8_t fullStr_len;
+    uint8_t account_index;
+    uint64_t stake_amount;
+    uint64_t payment_amount;
+    uint64_t fee;
+    unsigned char old_owner[SIZEOF_B58_KEY];
+    unsigned char new_owner[SIZEOF_B58_KEY];
+    unsigned char old_address[SIZEOF_B58_KEY];
+    unsigned char new_address[SIZEOF_B58_KEY];
+} transferValidatorContext_t;
 
 
 // To save memory, we store all the context types in a single global union,
 // taking advantage of the fact that only one command is executed at a time.
 typedef union {
 	getPublicKeyContext_t getPublicKeyContext;
-	calcTxnHashContext_t calcTxnHashContext;
+	paymentContext_t paymentContext;
+	stakeValidatorContext_t stakeValidatorContext;
+	transferValidatorContext_t transferValidatorContext;
+	unstakeValidatorContext_t unstakeValidatorContext;
 } commandContext;
 extern commandContext global;
 
