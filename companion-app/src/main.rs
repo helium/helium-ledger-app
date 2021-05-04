@@ -7,7 +7,7 @@ use helium_proto::BlockchainTxn;
 use qr2term::print_qr;
 use std::{env, fmt, process};
 use structopt::StructOpt;
-
+use ledger_transport::exchange::Exchange as LedgerTransport;
 mod error;
 mod txns;
 
@@ -27,12 +27,13 @@ enum Units {
 /// Common options for most wallet commands
 #[derive(Debug, StructOpt)]
 pub struct Opts {
-    /// File(s) to use
-    #[structopt(short = "a", long = "account", default_value = "0")]
-
     /// Select account index to stake from
     #[structopt(long = "account", default_value = "0")]
     pub account: u8,
+
+    /// Enable interaction with emulator for development and testing
+    #[structopt(long = "emulator")]
+    pub emulator: bool,
 }
 
 #[derive(Debug, StructOpt)]
@@ -90,7 +91,7 @@ impl fmt::Display for Version {
 }
 
 async fn run(cli: Cli) -> Result {
-    let version = txns::get_app_version()?;
+    let version = txns::get_app_version(&cli.opts).await?;
     println!("Ledger running Helium App {}\r\n", version);
 
     let result = match cli.cmd {
