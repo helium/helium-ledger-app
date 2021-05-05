@@ -11,9 +11,9 @@ pub enum Error {
     #[error("Error generating QR")]
     Qr(#[from] qr2term::QrError),
     #[error("Error accessing Ledger HID Device")]
-    Hid(#[from] ledger::LedgerHIDError),
+    Hid(#[from] ledger_transport::LedgerHIDError),
     #[error("Connection refused by Ledger emulator")]
-    Tcp(#[from] ledger_tcp::LedgerTcpError),
+    Tcp(#[from] ledger_transport::TransportTcpError),
     #[error("Helium API Error")]
     HeliumApi(#[from] helium_api::Error),
     #[error("Helium Crypto Error")]

@@ -10,8 +10,7 @@ use helium_wallet::{
     keypair::{Network, PublicKey},
     traits::{TxnEnvelope, TxnFee},
 };
-use ledger::*;
-use ledger_apdu::{APDUAnswer, APDUCommand};
+use ledger_transport::*;
 use prost::Message;
 use std::convert::TryFrom;
 
@@ -33,7 +32,7 @@ pub enum PubkeyDisplay {
 
 pub(crate) async fn get_ledger_transport(opts: &Opts) -> Result<Box<dyn LedgerTransport>> {
     Ok(if opts.emulator {
-        Box::new(ledger_tcp::TransportTcp::new().await?)
+        Box::new(TransportTcp::new().await?)
     } else {
         Box::new(TransportNativeHID::new()?)
     })
