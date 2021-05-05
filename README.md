@@ -45,11 +45,20 @@ about the toolchains:
 * gcc-arm-none-eabi-7-2017-q4-major-linux
 * clang9.0.0 plus the matching ld.lld (eg: cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS=clang;lld \
   -DCMAKE_INSTALL_PREFIX=/usr/local ../llvm-project/llvm)
+  
+You make command could look something like this:
+
+```
+GCCPATH=~/ledger-build-tools/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/ \
+CLANGPATH=~/ledger-build-tools/clang/bin/ \
+BOLOS_SDK=~/nanox-secure-sdk \
+make TESTNET=true
+```
 
 ## Emulator: speculos
 
 You can test the app in an emulator by installing [`speculos`](https://github.com/LedgerHQ/speculos). This is in fact
-the only way to test the app for Nano X.
+**the only way to test the app for Nano X**.
 
 Note that `speculos` is particular about the version of construct used and pip install actually brings too new of a 
 version in.
