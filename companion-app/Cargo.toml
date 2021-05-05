@@ -16,10 +16,10 @@ helium-wallet = { git = "https://github.com/helium/helium-wallet-rs", branch = "
 helium-crypto = {git = "https://github.com/helium/helium-crypto-rs", tag="v0.0.7"}
 helium-proto = { git = "https://github.com/helium/proto", branch="master"}
 prettytable-rs = "0"
-ledger-transport-hid = { git = "https://github.com/helium/ledger-rs", branch = "lthiery/tcp-stripped" }
 ledger-apdu = { git = "https://github.com/helium/ledger-rs", branch = "lthiery/tcp-stripped" }
-ledger-transport-tcp = { git = "https://github.com/helium/ledger-rs", branch = "lthiery/tcp-stripped" }
 ledger-transport = { git = "https://github.com/helium/ledger-rs", branch = "lthiery/tcp-stripped" }
+ledger-transport-hid = { git = "https://github.com/helium/ledger-rs", branch = "lthiery/tcp-stripped" }
+ledger-transport-tcp = { git = "https://github.com/helium/ledger-rs", branch = "lthiery/tcp-stripped" }
 bs58 = {version = "0", features=["check"]}
 base64 = "0"
 rust_decimal = "1"
