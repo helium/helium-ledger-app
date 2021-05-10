@@ -11,8 +11,8 @@ thiserror = "1"
 byteorder = "1"
 structopt = "0"
 helium-api = "2.0.4"
-helium-wallet = { git = "https://github.com/helium/helium-wallet-rs", branch = "lthiery/add-memo-to-payments" }
-helium-crypto = {git = "https://github.com/helium/helium-crypto-rs", tag="v0.0.7"}
+helium-wallet = { git = "https://github.com/helium/helium-wallet-rs" }
+helium-crypto = {git = "https://github.com/helium/helium-crypto-rs", tag="v0.0.8"}
 helium-proto = { git = "https://github.com/helium/proto", branch="master"}
 prettytable-rs = "0"
 bs58 = {version = "0", features=["check"]}
