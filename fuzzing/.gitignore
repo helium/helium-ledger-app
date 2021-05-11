@@ -1,3 +1,5 @@
 /cmake-build-fuzz/
+/cmake-build-fuzz-coverage/
 /corpus/
 !/corpus/*.raw
+/html-coverage/

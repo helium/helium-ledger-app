@@ -8,6 +8,19 @@ add_compile_options(-g -ggdb2 -O3)
 
 set(LIBSOL_DIR "../libsol")
 
+# Build with code coverage generation
+if(CODE_COVERAGE)
+    if(CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
+        add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+        add_link_options(-fprofile-instr-generate -fcoverage-mapping)
+    elseif(CMAKE_C_COMPILER_ID MATCHES "GNU")
+        add_compile_options(-fprofile-arcs -ftest-coverage)
+        link_libraries(gcov)
+    else()
+        message(FATAL_ERROR "Unsupported compiler used with code coverage generation")
+    endif()
+endif()
+
 add_library(sol
     ${LIBSOL_DIR}/instruction.c
     ${LIBSOL_DIR}/message.c
