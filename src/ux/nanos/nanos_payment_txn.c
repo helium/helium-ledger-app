@@ -10,7 +10,7 @@
 #include "helium.h"
 #include "helium_ux.h"
 
-static calcTxnHashContext_t *ctx = &global.calcTxnHashContext;
+#define CTX global.paymentContext
 
 static const bagl_element_t ui_signTxn_approve[] = {
 	UI_BACKGROUND(),
@@ -21,9 +21,9 @@ static const bagl_element_t ui_signTxn_approve[] = {
 };
 
 static const bagl_element_t* ui_prepro_signTxn_approve(const bagl_element_t *element) {
-	int fullSize = ctx->fullStr_len;
-	if ((element->component.userid == 1 && ctx->displayIndex == 0) ||
-	    (element->component.userid == 2 && ctx->displayIndex == fullSize-12)) {
+	int fullSize = CTX.fullStr_len;
+	if ((element->component.userid == 1 && CTX.displayIndex == 0) ||
+	    (element->component.userid == 2 && CTX.displayIndex == fullSize-12)) {
 		return NULL;
 	}
 	return element;
@@ -43,7 +43,7 @@ static unsigned int ui_signTxn_approve_button(unsigned int button_mask, unsigned
 
 	case BUTTON_RIGHT:
 	case BUTTON_EVT_FAST | BUTTON_RIGHT: // SEEK RIGHT
-		adpu_tx = create_helium_pay_txn(ctx->account_index);
+		adpu_tx = create_helium_pay_txn(CTX.account_index);
 		io_exchange_with_code(SW_OK, adpu_tx);
 		ui_idle();
 		break;
@@ -60,36 +60,36 @@ static const bagl_element_t ui_displayFee[] = {
 	UI_ICON_RIGHT(0x02, BAGL_GLYPH_ICON_RIGHT),
 	UI_TEXT(0x00, 0, 12, 128, "Data Credit Fee"),
 	// The visible portion of fee
-	UI_TEXT(0x00, 0, 26, 128, global.calcTxnHashContext.partialStr),
+	UI_TEXT(0x00, 0, 26, 128, CTX.partialStr),
 };
 
 static const bagl_element_t* ui_prepro_displayFee(const bagl_element_t *element) {
-	int fullSize = ctx->fullStr_len;
-	if ((element->component.userid == 1 && ctx->displayIndex == 0) ||
-	    (element->component.userid == 2 && ctx->displayIndex == fullSize-12)) {
+	int fullSize = CTX.fullStr_len;
+	if ((element->component.userid == 1 && CTX.displayIndex == 0) ||
+	    (element->component.userid == 2 && CTX.displayIndex == fullSize-12)) {
 		return NULL;
 	}
 	return element;
 }
 
 static unsigned int ui_displayFee_button(unsigned int button_mask, unsigned int button_mask_counter) {
-	int fullSize = ctx->fullStr_len;
+	int fullSize = CTX.fullStr_len;
 	switch (button_mask) {
 	case BUTTON_LEFT:
 	case BUTTON_EVT_FAST | BUTTON_LEFT: // SEEK LEFT
-		if (ctx->displayIndex > 0) {
-			ctx->displayIndex--;
+		if (CTX.displayIndex > 0) {
+			CTX.displayIndex--;
 		}
-		os_memmove(ctx->partialStr, ctx->fullStr+ctx->displayIndex, 12);
+		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
 	case BUTTON_RIGHT:
 	case BUTTON_EVT_FAST | BUTTON_RIGHT: // SEEK RIGHT
-		if (ctx->displayIndex < fullSize-12) {
-			ctx->displayIndex++;
+		if (CTX.displayIndex < fullSize-12) {
+			CTX.displayIndex++;
 		}
-		os_memmove(ctx->partialStr, ctx->fullStr+ctx->displayIndex, 12);
+		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -107,54 +107,54 @@ static const bagl_element_t ui_displayRecipient[] = {
 	UI_ICON_RIGHT(0x02, BAGL_GLYPH_ICON_RIGHT),
 	UI_TEXT(0x00, 0, 12, 128, "Recipient Address"),
 	// The visible portion of the recipient
-	UI_TEXT(0x00, 0, 26, 128, global.calcTxnHashContext.partialStr),
+	UI_TEXT(0x00, 0, 26, 128, CTX.partialStr),
 };
 
 static const bagl_element_t* ui_prepro_displayRecipient(const bagl_element_t *element) {
-	int fullSize = ctx->fullStr_len;
-	if ((element->component.userid == 1 && ctx->displayIndex == 0) ||
-	    (element->component.userid == 2 && ctx->displayIndex == fullSize-12)) {
+	int fullSize = CTX.fullStr_len;
+	if ((element->component.userid == 1 && CTX.displayIndex == 0) ||
+	    (element->component.userid == 2 && CTX.displayIndex == fullSize-12)) {
 		return NULL;
 	}
 	return element;
 }
 
 static unsigned int ui_displayRecipient_button(unsigned int button_mask, unsigned int button_mask_counter) {
-	int fullSize = ctx->fullStr_len;
+	int fullSize = CTX.fullStr_len;
 	uint8_t len;
 	switch (button_mask) {
 	case BUTTON_LEFT:
 	case BUTTON_EVT_FAST | BUTTON_LEFT: // SEEK LEFT
-		if (ctx->displayIndex > 0) {
-			ctx->displayIndex--;
+		if (CTX.displayIndex > 0) {
+			CTX.displayIndex--;
 		}
-		os_memmove(ctx->partialStr, ctx->fullStr+ctx->displayIndex, 12);
+		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
 	case BUTTON_RIGHT:
 	case BUTTON_EVT_FAST | BUTTON_RIGHT: // SEEK RIGHT
-		if (ctx->displayIndex < fullSize-12) {
-			ctx->displayIndex++;
+		if (CTX.displayIndex < fullSize-12) {
+			CTX.displayIndex++;
 		}
-		os_memmove(ctx->partialStr, ctx->fullStr+ctx->displayIndex, 12);
+		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
 	case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT: // PROCEED
 
 		// display data credit transaction fee
-		len = bin2dec(ctx->fullStr, ctx->fee);
-		ctx->fullStr_len = len;
-		ctx->fullStr[len] = '\0';
+		len = bin2dec(CTX.fullStr, CTX.fee);
+		CTX.fullStr_len = len;
+		CTX.fullStr[len] = '\0';
 		
 		uint8_t partlen = 12;
 		if(len < 12){
 			partlen = len;
 		}
-		os_memmove(ctx->partialStr, ctx->fullStr, partlen);
-		ctx->partialStr[partlen] = '\0';
-		ctx->displayIndex = 0;
+		os_memmove(CTX.partialStr, CTX.fullStr, partlen);
+		CTX.partialStr[partlen] = '\0';
+		CTX.displayIndex = 0;
 
 		UX_DISPLAY(ui_displayFee, ui_prepro_displayFee);
 		break;
@@ -172,20 +172,20 @@ static const bagl_element_t ui_displayAmount[] = {
 	UI_TEXT(0x00, 0, 12, 128, "Amount HNT"),
 #endif
 	// The visible portion of the amount
-	UI_TEXT(0x00, 0, 26, 128, global.calcTxnHashContext.partialStr),
+	UI_TEXT(0x00, 0, 26, 128, CTX.partialStr),
 };
 
 static const bagl_element_t* ui_prepro_displayAmount(const bagl_element_t *element) {
-	int fullSize = ctx->fullStr_len;
-	if ((element->component.userid == 1 && ctx->displayIndex == 0) ||
-	    (element->component.userid == 2 && ctx->displayIndex == fullSize-12)) {
+	int fullSize = CTX.fullStr_len;
+	if ((element->component.userid == 1 && CTX.displayIndex == 0) ||
+	    (element->component.userid == 2 && CTX.displayIndex == fullSize-12)) {
 		return NULL;
 	}
 	return element;
 }
 
 static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned int button_mask_counter) {
-	int fullSize = ctx->fullStr_len;
+	int fullSize = CTX.fullStr_len;
 	cx_sha256_t hash;
 	unsigned char hash_buffer[32];
 	// use the G_io_apdu buffer as a scratchpad to minimize stack usage
@@ -194,19 +194,19 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 	switch (button_mask) {
 	case BUTTON_LEFT:
 	case BUTTON_EVT_FAST | BUTTON_LEFT: // SEEK LEFT
-		if (ctx->displayIndex > 0) {
-			ctx->displayIndex--;
+		if (CTX.displayIndex > 0) {
+			CTX.displayIndex--;
 		}
-		os_memmove(ctx->partialStr, ctx->fullStr+ctx->displayIndex, 12);
+		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
 	case BUTTON_RIGHT:
 	case BUTTON_EVT_FAST | BUTTON_RIGHT: // SEEK RIGHT
-		if (ctx->displayIndex < fullSize-12) {
-			ctx->displayIndex++;
+		if (CTX.displayIndex < fullSize-12) {
+			CTX.displayIndex++;
 		}
-		os_memmove(ctx->partialStr, ctx->fullStr+ctx->displayIndex, 12);
+		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -214,7 +214,7 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 
 		for(uint8_t i=0; i<2; i++){
 			// display recipient address on screen
-			os_memmove(address_with_check, ctx->payee, 34);
+			os_memmove(address_with_check, CTX.payee, 34);
 
 			cx_sha256_init(&hash);
 			cx_hash(&hash.header, CX_LAST, address_with_check, 34, hash_buffer, 32);
@@ -222,12 +222,12 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 			cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
 			os_memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
 			size_t output_len;
-			btchip_encode_base58(address_with_check, 38, ctx->fullStr, &output_len);
-			ctx->fullStr[output_len] = '\0';
-			ctx->fullStr_len = output_len;
-			os_memmove(ctx->partialStr, ctx->fullStr, 12);
-			ctx->partialStr[12] = '\0';
-			ctx->displayIndex = 0;
+			btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
+			CTX.fullStr[output_len] = '\0';
+			CTX.fullStr_len = output_len;
+			os_memmove(CTX.partialStr, CTX.fullStr, 12);
+			CTX.partialStr[12] = '\0';
+			CTX.displayIndex = 0;
 
 			UX_DISPLAY(ui_displayRecipient, ui_prepro_displayRecipient);
 		}
@@ -238,24 +238,19 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 }
 
 void handle_sign_payment_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
-	// copy data out of dataBuffer and into transaction context
-	ctx->amount = U8LE(dataBuffer, 0);
-	ctx->fee  = U8LE(dataBuffer, 8);
-	ctx->nonce = U8LE(dataBuffer, 16);
-	ctx->account_index = p1;
-	os_memmove(ctx->payee, &dataBuffer[24], sizeof(ctx->payee));
+    save_payment_context(p1, p2, dataBuffer, dataLength, &CTX);
 
 	// display amount on screen
-	uint8_t len = pretty_print_hnt(ctx->fullStr, ctx->amount);
+	uint8_t len = pretty_print_hnt(CTX.fullStr, CTX.amount);
 	uint8_t i = 0;
-	while(ctx->fullStr[i] != '\0' && i<12){
-		ctx->partialStr[i] = ctx->fullStr[i];
+	while(CTX.fullStr[i] != '\0' && i<12){
+		CTX.partialStr[i] = CTX.fullStr[i];
 		i++;
 	}
-	ctx->partialStr[i] = '\0';
-	ctx->fullStr_len = len;
+	CTX.partialStr[i] = '\0';
+	CTX.fullStr_len = len;
 
-	ctx->displayIndex = 0;
+	CTX.displayIndex = 0;
 
 	UX_DISPLAY(ui_displayAmount, ui_prepro_displayAmount);
 	*flags |= IO_ASYNCH_REPLY;

@@ -1,4 +1,8 @@
 #include <stdbool.h>
+#include <stdint.h>
+#include <os.h>
+#include <cx.h>
+#include "../ux/helium_ux.h"
 
 // exception codes
 #define SW_DEVELOPER_ERR 0x6B00
@@ -33,6 +37,9 @@ extern bool sign_transaction;
 extern uint16_t txn_length;
 
 uint32_t create_helium_pay_txn(uint8_t account_index);
+uint32_t create_helium_stake_txn(uint8_t account);
+uint32_t create_helium_transfer_validator_txn(uint8_t account);
+uint32_t create_helium_unstake_txn(uint8_t account);
 
 #define SIZE_OF_PUB_KEY_BIN 	32
 #define SIZE_OF_SHA_CHECKSUM 	4

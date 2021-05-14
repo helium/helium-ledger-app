@@ -1,7 +1,0 @@
-[workspace]
-members = [
-    "companion-app",
-]
-
-[patch.crates-io]
-elliptic-curve = { git = "https://github.com/helium/traits.git", branch = "rg/compact" }

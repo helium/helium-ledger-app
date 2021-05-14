@@ -22,8 +22,8 @@
 #include "os.h"
 #include "os_io_seproxyhal.h"
 #include "glyphs.h"
-#include "helium.h"
-#include "helium_ux.h"
+#include "txns/helium.h"
+#include "ux/helium_ux.h"
 
 commandContext global;
 
@@ -43,6 +43,10 @@ void io_exchange_with_code(uint16_t code, uint16_t tx) {
 #define INS_GET_VERSION    0x01
 #define INS_GET_PUBLIC_KEY 0x02
 #define INS_SIGN_PAYMENT_TXN   0x08
+#define INS_SIGN_VALIDATOR_STAKE_TXN   0x09
+#define INS_SIGN_VALIDATOR_TXFER_TXN   0x0A
+#define INS_SIGN_VALIDATOR_UNSTAKE_TXN   0x0B
+
 
 // This is the function signature for a command handler. 'flags' and 'tx' are
 // out-parameters that will control the behavior of the next io_exchange call
@@ -53,12 +57,19 @@ typedef void handler_fn_t(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t 
 handler_fn_t handle_get_version;
 handler_fn_t handle_get_public_key;
 handler_fn_t handle_sign_payment_txn;
+handler_fn_t handle_validator_stake_txn;
+handler_fn_t handle_validator_txfer;
+handler_fn_t handle_validator_unstake_txn;
+
 
 static handler_fn_t* lookupHandler(uint8_t ins) {
 	switch (ins) {
 	case INS_GET_VERSION:    return handle_get_version;
 	case INS_GET_PUBLIC_KEY: return handle_get_public_key;
 	case INS_SIGN_PAYMENT_TXN:   return handle_sign_payment_txn;
+	case INS_SIGN_VALIDATOR_STAKE_TXN: return handle_validator_stake_txn;
+	case INS_SIGN_VALIDATOR_TXFER_TXN: return  handle_validator_txfer;
+	case INS_SIGN_VALIDATOR_UNSTAKE_TXN: return  handle_validator_unstake_txn;
 	default:                 return NULL;
 	}
 }
