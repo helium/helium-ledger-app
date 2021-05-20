@@ -41,7 +41,7 @@ else
 	ICONNAME   = nanos_app_helium.gif
 endif
 
-APPVERSION = 2.1.0
+APPVERSION = 2.1.1
 
 # The --path argument here restricts which BIP32 paths the app is allowed to derive.
 ifeq ($(TESTNET),true)
@@ -49,6 +49,11 @@ APP_LOAD_PARAMS = --appFlags 0x240 --path "44'/905'" --curve secp256k1 --curve e
 else
 APP_LOAD_PARAMS = --appFlags 0x240 --path "44'/904'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
 endif
+
+# Add security review banner. To be removed once Ledger security review is done.
+APP_LOAD_PARAMS += --tlvraw 9F:01
+DEFINES += HAVE_PENDING_REVIEW_SCREEN
+
 
 APP_SOURCE_PATH = src
 SDK_SOURCE_PATH = lib_stusb lib_stusb_impl
