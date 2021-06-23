@@ -22,7 +22,7 @@ Please [follow instructions here](https://docs.helium.com/wallets/ledger) to lea
 You can follows the instructions [here](https://ledger.readthedocs.io/en/0/nanos/setup.html#first-app-hello-world
 ) from Ledger docs
 
-Another way is to download the BOLOS_SDK for which you are compiling. For example, for Nano X,
+Another way is to download the BOLOS_SDK for which you are compiling. For example, for Nano S,
 clone the repo into your home directory
 
 ```
