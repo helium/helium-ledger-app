@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <os.h>
+#include <cx.h>
 #include "helium.h"
 #include "helium_ux.h"
 
