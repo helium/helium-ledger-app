@@ -8,5 +8,5 @@ dep/
 obj/
 target/
 .idea/
-glyphs*
+src/glyphs.*
 
