@@ -28,7 +28,7 @@ void test_parse_delegate_stake_instructions() {
             6,
             6,
                 1, 2, 3, 4, 5, 0,
-            4, 
+            4,
                 2, 0, 0, 0
     };
     Parser parser = {message, sizeof(message)};
@@ -182,8 +182,32 @@ void test_parse_stake_instruction_kind() {
     assert(parse_stake_instruction_kind(&parser, &kind) == 0);
     assert(kind == StakeAuthorizeWithSeed);
 
-    // Fail the first unused enum value to be sure this test gets updated
     buf[0] = 9;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_stake_instruction_kind(&parser, &kind) == 0);
+    assert(kind == StakeInitializeChecked);
+
+    buf[0] = 10;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_stake_instruction_kind(&parser, &kind) == 0);
+    assert(kind == StakeAuthorizeChecked);
+
+    buf[0] = 11;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_stake_instruction_kind(&parser, &kind) == 0);
+    assert(kind == StakeAuthorizeCheckedWithSeed);
+
+    buf[0] = 12;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_stake_instruction_kind(&parser, &kind) == 0);
+    assert(kind == StakeSetLockupChecked);
+
+    // Fail the first unused enum value to be sure this test gets updated
+    buf[0] = 13;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_stake_instruction_kind(&parser, &kind) == 1);

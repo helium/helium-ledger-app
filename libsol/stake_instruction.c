@@ -27,6 +27,10 @@ static int parse_stake_instruction_kind(
         case StakeSetLockup:
         case StakeMerge:
         case StakeAuthorizeWithSeed:
+        case StakeInitializeChecked:
+        case StakeAuthorizeChecked:
+        case StakeAuthorizeCheckedWithSeed:
+        case StakeSetLockupChecked:
             *kind = (enum StakeInstructionKind) maybe_kind;
             return 0;
     }
@@ -303,6 +307,10 @@ int parse_stake_instructions(
             );
         // Unsupported instructions
         case StakeAuthorizeWithSeed:
+        case StakeInitializeChecked:
+        case StakeAuthorizeChecked:
+        case StakeAuthorizeCheckedWithSeed:
+        case StakeSetLockupChecked:
             break;
     }
 
@@ -498,6 +506,10 @@ int print_stake_info(
             return print_stake_merge_info(&info->merge, header);
         // Unsupported instructions
         case StakeAuthorizeWithSeed:
+        case StakeInitializeChecked:
+        case StakeAuthorizeChecked:
+        case StakeAuthorizeCheckedWithSeed:
+        case StakeSetLockupChecked:
             break;
     }
 
