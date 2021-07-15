@@ -313,7 +313,7 @@ static int print_stake_split_with_seed(
 static int print_stake_authorize_both(
     const MessageHeader* header,
     InstructionInfo* const * infos,
-    size_t infos_lenght
+    size_t infos_length
 ) {
     const StakeAuthorizeInfo* staker_info = &infos[0]->stake.authorize;
     const StakeAuthorizeInfo* withdrawer_info = &infos[1]->stake.authorize;
@@ -439,7 +439,7 @@ static int print_create_vote_account_with_seed(
 static int print_vote_authorize_both(
     const MessageHeader* header,
     InstructionInfo* const * infos,
-    size_t infos_lenght
+    size_t infos_length
 ) {
     const VoteAuthorizeInfo* voter_info = &infos[0]->vote.authorize;
     const VoteAuthorizeInfo* withdrawer_info = &infos[1]->vote.authorize;

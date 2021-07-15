@@ -90,7 +90,7 @@ static int parse_stake_initialize_instruction(
     BAIL_IF(parse_i64(parser, &info->lockup.unix_timestamp));
     BAIL_IF(parse_u64(parser, &info->lockup.epoch));
     BAIL_IF(parse_pubkey(parser, &info->lockup.custodian));
-    info->lockup. present = StakeLockupHasAll;
+    info->lockup.present = StakeLockupHasAll;
 
     return 0;
 }
