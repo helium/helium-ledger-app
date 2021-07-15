@@ -708,15 +708,41 @@ fn test_stake_set_lockup() -> Result<(), RemoteWalletError> {
     let stake_account = ledger_base_pubkey;
     let stake_custodian = ledger.get_pubkey(&derivation_path, false)?;
     let new_custodian = Pubkey::new(&[1u8; 32]);
-    let lockup = stake_instruction::LockupArgs {
-        unix_timestamp: Some(1),
-        epoch: Some(2),
-        custodian: Some(new_custodian),
-    };
-    let instruction = stake_instruction::set_lockup(&stake_account, &lockup, &stake_custodian);
-    let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
-    let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&stake_custodian.as_ref(), &message));
+    for maybe_new_custodian in &[None, Some(new_custodian)] {
+        let lockup = stake_instruction::LockupArgs {
+            unix_timestamp: Some(1),
+            epoch: Some(2),
+            custodian: *maybe_new_custodian,
+        };
+        let instruction = stake_instruction::set_lockup(&stake_account, &lockup, &stake_custodian);
+        let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
+        let signature = ledger.sign_message(&derivation_path, &message)?;
+        assert!(signature.verify(&stake_custodian.as_ref(), &message));
+    }
+    Ok(())
+}
+
+// This test requires interactive approval of message signing on the ledger.
+fn test_stake_set_lockup_checked() -> Result<(), RemoteWalletError> {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
+
+    let stake_account = ledger_base_pubkey;
+    let stake_custodian = ledger.get_pubkey(&derivation_path, false)?;
+    let new_custodian = Pubkey::new(&[1u8; 32]);
+    for maybe_new_custodian in &[None, Some(new_custodian)] {
+        let lockup = stake_instruction::LockupArgs {
+            unix_timestamp: Some(1),
+            epoch: Some(2),
+            custodian: *maybe_new_custodian,
+        };
+        let instruction =
+            stake_instruction::set_lockup_checked(&stake_account, &lockup, &stake_custodian);
+        let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
+        let signature = ledger.sign_message(&derivation_path, &message)?;
+        assert!(signature.verify(&stake_custodian.as_ref(), &message));
+    }
     Ok(())
 }
 
@@ -1596,6 +1622,7 @@ fn do_run_tests() -> Result<(), RemoteWalletError> {
     run!(test_stake_split_with_nonce);
     run!(test_stake_split_with_seed);
     run!(test_stake_set_lockup);
+    run!(test_stake_set_lockup_checked);
     run!(test_stake_deactivate);
     run!(test_vote_update_commission);
     run!(test_vote_update_validator_identity);

@@ -205,7 +205,8 @@ static int parse_stake_deactivate_instruction(
 
 static int parse_stake_lockupargs(
     Parser* parser,
-    StakeLockup* lockup
+    StakeLockup* lockup,
+    bool parse_custodian
 ) {
     // LockupArgs
     enum StakeLockupPresent present = StakeLockupHasNone;
@@ -220,10 +221,12 @@ static int parse_stake_lockupargs(
         BAIL_IF(parse_u64(parser, &lockup->epoch))
         present |= StakeLockupHasEpoch;
     }
-    BAIL_IF(parse_option(parser, &option));
-    if (option == OptionSome) {
-        BAIL_IF(parse_pubkey(parser, &lockup->custodian));
-        present |= StakeLockupHasCustodian;
+    if (parse_custodian) {
+        BAIL_IF(parse_option(parser, &option));
+        if (option == OptionSome) {
+            BAIL_IF(parse_pubkey(parser, &lockup->custodian));
+            present |= StakeLockupHasCustodian;
+        }
     }
     lockup->present = present;
 
@@ -242,7 +245,28 @@ static int parse_stake_set_lockup_instruction(
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
     BAIL_IF(instruction_accounts_iterator_next(&it, &info->custodian));
 
-    BAIL_IF(parse_stake_lockupargs(parser, &info->lockup));
+    BAIL_IF(parse_stake_lockupargs(parser, &info->lockup, true));
+
+    return 0;
+}
+
+static int parse_stake_set_lockup_checked_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    StakeSetLockupInfo* info
+) {
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->custodian));
+
+    BAIL_IF(parse_stake_lockupargs(parser, &info->lockup, false));
+    // Custodian is optional
+    if (instruction_accounts_iterator_next(&it, &info->lockup.custodian) == 0) {
+        info->lockup.present = info->lockup.present | StakeLockupHasCustodian;
+    }
 
     return 0;
 }
@@ -349,6 +373,13 @@ int parse_stake_instructions(
                 header,
                 &info->set_lockup
             );
+        case StakeSetLockupChecked:
+            return parse_stake_set_lockup_checked_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->set_lockup
+            );
         case StakeSplit:
             return parse_stake_split_instruction(
                 &parser,
@@ -364,7 +395,6 @@ int parse_stake_instructions(
             );
         // Unsupported instructions
         case StakeAuthorizeWithSeed:
-        case StakeSetLockupChecked:
         case StakeAuthorizeCheckedWithSeed:
             break;
     }
@@ -556,6 +586,7 @@ int print_stake_info(
         case StakeDeactivate:
             return print_stake_deactivate_info(&info->deactivate, header);
         case StakeSetLockup:
+        case StakeSetLockupChecked:
             return print_stake_set_lockup_info(&info->set_lockup, header);
         case StakeSplit:
             return print_stake_split_info(&info->split, header);
@@ -564,7 +595,6 @@ int print_stake_info(
         // Unsupported instructions
         case StakeAuthorizeWithSeed:
         case StakeAuthorizeCheckedWithSeed:
-        case StakeSetLockupChecked:
             break;
     }
 
