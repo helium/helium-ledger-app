@@ -64,16 +64,21 @@ Refresh the repo (required after Makefile edits):
 make clean
 ```
 
-To load the app onto the device, from the *host* machine:
+Run C tests:
+```bash
+make -C libsol
+```
+
+Load the app onto the device:
 
 ```bash
-make -f host.mk load
+make load
 ```
 
 Remove the app from the device:
 
 ```bash
-make -f host.mk delete
+make delete
 ```
 
 
@@ -87,5 +92,3 @@ cargo run
 ## Documentation
 
 This follows the specification available in the [`api.md`](doc/api.md).
-In this project we'll create a Linux virtual machine capable of cross-compiling the
-Ledger Wallet boilerplate application and then loading it onto Ledger Nano S.
