@@ -20,6 +20,7 @@ static int parse_vote_instruction_kind(
         case VoteUpdateValidatorId:
         case VoteUpdateCommission:
         case VoteSwitchVote:
+        case VoteAuthorizeChecked:
             *kind = (enum VoteInstructionKind) maybe_kind;
             return 0;
     }
@@ -104,6 +105,26 @@ static int parse_vote_authorize_instruction(
     return 0;
 }
 
+static int parse_vote_authorize_checked_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    VoteAuthorizeInfo* info
+) {
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    // Skip clock sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->new_authority));
+
+    BAIL_IF(parse_vote_authorize(parser, &info->authorize));
+
+    return 0;
+}
+
 static int parse_vote_update_validator_id_instruction(
     Parser* parser,
     const Instruction* instruction,
@@ -178,6 +199,13 @@ int parse_vote_instructions(
             );
         case VoteAuthorize:
             return parse_vote_authorize_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->authorize
+            );
+        case VoteAuthorizeChecked:
+            return parse_vote_authorize_checked_instruction(
                 &parser,
                 instruction,
                 header,
@@ -304,6 +332,7 @@ int print_vote_info(const VoteInfo* info, const MessageHeader* header) {
                 header
             );
         case VoteAuthorize:
+        case VoteAuthorizeChecked:
             return print_vote_authorize_info(
                 &info->authorize,
                 header

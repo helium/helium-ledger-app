@@ -651,6 +651,48 @@ fn test_vote_authorize() -> Result<(), RemoteWalletError> {
 }
 
 // This test requires interactive approval of message signing on the ledger.
+fn test_vote_authorize_checked() -> Result<(), RemoteWalletError> {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
+
+    let vote_account = ledger_base_pubkey;
+    let vote_authority = ledger.get_pubkey(&derivation_path, false)?;
+    let new_authority = Pubkey::new(&[1u8; 32]);
+    let vote_auth = vote_instruction::authorize_checked(
+        &vote_account,
+        &vote_authority,
+        &new_authority,
+        vote_state::VoteAuthorize::Voter,
+    );
+
+    // Authorize voter
+    let message = Message::new(&[vote_auth.clone()], Some(&ledger_base_pubkey)).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(&vote_authority.as_ref(), &message));
+
+    let new_authority = Pubkey::new(&[2u8; 32]);
+    let withdraw_auth = vote_instruction::authorize_checked(
+        &vote_account,
+        &vote_authority,
+        &new_authority,
+        vote_state::VoteAuthorize::Withdrawer,
+    );
+
+    // Authorize withdrawer
+    let message = Message::new(&[withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(&vote_authority.as_ref(), &message));
+
+    // Authorize both
+    // Note: Instruction order must match CLI; voter first, withdrawer second
+    let message = Message::new(&[vote_auth, withdraw_auth], Some(&ledger_base_pubkey)).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(&vote_authority.as_ref(), &message));
+    Ok(())
+}
+
+// This test requires interactive approval of message signing on the ledger.
 fn test_vote_update_validator_identity() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
@@ -1627,6 +1669,7 @@ fn do_run_tests() -> Result<(), RemoteWalletError> {
     run!(test_vote_update_commission);
     run!(test_vote_update_validator_identity);
     run!(test_vote_authorize);
+    run!(test_vote_authorize_checked);
     run!(test_stake_authorize);
     run!(test_stake_authorize_checked);
     run!(test_nonce_authorize);

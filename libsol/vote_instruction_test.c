@@ -45,8 +45,14 @@ void test_parse_vote_instruction_kind() {
     assert(parse_vote_instruction_kind(&parser, &kind) == 0);
     assert(kind == VoteSwitchVote);
 
-    // Fail the first unused enum value to be sure this test gets updated
     buf[0] = 7;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_vote_instruction_kind(&parser, &kind) == 0);
+    assert(kind == VoteAuthorizeChecked);
+
+    // Fail the first unused enum value to be sure this test gets updated
+    buf[0] = 8;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_vote_instruction_kind(&parser, &kind) == 1);

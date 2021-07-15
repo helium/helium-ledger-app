@@ -12,6 +12,7 @@ enum VoteInstructionKind {
     VoteUpdateValidatorId,
     VoteUpdateCommission,
     VoteSwitchVote,
+    VoteAuthorizeChecked,
 };
 
 typedef struct VoteInitData {

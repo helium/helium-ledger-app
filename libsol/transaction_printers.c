@@ -170,6 +170,17 @@ const InstructionBrief vote_authorize_both_brief[] = {
         infos_length                                \
     )
 
+const InstructionBrief vote_authorize_checked_both_brief[] = {
+    VOTE_IX_BRIEF(VoteAuthorizeChecked),
+    VOTE_IX_BRIEF(VoteAuthorizeChecked),
+};
+#define is_vote_authorize_checked_both(infos, infos_length) \
+    instruction_infos_match_briefs(                         \
+        infos,                                              \
+        vote_authorize_checked_both_brief,                  \
+        infos_length                                        \
+    )
+
 const InstructionBrief spl_token_create_mint_brief[] = {
     SYSTEM_IX_BRIEF(SystemCreateAccount),
     SPL_TOKEN_IX_BRIEF(SplTokenKind(InitializeMint)),
@@ -783,7 +794,8 @@ int print_transaction(
             } else if (is_stake_authorize_both(infos, infos_length)
                 || is_stake_authorize_checked_both(infos, infos_length)) {
                 return print_stake_authorize_both(header, infos, infos_length);
-            } else if (is_vote_authorize_both(infos, infos_length)) {
+            } else if (is_vote_authorize_both(infos, infos_length)
+                || is_vote_authorize_checked_both(infos, infos_length)) {
                 return print_vote_authorize_both(header, infos, infos_length);
             } else if (is_stake_split_with_seed_v1_1(infos, infos_length)) {
                 return print_stake_split_with_seed(
