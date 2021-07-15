@@ -1495,7 +1495,6 @@ fn do_run_tests() -> Result<(), RemoteWalletError> {
     run!(test_stake_split_with_seed);
     run!(test_stake_set_lockup);
     run!(test_stake_deactivate);
-    run!(test_stake_authorize);
     run!(test_vote_update_commission);
     run!(test_vote_update_validator_identity);
     run!(test_vote_authorize);
