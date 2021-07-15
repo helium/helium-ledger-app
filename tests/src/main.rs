@@ -1,10 +1,12 @@
 use rand::prelude::{RngCore, SeedableRng, StdRng};
-use solana_remote_wallet::ledger::{LedgerSettings, LedgerWallet};
-use solana_remote_wallet::ledger_error::LedgerError;
-use solana_remote_wallet::remote_wallet::{
-    initialize_wallet_manager, DerivationPath, RemoteWallet, RemoteWalletError,
+use solana_remote_wallet::{
+    ledger::{LedgerSettings, LedgerWallet},
+    ledger_error::LedgerError,
+    locator::Manufacturer,
+    remote_wallet::{initialize_wallet_manager, RemoteWallet, RemoteWalletError},
 };
 use solana_sdk::{
+    derivation_path::DerivationPath,
     instruction::{AccountMeta, Instruction},
     message::Message,
     pubkey::Pubkey,
@@ -13,8 +15,7 @@ use solana_sdk::{
 use solana_stake_program::{stake_instruction, stake_state};
 use solana_vote_program::{vote_instruction, vote_state};
 use spl_associated_token_account::*;
-use std::collections::HashSet;
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 fn get_ledger() -> (Arc<LedgerWallet>, Pubkey) {
     let wallet_manager = initialize_wallet_manager().expect("Couldn't start wallet manager");
@@ -28,7 +29,7 @@ fn get_ledger() -> (Arc<LedgerWallet>, Pubkey) {
     let (base_pubkey, device_path) = wallet_manager
         .list_devices()
         .iter()
-        .find(|d| d.manufacturer == "ledger")
+        .find(|d| d.manufacturer == Manufacturer::Ledger)
         .cloned()
         .map(|d| (d.pubkey, d.host_device_path))
         .expect("No ledger device detected");
@@ -44,37 +45,13 @@ fn test_ledger_pubkey() -> Result<(), RemoteWalletError> {
     let mut pubkey_set = HashSet::new();
     pubkey_set.insert(ledger_base_pubkey);
 
-    let pubkey_0_0 = ledger.get_pubkey(
-        &DerivationPath {
-            account: Some(0.into()),
-            change: Some(0.into()),
-        },
-        false,
-    )?;
+    let pubkey_0_0 = ledger.get_pubkey(&DerivationPath::new_bip44(Some(0), Some(0)), false)?;
     pubkey_set.insert(pubkey_0_0);
-    let pubkey_0_1 = ledger.get_pubkey(
-        &DerivationPath {
-            account: Some(0.into()),
-            change: Some(1.into()),
-        },
-        false,
-    )?;
+    let pubkey_0_1 = ledger.get_pubkey(&DerivationPath::new_bip44(Some(0), Some(1)), false)?;
     pubkey_set.insert(pubkey_0_1);
-    let pubkey_1 = ledger.get_pubkey(
-        &DerivationPath {
-            account: Some(1.into()),
-            change: None,
-        },
-        false,
-    )?;
+    let pubkey_1 = ledger.get_pubkey(&DerivationPath::new_bip44(Some(1), None), false)?;
     pubkey_set.insert(pubkey_1);
-    let pubkey_1_0 = ledger.get_pubkey(
-        &DerivationPath {
-            account: Some(1.into()),
-            change: Some(0.into()),
-        },
-        false,
-    )?;
+    let pubkey_1_0 = ledger.get_pubkey(&DerivationPath::new_bip44(Some(1), Some(0)), false)?;
     pubkey_set.insert(pubkey_1_0);
 
     assert_eq!(pubkey_set.len(), 5); // Ensure keys at various derivation paths are unique
@@ -85,10 +62,7 @@ fn test_ledger_pubkey() -> Result<(), RemoteWalletError> {
 fn test_ledger_sign_transaction() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
     let instruction = system_instruction::transfer(&from, &ledger_base_pubkey, 42);
@@ -111,10 +85,7 @@ fn test_ledger_sign_transaction_too_big() -> Result<(), RemoteWalletError> {
     // Test too big of a transaction
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
     let recipients: Vec<(Pubkey, u64)> = (0..100).map(|_| (Pubkey::new_unique(), 42)).collect();
@@ -128,10 +99,7 @@ fn test_ledger_sign_transaction_too_big() -> Result<(), RemoteWalletError> {
 fn test_ledger_delegate_stake() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let authorized_pubkey = ledger.get_pubkey(&derivation_path, false)?;
     let stake_pubkey = ledger_base_pubkey;
@@ -148,10 +116,7 @@ fn test_ledger_delegate_stake() -> Result<(), RemoteWalletError> {
 fn test_ledger_delegate_stake_with_nonce() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let authorized_pubkey = ledger.get_pubkey(&derivation_path, false)?;
     let stake_pubkey = ledger_base_pubkey;
@@ -171,10 +136,7 @@ fn test_ledger_delegate_stake_with_nonce() -> Result<(), RemoteWalletError> {
 fn test_ledger_advance_nonce_account() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let authorized_pubkey = ledger.get_pubkey(&derivation_path, false)?;
     let nonce_account = Pubkey::new(&[1u8; 32]);
@@ -189,10 +151,7 @@ fn test_ledger_advance_nonce_account() -> Result<(), RemoteWalletError> {
 fn test_ledger_advance_nonce_account_separate_fee_payer() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let authorized_pubkey = ledger.get_pubkey(&derivation_path, false)?;
     let nonce_account = Pubkey::new(&[1u8; 32]);
@@ -208,10 +167,7 @@ fn test_ledger_advance_nonce_account_separate_fee_payer() -> Result<(), RemoteWa
 fn test_ledger_transfer_with_nonce() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
     let nonce_account = Pubkey::new(&[1u8; 32]);
@@ -229,10 +185,7 @@ fn test_ledger_transfer_with_nonce() -> Result<(), RemoteWalletError> {
 fn test_create_stake_account_with_seed_and_nonce() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
     let nonce_account = Pubkey::new(&[1u8; 32]);
@@ -264,10 +217,7 @@ fn test_create_stake_account_with_seed_and_nonce() -> Result<(), RemoteWalletErr
 fn test_create_stake_account() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
     let stake_account = ledger_base_pubkey;
@@ -295,10 +245,7 @@ fn test_create_stake_account() -> Result<(), RemoteWalletError> {
 fn test_create_stake_account_no_lockup() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
     let stake_account = ledger_base_pubkey;
@@ -323,10 +270,7 @@ fn test_create_stake_account_no_lockup() -> Result<(), RemoteWalletError> {
 fn test_create_nonce_account_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
     let base = from;
@@ -350,10 +294,7 @@ fn test_create_nonce_account_with_seed() -> Result<(), RemoteWalletError> {
 fn test_create_nonce_account() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
     let nonce_account = ledger_base_pubkey;
@@ -373,10 +314,7 @@ fn test_create_nonce_account() -> Result<(), RemoteWalletError> {
 fn test_sign_full_shred_of_garbage_tx() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
 
@@ -401,10 +339,7 @@ fn test_sign_full_shred_of_garbage_tx() -> Result<(), RemoteWalletError> {
 fn test_create_vote_account() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
     let vote_account = ledger_base_pubkey;
@@ -425,10 +360,7 @@ fn test_create_vote_account() -> Result<(), RemoteWalletError> {
 fn test_create_vote_account_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
     let base = from;
@@ -458,10 +390,7 @@ fn test_create_vote_account_with_seed() -> Result<(), RemoteWalletError> {
 fn test_nonce_withdraw() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let nonce_account = ledger_base_pubkey;
     let nonce_authority = ledger.get_pubkey(&derivation_path, false)?;
@@ -478,10 +407,7 @@ fn test_nonce_withdraw() -> Result<(), RemoteWalletError> {
 fn test_stake_withdraw() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let stake_account = ledger_base_pubkey;
     let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
@@ -497,10 +423,7 @@ fn test_stake_withdraw() -> Result<(), RemoteWalletError> {
 fn test_vote_withdraw() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let vote_account = ledger_base_pubkey;
     let vote_authority = ledger.get_pubkey(&derivation_path, false)?;
@@ -516,10 +439,7 @@ fn test_vote_withdraw() -> Result<(), RemoteWalletError> {
 fn test_nonce_authorize() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let nonce_account = ledger_base_pubkey;
     let nonce_authority = ledger.get_pubkey(&derivation_path, false)?;
@@ -539,10 +459,7 @@ fn test_nonce_authorize() -> Result<(), RemoteWalletError> {
 fn test_stake_authorize() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let stake_account = ledger_base_pubkey;
     let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
@@ -593,10 +510,7 @@ fn test_stake_authorize() -> Result<(), RemoteWalletError> {
 fn test_vote_authorize() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let vote_account = ledger_base_pubkey;
     let vote_authority = ledger.get_pubkey(&derivation_path, false)?;
@@ -638,10 +552,7 @@ fn test_vote_authorize() -> Result<(), RemoteWalletError> {
 fn test_vote_update_validator_identity() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let vote_account = ledger_base_pubkey;
     let vote_authority = ledger.get_pubkey(&derivation_path, false)?;
@@ -658,10 +569,7 @@ fn test_vote_update_validator_identity() -> Result<(), RemoteWalletError> {
 fn test_vote_update_commission() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let vote_account = ledger_base_pubkey;
     let vote_authority = ledger.get_pubkey(&derivation_path, false)?;
@@ -678,10 +586,7 @@ fn test_vote_update_commission() -> Result<(), RemoteWalletError> {
 fn test_stake_deactivate() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let stake_account = ledger_base_pubkey;
     let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
@@ -696,10 +601,7 @@ fn test_stake_deactivate() -> Result<(), RemoteWalletError> {
 fn test_stake_set_lockup() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let stake_account = ledger_base_pubkey;
     let stake_custodian = ledger.get_pubkey(&derivation_path, false)?;
@@ -721,10 +623,7 @@ fn test_stake_set_lockup() -> Result<(), RemoteWalletError> {
 fn test_stake_split_with_nonce() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
     let stake_account = ledger_base_pubkey;
@@ -744,10 +643,7 @@ fn test_stake_split_with_nonce() -> Result<(), RemoteWalletError> {
 fn test_stake_split_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
     let stake_account = ledger_base_pubkey;
@@ -771,10 +667,7 @@ fn test_stake_split_with_seed() -> Result<(), RemoteWalletError> {
 fn test_stake_merge() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
     let source = Pubkey::new_unique();
@@ -791,10 +684,7 @@ fn test_stake_merge() -> Result<(), RemoteWalletError> {
 fn test_ledger_reject_unexpected_signer() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = Pubkey::new(&[1u8; 32]);
     let instruction = system_instruction::transfer(&from, &ledger_base_pubkey, 42);
@@ -806,10 +696,7 @@ fn test_ledger_reject_unexpected_signer() -> Result<(), RemoteWalletError> {
 fn test_spl_token_create_mint() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let mint = Pubkey::new(&[1u8; 32]);
 
@@ -832,10 +719,7 @@ fn test_spl_token_create_mint() -> Result<(), RemoteWalletError> {
 fn test_spl_token_create_account() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let mint = Pubkey::new(&[2u8; 32]);
@@ -860,10 +744,7 @@ fn test_spl_token_create_account() -> Result<(), RemoteWalletError> {
 fn test_spl_token_create_account2() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let mint = Pubkey::new(&[2u8; 32]);
@@ -888,10 +769,7 @@ fn test_spl_token_create_account2() -> Result<(), RemoteWalletError> {
 fn test_spl_token_create_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let signers = [
@@ -925,10 +803,7 @@ fn test_spl_token_create_multisig() -> Result<(), RemoteWalletError> {
 fn test_spl_token_create_mint_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let base = owner;
     let seed = "seedseedseedseedseedseedseedseed";
@@ -955,10 +830,7 @@ fn test_spl_token_create_mint_with_seed() -> Result<(), RemoteWalletError> {
 fn test_spl_token_create_account_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let base = owner;
     let seed = "seedseedseedseedseedseedseedseed";
@@ -987,10 +859,7 @@ fn test_spl_token_create_account_with_seed() -> Result<(), RemoteWalletError> {
 fn test_spl_token_create_multisig_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let base = owner;
     let seed = "seedseedseedseedseedseedseedseed";
@@ -1029,10 +898,7 @@ fn test_spl_token_create_multisig_with_seed() -> Result<(), RemoteWalletError> {
 fn test_spl_token_transfer() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let sender = Pubkey::new(&[1u8; 32]);
     let recipient = Pubkey::new(&[2u8; 32]);
@@ -1058,10 +924,7 @@ fn test_spl_token_transfer() -> Result<(), RemoteWalletError> {
 fn test_spl_token_approve() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let delegate = Pubkey::new(&[2u8; 32]);
@@ -1087,10 +950,7 @@ fn test_spl_token_approve() -> Result<(), RemoteWalletError> {
 fn test_spl_token_revoke() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
 
@@ -1105,10 +965,7 @@ fn test_spl_token_revoke() -> Result<(), RemoteWalletError> {
 fn test_spl_token_set_authority() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let new_owner = Pubkey::new(&[2u8; 32]);
@@ -1131,10 +988,7 @@ fn test_spl_token_set_authority() -> Result<(), RemoteWalletError> {
 fn test_spl_token_mint_to() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let mint = spl_token::native_mint::id();
     let account = Pubkey::new(&[2u8; 32]);
@@ -1158,10 +1012,7 @@ fn test_spl_token_mint_to() -> Result<(), RemoteWalletError> {
 fn test_spl_token_burn() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let mint = spl_token::native_mint::id();
@@ -1178,10 +1029,7 @@ fn test_spl_token_burn() -> Result<(), RemoteWalletError> {
 fn test_spl_token_close_account() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let account = Pubkey::new(&[1u8; 32]);
     let destination = Pubkey::new(&[2u8; 32]);
@@ -1203,10 +1051,7 @@ fn test_spl_token_close_account() -> Result<(), RemoteWalletError> {
 fn test_spl_token_transfer_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let sender = Pubkey::new(&[2u8; 32]);
@@ -1234,10 +1079,7 @@ fn test_spl_token_transfer_multisig() -> Result<(), RemoteWalletError> {
 fn test_spl_token_approve_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
@@ -1265,10 +1107,7 @@ fn test_spl_token_approve_multisig() -> Result<(), RemoteWalletError> {
 fn test_spl_token_revoke_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
@@ -1290,10 +1129,7 @@ fn test_spl_token_revoke_multisig() -> Result<(), RemoteWalletError> {
 fn test_spl_token_set_authority_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
@@ -1318,10 +1154,7 @@ fn test_spl_token_set_authority_multisig() -> Result<(), RemoteWalletError> {
 fn test_spl_token_mint_to_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let mint = Pubkey::new(&[2u8; 32]);
@@ -1347,10 +1180,7 @@ fn test_spl_token_mint_to_multisig() -> Result<(), RemoteWalletError> {
 fn test_spl_token_burn_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
@@ -1376,10 +1206,7 @@ fn test_spl_token_burn_multisig() -> Result<(), RemoteWalletError> {
 fn test_spl_token_close_account_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let signer = ledger.get_pubkey(&derivation_path, false)?;
     let owner = Pubkey::new(&[1u8; 32]);
     let account = Pubkey::new(&[2u8; 32]);
@@ -1403,10 +1230,7 @@ fn test_spl_token_close_account_multisig() -> Result<(), RemoteWalletError> {
 fn test_spl_token_freeze_account() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let signer = ledger.get_pubkey(&derivation_path, false)?;
     let freeze_auth = signer;
     let account = Pubkey::new(&[1u8; 32]);
@@ -1429,10 +1253,7 @@ fn test_spl_token_freeze_account() -> Result<(), RemoteWalletError> {
 fn test_spl_token_freeze_account_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let signer = ledger.get_pubkey(&derivation_path, false)?;
     let freeze_auth = signer;
     let account = Pubkey::new(&[1u8; 32]);
@@ -1456,10 +1277,7 @@ fn test_spl_token_freeze_account_multisig() -> Result<(), RemoteWalletError> {
 fn test_spl_token_thaw_account() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let signer = ledger.get_pubkey(&derivation_path, false)?;
     let thaw_auth = signer;
     let account = Pubkey::new(&[1u8; 32]);
@@ -1477,10 +1295,7 @@ fn test_spl_token_thaw_account() -> Result<(), RemoteWalletError> {
 fn test_spl_token_thaw_account_multisig() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let signer = ledger.get_pubkey(&derivation_path, false)?;
     let thaw_auth = signer;
     let account = Pubkey::new(&[1u8; 32]);
@@ -1504,10 +1319,7 @@ fn test_spl_token_thaw_account_multisig() -> Result<(), RemoteWalletError> {
 fn test_spl_associated_token_account_create() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let mint = Pubkey::new_unique();
     let instruction = create_associated_token_account(&owner, &owner, &mint);
@@ -1521,10 +1333,7 @@ fn test_spl_associated_token_account_create_with_transfer_checked() -> Result<()
 {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let sender = ledger.get_pubkey(&derivation_path, false)?;
     let mint = Pubkey::new_unique();
     let sender_holder = get_associated_token_address(&sender, &mint);
@@ -1572,10 +1381,7 @@ fn test_spl_associated_token_account_create_with_transfer_checked_and_serum_asse
 ) -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let sender = ledger.get_pubkey(&derivation_path, false)?;
     let mint = Pubkey::new_unique();
     let sender_holder = get_associated_token_address(&sender, &mint);
@@ -1606,10 +1412,7 @@ fn test_spl_associated_token_account_create_with_transfer_checked_and_serum_asse
 fn test_ledger_transfer_with_memos() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
-    let derivation_path = DerivationPath {
-        account: Some(12345.into()),
-        change: None,
-    };
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
     let instructions = vec![
