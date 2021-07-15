@@ -185,7 +185,7 @@ void test_process_message_body_nonced_stake_create_with_seed() {
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
 
-    process_message_body_and_sanity_check(message, sizeof(message), 12);
+    process_message_body_and_sanity_check(message, sizeof(message), 13);
 }
 
 void test_process_message_body_create_stake_account() {
@@ -221,7 +221,7 @@ void test_process_message_body_create_stake_account() {
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
 
-    process_message_body_and_sanity_check(message, sizeof(message), 8);
+    process_message_body_and_sanity_check(message, sizeof(message), 9);
 }
 
 void test_process_message_body_create_stake_account_no_lockup() {
@@ -257,7 +257,7 @@ void test_process_message_body_create_stake_account_no_lockup() {
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
 
-    process_message_body_and_sanity_check(message, sizeof(message), 6);
+    process_message_body_and_sanity_check(message, sizeof(message), 7);
 }
 
 void test_process_message_body_create_nonce_account() {
@@ -1003,7 +1003,7 @@ void test_process_message_body_stake_merge() {
 void test_process_message_body_spl_token_create_token() {
     uint8_t message[] = {
         2, 0, 3,
-        5, 
+        5,
             OWNER_ACCOUNT,
             MINT_ACCOUNT,
             SYSVAR_RENT,
@@ -1015,13 +1015,13 @@ void test_process_message_body_spl_token_create_token() {
             2,
                 0, 1,
             52,
-                0, 0, 0, 0, 
-                245, 1, 0, 0, 0, 0, 0, 0, 
-                88, 0, 0, 0, 0, 0, 0, 0, 
+                0, 0, 0, 0,
+                245, 1, 0, 0, 0, 0, 0, 0,
+                88, 0, 0, 0, 0, 0, 0, 0,
                 PROGRAM_ID_SPL_TOKEN,
-            4, 
-            2, 
-                1, 2, 
+            4,
+            2,
+                1, 2,
             35,
                 0,
                 9,
