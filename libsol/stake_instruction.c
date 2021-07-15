@@ -143,6 +143,28 @@ static int parse_stake_authorize_instruction(
     return 0;
 }
 
+static int parse_stake_authorize_checked_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    StakeAuthorizeInfo* info
+) {
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    // Skip clock sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->authority));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->new_authority));
+    // Custodian is optional, don't BAIL_IF()
+    instruction_accounts_iterator_next(&it, &info->custodian);
+
+    BAIL_IF(parse_stake_authorize(parser, &info->authorize));
+
+    return 0;
+}
+
 static int parse_stake_deactivate_instruction(
     Parser* parser,
     const Instruction* instruction,
@@ -278,6 +300,13 @@ int parse_stake_instructions(
                 header,
                 &info->authorize
             );
+        case StakeAuthorizeChecked:
+            return parse_stake_authorize_checked_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->authorize
+            );
         case StakeDeactivate:
             return parse_stake_deactivate_instruction(
                 &parser,
@@ -308,9 +337,8 @@ int parse_stake_instructions(
         // Unsupported instructions
         case StakeAuthorizeWithSeed:
         case StakeInitializeChecked:
-        case StakeAuthorizeChecked:
-        case StakeAuthorizeCheckedWithSeed:
         case StakeSetLockupChecked:
+        case StakeAuthorizeCheckedWithSeed:
             break;
     }
 
@@ -495,6 +523,7 @@ int print_stake_info(
         case StakeWithdraw:
             return print_stake_withdraw_info(&info->withdraw, header);
         case StakeAuthorize:
+        case StakeAuthorizeChecked:
             return print_stake_authorize_info(&info->authorize, header);
         case StakeDeactivate:
             return print_stake_deactivate_info(&info->deactivate, header);
@@ -507,7 +536,6 @@ int print_stake_info(
         // Unsupported instructions
         case StakeAuthorizeWithSeed:
         case StakeInitializeChecked:
-        case StakeAuthorizeChecked:
         case StakeAuthorizeCheckedWithSeed:
         case StakeSetLockupChecked:
             break;

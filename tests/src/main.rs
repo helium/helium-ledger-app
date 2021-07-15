@@ -507,6 +507,57 @@ fn test_stake_authorize() -> Result<(), RemoteWalletError> {
 }
 
 // This test requires interactive approval of message signing on the ledger.
+fn test_stake_authorize_checked() -> Result<(), RemoteWalletError> {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
+
+    let stake_account = ledger_base_pubkey;
+    let stake_authority = ledger.get_pubkey(&derivation_path, false)?;
+    let new_authority = Pubkey::new(&[1u8; 32]);
+    let stake_auth = stake_instruction::authorize_checked(
+        &stake_account,
+        &stake_authority,
+        &new_authority,
+        stake_state::StakeAuthorize::Staker,
+        None,
+    );
+
+    // Authorize staker
+    let message = Message::new(&[stake_auth.clone()], Some(&ledger_base_pubkey)).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(&stake_authority.as_ref(), &message));
+
+    let custodian = Pubkey::new_unique();
+    for maybe_custodian in &[None, Some(&custodian)] {
+        let new_authority = Pubkey::new(&[2u8; 32]);
+        let withdraw_auth = stake_instruction::authorize_checked(
+            &stake_account,
+            &stake_authority,
+            &new_authority,
+            stake_state::StakeAuthorize::Withdrawer,
+            *maybe_custodian,
+        );
+
+        // Authorize withdrawer
+        let message = Message::new(&[withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
+        let signature = ledger.sign_message(&derivation_path, &message)?;
+        assert!(signature.verify(&stake_authority.as_ref(), &message));
+
+        // Authorize both
+        // Note: Instruction order must match CLI; staker first, withdrawer second
+        let message = Message::new(
+            &[stake_auth.clone(), withdraw_auth],
+            Some(&ledger_base_pubkey),
+        )
+        .serialize();
+        let signature = ledger.sign_message(&derivation_path, &message)?;
+        assert!(signature.verify(&stake_authority.as_ref(), &message));
+    }
+    Ok(())
+}
+
+// This test requires interactive approval of message signing on the ledger.
 fn test_vote_authorize() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
@@ -1499,6 +1550,7 @@ fn do_run_tests() -> Result<(), RemoteWalletError> {
     run!(test_vote_update_validator_identity);
     run!(test_vote_authorize);
     run!(test_stake_authorize);
+    run!(test_stake_authorize_checked);
     run!(test_nonce_authorize);
     run!(test_vote_withdraw);
     run!(test_stake_withdraw);
