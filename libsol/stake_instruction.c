@@ -99,6 +99,27 @@ static int parse_stake_initialize_instruction(
     return 0;
 }
 
+static int parse_stake_initialize_checked_instruction(
+    Parser* parser,
+    const Instruction* instruction,
+    const MessageHeader* header,
+    StakeInitializeInfo* info
+) {
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->account));
+    // Skip rent sysvar
+    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->stake_authority));
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->withdraw_authority));
+
+    // No lockup on checked instructions
+    info->lockup.present = StakeLockupHasNone;
+
+    return 0;
+}
+
 static int parse_stake_withdraw_instruction(
     Parser* parser,
     const Instruction* instruction,
@@ -286,6 +307,13 @@ int parse_stake_instructions(
                 header,
                 &info->initialize
             );
+        case StakeInitializeChecked:
+            return parse_stake_initialize_checked_instruction(
+                &parser,
+                instruction,
+                header,
+                &info->initialize
+            );
         case StakeWithdraw:
             return parse_stake_withdraw_instruction(
                 &parser,
@@ -336,7 +364,6 @@ int parse_stake_instructions(
             );
         // Unsupported instructions
         case StakeAuthorizeWithSeed:
-        case StakeInitializeChecked:
         case StakeSetLockupChecked:
         case StakeAuthorizeCheckedWithSeed:
             break;
@@ -515,6 +542,7 @@ int print_stake_info(
         case StakeDelegate:
             return print_delegate_stake_info(&info->delegate_stake, header);
         case StakeInitialize:
+        case StakeInitializeChecked:
             return print_stake_initialize_info(
                 "Init stake acct",
                 &info->initialize,
@@ -535,7 +563,6 @@ int print_stake_info(
             return print_stake_merge_info(&info->merge, header);
         // Unsupported instructions
         case StakeAuthorizeWithSeed:
-        case StakeInitializeChecked:
         case StakeAuthorizeCheckedWithSeed:
         case StakeSetLockupChecked:
             break;

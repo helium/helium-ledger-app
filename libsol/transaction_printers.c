@@ -15,6 +15,17 @@ const InstructionBrief create_stake_account_brief[] = {
         infos_length                                \
     )
 
+const InstructionBrief create_stake_account_checked_brief[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccount),
+    STAKE_IX_BRIEF(StakeInitializeChecked),
+};
+#define is_create_stake_account_checked(infos, infos_length)\
+    instruction_infos_match_briefs(                         \
+        infos,                                              \
+        create_stake_account_checked_brief,                 \
+        infos_length                                        \
+    )
+
 const InstructionBrief create_stake_account_with_seed_brief[] = {
     SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
     STAKE_IX_BRIEF(StakeInitialize),
@@ -24,6 +35,17 @@ const InstructionBrief create_stake_account_with_seed_brief[] = {
         infos,                                                  \
         create_stake_account_with_seed_brief,                   \
         infos_length                                            \
+    )
+
+const InstructionBrief create_stake_account_with_seed_checked_brief[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
+    STAKE_IX_BRIEF(StakeInitializeChecked),
+};
+#define is_create_stake_account_with_seed_checked(infos, infos_length)  \
+    instruction_infos_match_briefs(                                     \
+        infos,                                                          \
+        create_stake_account_with_seed_checked_brief,                   \
+        infos_length                                                    \
     )
 
 const InstructionBrief stake_split_brief_v1_1[] = {
@@ -732,9 +754,11 @@ int print_transaction(
             break;
         }
         case 2: {
-            if (is_create_stake_account(infos, infos_length)) {
+            if (is_create_stake_account(infos, infos_length)
+                || is_create_stake_account_checked(infos, infos_length)) {
                 return print_create_stake_account(header, infos, infos_length);
-            } else if (is_create_stake_account_with_seed(infos, infos_length)) {
+            } else if (is_create_stake_account_with_seed(infos, infos_length)
+                || is_create_stake_account_with_seed_checked(infos, infos_length)) {
                 return print_create_stake_account_with_seed(
                     header,
                     infos,

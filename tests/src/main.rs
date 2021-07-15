@@ -267,6 +267,57 @@ fn test_create_stake_account_no_lockup() -> Result<(), RemoteWalletError> {
 }
 
 // This test requires interactive approval of message signing on the ledger.
+fn test_create_stake_account_checked() -> Result<(), RemoteWalletError> {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
+
+    let from = ledger.get_pubkey(&derivation_path, false)?;
+    let stake_account = ledger_base_pubkey;
+    let authorized = stake_state::Authorized {
+        staker: Pubkey::new(&[3u8; 32]),
+        withdrawer: Pubkey::new(&[4u8; 32]),
+    };
+    let instructions =
+        stake_instruction::create_account_checked(&from, &stake_account, &authorized, 42);
+    let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
+}
+
+// This test requires interactive approval of message signing on the ledger.
+fn test_create_stake_account_checked_with_seed_and_nonce() -> Result<(), RemoteWalletError> {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
+
+    let from = ledger.get_pubkey(&derivation_path, false)?;
+    let nonce_account = Pubkey::new(&[1u8; 32]);
+    let nonce_authority = Pubkey::new(&[2u8; 32]);
+    let base = from;
+    let seed = "seedseedseedseedseedseedseedseed";
+    let stake_account = Pubkey::create_with_seed(&base, seed, &solana_stake_program::id()).unwrap();
+    let authorized = stake_state::Authorized {
+        staker: Pubkey::new(&[3u8; 32]),
+        withdrawer: Pubkey::new(&[4u8; 32]),
+    };
+    let instructions = stake_instruction::create_account_with_seed_checked(
+        &from,
+        &stake_account,
+        &base,
+        seed,
+        &authorized,
+        42,
+    );
+    let message =
+        Message::new_with_nonce(instructions, None, &nonce_account, &nonce_authority).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(&from.as_ref(), &message));
+    Ok(())
+}
+
+// This test requires interactive approval of message signing on the ledger.
 fn test_create_nonce_account_with_seed() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
 
@@ -1561,6 +1612,7 @@ fn do_run_tests() -> Result<(), RemoteWalletError> {
     run!(test_create_nonce_account_with_seed);
     run!(test_create_stake_account);
     run!(test_create_stake_account_no_lockup);
+    run!(test_create_stake_account_checked);
     run!(test_ledger_pubkey);
     run!(test_ledger_sign_transaction);
     run!(test_ledger_sign_transaction_too_big);
@@ -1570,6 +1622,7 @@ fn do_run_tests() -> Result<(), RemoteWalletError> {
     run!(test_ledger_delegate_stake_with_nonce);
     run!(test_ledger_transfer_with_nonce);
     run!(test_create_stake_account_with_seed_and_nonce);
+    run!(test_create_stake_account_checked_with_seed_and_nonce);
     run!(test_sign_full_shred_of_garbage_tx);
     Ok(())
 }
