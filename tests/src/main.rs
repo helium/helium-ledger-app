@@ -1486,6 +1486,20 @@ fn test_spl_token_thaw_account_multisig() -> Result<(), RemoteWalletError> {
     Ok(())
 }
 
+fn test_spl_token_sync_native() -> Result<(), RemoteWalletError> {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
+    let signer = ledger.get_pubkey(&derivation_path, false)?;
+    let account = Pubkey::new(&[1u8; 32]);
+
+    let instruction = spl_token::instruction::sync_native(&spl_token::id(), &account).unwrap();
+    let message = Message::new(&[instruction], Some(&signer)).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(&signer.as_ref(), &message));
+    Ok(())
+}
+
 fn test_spl_associated_token_account_create() -> Result<(), RemoteWalletError> {
     let (ledger, _ledger_base_pubkey) = get_ledger();
 
@@ -1639,6 +1653,7 @@ fn do_run_tests() -> Result<(), RemoteWalletError> {
     run!(test_spl_token_freeze_account_multisig);
     run!(test_spl_token_thaw_account);
     run!(test_spl_token_thaw_account_multisig);
+    run!(test_spl_token_sync_native);
     run!(test_spl_token_burn);
     run!(test_spl_token_burn_multisig);
     run!(test_spl_token_mint_to);

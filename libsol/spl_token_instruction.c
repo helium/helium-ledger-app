@@ -30,6 +30,7 @@ static int parse_spl_token_instruction_kind(
         case SplTokenKind(CloseAccount):
         case SplTokenKind(FreezeAccount):
         case SplTokenKind(ThawAccount):
+        case SplTokenKind(SyncNative):
             *kind = (SplTokenInstructionKind) maybe_kind;
             return 0;
         // Deprecated instructions
@@ -349,6 +350,19 @@ static int parse_thaw_account_spl_token_instruction(
     return 0;
 }
 
+static int parse_sync_native_spl_token_instruction(
+    const Instruction* instruction,
+    const MessageHeader* header,
+    SplTokenSyncNativeInfo* info
+) {
+    InstructionAccountsIterator it;
+    instruction_accounts_iterator_init(&it, header, instruction);
+
+    BAIL_IF(instruction_accounts_iterator_next(&it, &info->token_account));
+
+    return 0;
+}
+
 int parse_spl_token_instructions(
     const Instruction* instruction,
     const MessageHeader* header,
@@ -447,6 +461,12 @@ int parse_spl_token_instructions(
                 instruction,
                 header,
                 &info->burn
+            );
+        case SplTokenKind(SyncNative):
+            return parse_sync_native_spl_token_instruction(
+                instruction,
+                header,
+                &info->sync_native
             );
         // Deprecated instructions
         case SplTokenKind(Transfer):
@@ -741,6 +761,18 @@ static int print_spl_token_thaw_account_info(
     return 0;
 }
 
+static int print_spl_token_sync_native_info(
+    const SplTokenSyncNativeInfo* info,
+    const MessageHeader* header
+) {
+    SummaryItem* item;
+
+    item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Sync native acct", info->token_account);
+
+    return 0;
+}
+
 int print_spl_token_info(
     const SplTokenInfo* info,
     const MessageHeader* header
@@ -783,6 +815,8 @@ int print_spl_token_info(
             return print_spl_token_mint_to_info(&info->mint_to, header);
         case SplTokenKind(BurnChecked):
             return print_spl_token_burn_info(&info->burn, header);
+        case SplTokenKind(SyncNative):
+            return print_spl_token_sync_native_info(&info->sync_native, header);
         // Deprecated instructions
         case SplTokenKind(Transfer):
         case SplTokenKind(Approve):

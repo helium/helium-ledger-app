@@ -112,6 +112,10 @@ typedef struct SplTokenThawAccountInfo {
     SplTokenSign sign;
 } SplTokenThawAccountInfo;
 
+typedef struct SplTokenSyncNativeInfo {
+    const Pubkey* token_account;
+} SplTokenSyncNativeInfo;
+
 typedef struct SplTokenInfo {
     SplTokenInstructionKind kind;
     union {
@@ -127,6 +131,7 @@ typedef struct SplTokenInfo {
         SplTokenCloseAccountInfo close_account;
         SplTokenFreezeAccountInfo freeze_account;
         SplTokenThawAccountInfo thaw_account;
+        SplTokenSyncNativeInfo sync_native;
     };
 } SplTokenInfo;
 

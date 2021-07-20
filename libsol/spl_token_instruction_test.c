@@ -25,7 +25,7 @@ void print_pubkey(const Pubkey* pubkey) {
 void test_parse_spl_token_create_token() {
     uint8_t message[] = {
         2, 0, 3,
-        5, 
+        5,
             OWNER_ACCOUNT,
             MINT_ACCOUNT,
             SYSVAR_RENT,
@@ -37,13 +37,13 @@ void test_parse_spl_token_create_token() {
             2,
                 0, 1,
             52,
-                0, 0, 0, 0, 
-                245, 1, 0, 0, 0, 0, 0, 0, 
-                88, 0, 0, 0, 0, 0, 0, 0, 
+                0, 0, 0, 0,
+                245, 1, 0, 0, 0, 0, 0, 0,
+                88, 0, 0, 0, 0, 0, 0, 0,
                 PROGRAM_ID_SPL_TOKEN,
-            4, 
-            2, 
-                1, 2, 
+            4,
+            2,
+                1, 2,
             35,
                 0,
                 9,
@@ -650,6 +650,40 @@ void test_parse_spl_token_thaw_account() {
     assert_pubkey_equal(thaw_account->sign.single.signer, &owner);
 }
 
+void test_parse_spl_token_sync_native() {
+    uint8_t message[] = {
+        1, 0, 1,
+        4,
+            OWNER_ACCOUNT,
+            TOKEN_ACCOUNT,
+            PROGRAM_ID_SPL_TOKEN,
+        BLOCKHASH,
+        1,
+            2,
+            1,
+                1,
+            1,
+                17
+    };
+    Parser parser = {message, sizeof(message)};
+    MessageHeader header;
+    assert(parse_message_header(&parser, &header) == 0);
+
+    Instruction instruction;
+    assert(parse_instruction(&parser, &instruction) == 0); // SplTokenSyncNative
+    assert(instruction_validate(&instruction, &header) == 0);
+
+    SplTokenInfo info;
+    assert(parse_spl_token_instructions(&instruction, &header, &info) == 0);
+    assert(parser.buffer_length == 0);
+
+    assert(info.kind == SplTokenKind(SyncNative));
+    const SplTokenSyncNativeInfo* sync_native = &info.sync_native;
+
+    const Pubkey token_account = {{ TOKEN_ACCOUNT }};
+    assert_pubkey_equal(sync_native->token_account, &token_account);
+}
+
 
 void test_parse_spl_token_instruction_kind() {
     SplTokenInstructionKind kind;
@@ -731,8 +765,14 @@ void test_parse_spl_token_instruction_kind() {
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
     assert(kind == SplTokenKind(InitializeAccount2));
 
-    // First unused enum value fails
     buf[0] = 17;
+    parser.buffer = buf;
+    parser.buffer_length = ARRAY_LEN(buf);
+    assert(parse_spl_token_instruction_kind(&parser, &kind) == 0);
+    assert(kind == SplTokenKind(SyncNative));
+
+    // First unused enum value fails
+    buf[0] = 18;
     parser.buffer = buf;
     parser.buffer_length = ARRAY_LEN(buf);
     assert(parse_spl_token_instruction_kind(&parser, &kind) == 1);
