@@ -23,7 +23,11 @@ fn get_ledger() -> (Arc<LedgerWallet>, Pubkey) {
     // Update device list
     const NO_DEVICE_HELP: &str = "No Ledger found, make sure you have a unlocked Ledger connected with the Ledger Wallet Solana running";
     wallet_manager.update_devices().expect(NO_DEVICE_HELP);
-    assert!(!wallet_manager.list_devices().is_empty(), NO_DEVICE_HELP);
+    assert!(
+        !wallet_manager.list_devices().is_empty(),
+        "{}",
+        NO_DEVICE_HELP
+    );
 
     // Fetch the device path and base pubkey of a connected ledger device
     let (base_pubkey, device_path) = wallet_manager
