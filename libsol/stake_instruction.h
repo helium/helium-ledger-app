@@ -15,6 +15,10 @@ enum StakeInstructionKind {
     StakeSetLockup,
     StakeMerge,
     StakeAuthorizeWithSeed,
+    StakeInitializeChecked,
+    StakeAuthorizeChecked,
+    StakeAuthorizeCheckedWithSeed,
+    StakeSetLockupChecked,
 };
 
 typedef struct StakeDelegateInfo {

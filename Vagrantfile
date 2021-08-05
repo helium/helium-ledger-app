@@ -56,6 +56,13 @@ Vagrant.configure("2") do |config|
   #
   #   # Customize the amount of memory on the VM:
   #   vb.memory = "1024"
+  vb.customize ["modifyvm", :id, "--usb", "on"]
+  vb.customize ["modifyvm", :id, "--usbehci", "on"]
+  vb.customize ["usbfilter", "add", "0",
+    "--target", :id,
+    "--name", "Ledger Nano S",
+    "--manufacturer", "Ledger",
+    "--product", "Nano S"]
   end
   #
   # View the documentation for the provider you are using for more
@@ -72,6 +79,9 @@ Vagrant.configure("2") do |config|
 
     # Minimize the terminal mess wget is about to make
     echo "progress = bar:force:noscroll" > ~/.wgetrc
+
+    # Load udev rules
+    source /vagrant/udev.sh
 
     # Commence workaround for vbox share dirs not supportting hard links...
     # 1) Temporarily setup our "dev-env" dir in ~vagrant

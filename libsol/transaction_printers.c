@@ -15,6 +15,17 @@ const InstructionBrief create_stake_account_brief[] = {
         infos_length                                \
     )
 
+const InstructionBrief create_stake_account_checked_brief[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccount),
+    STAKE_IX_BRIEF(StakeInitializeChecked),
+};
+#define is_create_stake_account_checked(infos, infos_length)\
+    instruction_infos_match_briefs(                         \
+        infos,                                              \
+        create_stake_account_checked_brief,                 \
+        infos_length                                        \
+    )
+
 const InstructionBrief create_stake_account_with_seed_brief[] = {
     SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
     STAKE_IX_BRIEF(StakeInitialize),
@@ -24,6 +35,17 @@ const InstructionBrief create_stake_account_with_seed_brief[] = {
         infos,                                                  \
         create_stake_account_with_seed_brief,                   \
         infos_length                                            \
+    )
+
+const InstructionBrief create_stake_account_with_seed_checked_brief[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
+    STAKE_IX_BRIEF(StakeInitializeChecked),
+};
+#define is_create_stake_account_with_seed_checked(infos, infos_length)  \
+    instruction_infos_match_briefs(                                     \
+        infos,                                                          \
+        create_stake_account_with_seed_checked_brief,                   \
+        infos_length                                                    \
     )
 
 const InstructionBrief stake_split_brief_v1_1[] = {
@@ -82,6 +104,17 @@ const InstructionBrief stake_authorize_both_brief[] = {
         infos_length                                \
     )
 
+const InstructionBrief stake_authorize_checked_both_brief[] = {
+    STAKE_IX_BRIEF(StakeAuthorizeChecked),
+    STAKE_IX_BRIEF(StakeAuthorizeChecked),
+};
+#define is_stake_authorize_checked_both(infos, infos_length)\
+    instruction_infos_match_briefs(                         \
+        infos,                                              \
+        stake_authorize_checked_both_brief,                 \
+        infos_length                                        \
+    )
+
 const InstructionBrief create_nonce_account_brief[] = {
     SYSTEM_IX_BRIEF(SystemCreateAccount),
     SYSTEM_IX_BRIEF(SystemInitializeNonceAccount),
@@ -135,6 +168,17 @@ const InstructionBrief vote_authorize_both_brief[] = {
         infos,                                      \
         vote_authorize_both_brief,                  \
         infos_length                                \
+    )
+
+const InstructionBrief vote_authorize_checked_both_brief[] = {
+    VOTE_IX_BRIEF(VoteAuthorizeChecked),
+    VOTE_IX_BRIEF(VoteAuthorizeChecked),
+};
+#define is_vote_authorize_checked_both(infos, infos_length) \
+    instruction_infos_match_briefs(                         \
+        infos,                                              \
+        vote_authorize_checked_both_brief,                  \
+        infos_length                                        \
     )
 
 const InstructionBrief spl_token_create_mint_brief[] = {
@@ -313,7 +357,7 @@ static int print_stake_split_with_seed(
 static int print_stake_authorize_both(
     const MessageHeader* header,
     InstructionInfo* const * infos,
-    size_t infos_lenght
+    size_t infos_length
 ) {
     const StakeAuthorizeInfo* staker_info = &infos[0]->stake.authorize;
     const StakeAuthorizeInfo* withdrawer_info = &infos[1]->stake.authorize;
@@ -439,7 +483,7 @@ static int print_create_vote_account_with_seed(
 static int print_vote_authorize_both(
     const MessageHeader* header,
     InstructionInfo* const * infos,
-    size_t infos_lenght
+    size_t infos_length
 ) {
     const VoteAuthorizeInfo* voter_info = &infos[0]->vote.authorize;
     const VoteAuthorizeInfo* withdrawer_info = &infos[1]->vote.authorize;
@@ -721,9 +765,11 @@ int print_transaction(
             break;
         }
         case 2: {
-            if (is_create_stake_account(infos, infos_length)) {
+            if (is_create_stake_account(infos, infos_length)
+                || is_create_stake_account_checked(infos, infos_length)) {
                 return print_create_stake_account(header, infos, infos_length);
-            } else if (is_create_stake_account_with_seed(infos, infos_length)) {
+            } else if (is_create_stake_account_with_seed(infos, infos_length)
+                || is_create_stake_account_with_seed_checked(infos, infos_length)) {
                 return print_create_stake_account_with_seed(
                     header,
                     infos,
@@ -745,9 +791,11 @@ int print_transaction(
                     infos,
                     infos_length
                 );
-            } else if (is_stake_authorize_both(infos, infos_length)) {
+            } else if (is_stake_authorize_both(infos, infos_length)
+                || is_stake_authorize_checked_both(infos, infos_length)) {
                 return print_stake_authorize_both(header, infos, infos_length);
-            } else if (is_vote_authorize_both(infos, infos_length)) {
+            } else if (is_vote_authorize_both(infos, infos_length)
+                || is_vote_authorize_checked_both(infos, infos_length)) {
                 return print_vote_authorize_both(header, infos, infos_length);
             } else if (is_stake_split_with_seed_v1_1(infos, infos_length)) {
                 return print_stake_split_with_seed(
