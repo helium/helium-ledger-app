@@ -7,6 +7,7 @@
 #include <string.h>
 #include <os.h>
 #include <os_io_seproxyhal.h>
+#include <cx.h>
 #include "helium.h"
 #include "helium_ux.h"
 #include "save_context.h"
