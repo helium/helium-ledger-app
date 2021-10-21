@@ -22,6 +22,10 @@ void bin2hex(uint8_t *dst, uint8_t *data, uint64_t inlen);
 // final NUL byte. It returns the length of the string.
 int bin2dec(uint8_t *dst, uint64_t n);
 
+// bin2dec converts an unsigned integer to a decimal string and appends a
+// final NUL byte. It returns the length of the string.
+int u64_to_base64(uint8_t *dst, uint64_t n);
+
 uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n);
 
 typedef struct transaction_arg_t {
@@ -40,6 +44,7 @@ uint32_t create_helium_pay_txn(uint8_t account_index);
 uint32_t create_helium_stake_txn(uint8_t account);
 uint32_t create_helium_transfer_validator_txn(uint8_t account);
 uint32_t create_helium_unstake_txn(uint8_t account);
+uint32_t create_helium_burn_txn(uint8_t account);
 
 #define SIZE_OF_PUB_KEY_BIN 	32
 #define SIZE_OF_SHA_CHECKSUM 	4

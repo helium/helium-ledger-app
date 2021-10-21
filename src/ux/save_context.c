@@ -34,5 +34,13 @@ void save_validator_unstake_context(uint8_t p1, uint8_t p2, uint8_t *dataBuffer,
     os_memmove(ctx->address, &dataBuffer[24], sizeof(ctx->address));
 }
 
+void save_burn_context(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, burnContext_t *ctx) {
+    ctx->amount = U8LE(dataBuffer, 0);
+    ctx->fee = U8LE(dataBuffer, 8);
+    ctx->nonce = U8LE(dataBuffer, 16);
+    ctx->memo = U8LE(dataBuffer, 24);
+    ctx->account_index = p1;
+    os_memmove(ctx->payee, &dataBuffer[32], sizeof(ctx->payee));
+}
 
 
