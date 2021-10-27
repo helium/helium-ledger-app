@@ -202,3 +202,29 @@ void __attribute__ ((noinline)) get_pubkey_bytes(uint8_t account, uint8_t * out)
     derive_helium_public_key(account, NULL, &publicKey);
 	extract_pubkey_bytes(out, &publicKey);
 }
+
+static const unsigned char base64_table[65] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+// 64 bit int will always encode to 12 in length
+#define OUTPUT_LEN 12
+
+int u64_to_base64(uint8_t *dst, uint64_t n){
+    uint8_t* in = (uint8_t *) &n;
+
+    for(int i=0; i<2; i++) {
+        *dst++ = base64_table[in[0] >> 2];
+        *dst++ = base64_table[((in[0] & 0x03) << 4) | (in[1] >> 4)];
+        *dst++ = base64_table[((in[1] & 0x0f) << 2) | (in[2] >> 6)];
+        *dst++ = base64_table[in[2] & 0x3f];
+        in+=3;
+    }
+
+    *dst++ = base64_table[in[0] >> 2];
+    *dst++ = base64_table[((in[0] & 0x03) << 4) | (in[1] >> 4)];
+    *dst++ = base64_table[((in[1] & 0x0f) << 2) ];
+
+    *dst++ = '=';
+    *dst++ = '\0';
+    return OUTPUT_LEN;
+}
