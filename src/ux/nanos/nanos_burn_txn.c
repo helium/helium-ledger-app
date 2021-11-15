@@ -43,7 +43,7 @@ static unsigned int ui_signTxn_approve_button(unsigned int button_mask, unsigned
 
 	case BUTTON_RIGHT:
 	case BUTTON_EVT_FAST | BUTTON_RIGHT: // SEEK RIGHT
-		adpu_tx = create_helium_pay_txn(CTX.account_index);
+		adpu_tx = create_helium_burn_txn(CTX.account_index);
 		io_exchange_with_code(SW_OK, adpu_tx);
 		ui_idle();
 		break;
