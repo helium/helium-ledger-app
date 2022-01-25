@@ -149,7 +149,7 @@ function(NANOPB_GENERATE_CPP SRCS HDRS)
   set(GENERATOR_PATH ${CMAKE_BINARY_DIR}/nanopb/generator)
 
   set(NANOPB_GENERATOR_EXECUTABLE ${GENERATOR_PATH}/nanopb_generator.py)
-  if (CMAKE_HOST_WIN32)
+  if (WIN32)
     set(NANOPB_GENERATOR_PLUGIN ${GENERATOR_PATH}/protoc-gen-nanopb.bat)
   else()
     set(NANOPB_GENERATOR_PLUGIN ${GENERATOR_PATH}/protoc-gen-nanopb)
@@ -157,7 +157,8 @@ function(NANOPB_GENERATE_CPP SRCS HDRS)
 
   set(GENERATOR_CORE_DIR ${GENERATOR_PATH}/proto)
   set(GENERATOR_CORE_SRC
-      ${GENERATOR_CORE_DIR}/nanopb.proto)
+      ${GENERATOR_CORE_DIR}/nanopb.proto
+      ${GENERATOR_CORE_DIR}/plugin.proto)
 
   # Treat the source diretory as immutable.
   #
@@ -216,7 +217,7 @@ function(NANOPB_GENERATE_CPP SRCS HDRS)
     set(NANOPB_OPTIONS_DIRS)
 
     # If there an options file in the same working directory, set it as a dependency
-    set(NANOPB_OPTIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${FIL_DIR}/${FIL_WE}.options)
+    set(NANOPB_OPTIONS_FILE ${FIL_DIR}/${FIL_WE}.options)
     if(EXISTS ${NANOPB_OPTIONS_FILE})
         # Get directory as lookups for dependency options fail if an options
         # file is used. The options is still set as a dependency of the
@@ -256,8 +257,7 @@ function(NANOPB_GENERATE_CPP SRCS HDRS)
       ARGS -I${GENERATOR_PATH} -I${GENERATOR_CORE_DIR}
            -I${CMAKE_CURRENT_BINARY_DIR} ${_nanopb_include_path}
            --plugin=protoc-gen-nanopb=${NANOPB_GENERATOR_PLUGIN}
-           "--nanopb_opt=${NANOPB_PLUGIN_OPTIONS}"
-           "--nanopb_out=${CMAKE_CURRENT_BINARY_DIR}" ${ABS_FIL}
+           "--nanopb_out=${NANOPB_PLUGIN_OPTIONS}:${CMAKE_CURRENT_BINARY_DIR}" ${ABS_FIL}
       DEPENDS ${ABS_FIL} ${GENERATOR_CORE_PYTHON_SRC}
            ${NANOPB_OPTIONS_FILE} ${NANOPB_DEPENDS}
       COMMENT "Running C++ protocol buffer compiler using nanopb plugin on ${FIL}"
@@ -293,7 +293,6 @@ endif()
 find_path(NANOPB_INCLUDE_DIRS
     pb.h
     PATHS ${NANOPB_SRC_ROOT_FOLDER}
-    NO_CMAKE_FIND_ROOT_PATH
 )
 mark_as_advanced(NANOPB_INCLUDE_DIRS)
 
@@ -304,13 +303,13 @@ list(APPEND _nanopb_srcs pb_decode.c pb_encode.c pb_common.c)
 list(APPEND _nanopb_hdrs pb_decode.h pb_encode.h pb_common.h pb.h)
 
 foreach(FIL ${_nanopb_srcs})
-  find_file(${FIL}__nano_pb_file NAMES ${FIL} PATHS ${NANOPB_SRC_ROOT_FOLDER} ${NANOPB_INCLUDE_DIRS} NO_CMAKE_FIND_ROOT_PATH)
+  find_file(${FIL}__nano_pb_file NAMES ${FIL} PATHS ${NANOPB_SRC_ROOT_FOLDER} ${NANOPB_INCLUDE_DIRS})
   list(APPEND NANOPB_SRCS "${${FIL}__nano_pb_file}")
   mark_as_advanced(${FIL}__nano_pb_file)
 endforeach()
 
 foreach(FIL ${_nanopb_hdrs})
-  find_file(${FIL}__nano_pb_file NAMES ${FIL} PATHS ${NANOPB_INCLUDE_DIRS} NO_CMAKE_FIND_ROOT_PATH)
+  find_file(${FIL}__nano_pb_file NAMES ${FIL} PATHS ${NANOPB_INCLUDE_DIRS})
   mark_as_advanced(${FIL}__nano_pb_file)
   list(APPEND NANOPB_HDRS "${${FIL}__nano_pb_file}")
 endforeach()
@@ -331,14 +330,13 @@ find_path(NANOPB_GENERATOR_SOURCE_DIR
     DOC "nanopb generator source"
     PATHS
     ${NANOPB_SRC_ROOT_FOLDER}/generator
-    NO_CMAKE_FIND_ROOT_PATH
 )
 mark_as_advanced(NANOPB_GENERATOR_SOURCE_DIR)
 
 find_package(PythonInterp REQUIRED)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(NANOPB DEFAULT_MSG
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Nanopb DEFAULT_MSG
   NANOPB_INCLUDE_DIRS
   NANOPB_SRCS NANOPB_HDRS
   NANOPB_GENERATOR_SOURCE_DIR

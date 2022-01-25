@@ -109,12 +109,4 @@ static void * memset( void * s, int c, size_t n )
 }
 #endif
 
-
-/* limits.h subset */
-#ifdef HAVE_LIMITS_H
-#include <limits.h>
-#else
-#define CHAR_BIT 8
-#endif
-
 #endif
