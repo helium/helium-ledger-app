@@ -6,6 +6,7 @@ void save_payment_context(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t 
     ctx->nonce = U8LE(dataBuffer, 16);
     ctx->account_index = p1;
     os_memmove(ctx->payee, &dataBuffer[24], sizeof(ctx->payee));
+    ctx->memo = U8LE(dataBuffer, 24+SIZEOF_B58_KEY);
 }
 
 void save_validator_stake_context(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, stakeValidatorContext_t *ctx) {

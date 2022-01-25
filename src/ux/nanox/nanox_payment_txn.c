@@ -54,10 +54,18 @@ static void init_fee(void)
   len = bin2dec(CTX.fullStr, CTX.fee);
   CTX.fullStr_len = len;
   CTX.fullStr[len] = '\0';
-		
-  /* UX_DISPLAY(ui_displayFee, ui_prepro_displayFee); */
-  /* break; */
 }
+
+static void init_memo(void)
+{
+  uint8_t len;
+
+  // display memo
+  len = u64_to_base64(CTX.fullStr, CTX.memo);
+  CTX.fullStr_len = len;
+  CTX.fullStr[len] = '\0';
+}
+
 
 static void validate_transaction(bool isApproved)
 {
@@ -101,6 +109,15 @@ UX_STEP_NOCB_INIT(
     });
 
 UX_STEP_NOCB_INIT(
+    ux_payment_display_burn,
+    bnnn_paging,
+    init_memo(),
+    {
+      .title = "Payment Memo",
+      .text = (char *)global.burnContext.fullStr
+    });
+
+UX_STEP_NOCB_INIT(
     ux_payment_display_fee,
     bnnn_paging,
     init_fee(),
@@ -131,6 +148,7 @@ UX_STEP_CB(
 UX_DEF(ux_payment_sign_transaction_flow,
        &ux_payment_display_amount,
        &ux_payment_display_recipient_address,
+       &ux_payment_display_burn,
        &ux_payment_display_fee,
        &ux_payment_sign_approve,
        &ux_payment_sign_decline

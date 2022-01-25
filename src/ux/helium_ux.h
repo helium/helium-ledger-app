@@ -29,6 +29,7 @@ typedef struct {
 	uint64_t nonce;
 	uint64_t fee;
 	unsigned char payee[34];
+    uint64_t memo;
 } paymentContext_t;
 
 typedef struct {

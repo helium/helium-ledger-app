@@ -101,6 +101,66 @@ static unsigned int ui_displayFee_button(unsigned int button_mask, unsigned int 
 	return 0;
 }
 
+static const bagl_element_t ui_displayMemo[] = {
+	UI_BACKGROUND(),
+	UI_ICON_LEFT(0x01, BAGL_GLYPH_ICON_LEFT),
+	UI_ICON_RIGHT(0x02, BAGL_GLYPH_ICON_RIGHT),
+	UI_TEXT(0x00, 0, 12, 128, "Payment Memo"),
+	// The visible portion of fee
+	UI_TEXT(0x00, 0, 26, 128, CTX.partialStr),
+};
+
+static const bagl_element_t* ui_prepro_displayMemo(const bagl_element_t *element) {
+	int fullSize = CTX.fullStr_len;
+	if ((element->component.userid == 1 && CTX.displayIndex == 0) ||
+	    (element->component.userid == 2 && CTX.displayIndex == fullSize-12)) {
+		return NULL;
+	}
+	return element;
+}
+
+static unsigned int ui_displayMemo_button(unsigned int button_mask, unsigned int button_mask_counter) {
+	int fullSize = CTX.fullStr_len;
+    uint8_t len;
+	switch (button_mask) {
+	case BUTTON_LEFT:
+	case BUTTON_EVT_FAST | BUTTON_LEFT: // SEEK LEFT
+		if (CTX.displayIndex > 0) {
+			CTX.displayIndex--;
+		}
+		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		UX_REDISPLAY();
+		break;
+
+	case BUTTON_RIGHT:
+	case BUTTON_EVT_FAST | BUTTON_RIGHT: // SEEK RIGHT
+		if (CTX.displayIndex < fullSize-12) {
+			CTX.displayIndex++;
+		}
+		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		UX_REDISPLAY();
+		break;
+
+	case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT: // PROCEED
+        // display data credit transaction fee
+		len = bin2dec(CTX.fullStr, CTX.fee);
+		CTX.fullStr_len = len;
+		CTX.fullStr[len] = '\0';
+
+		uint8_t partlen = 12;
+		if(len < 12){
+			partlen = len;
+		}
+		os_memmove(CTX.partialStr, CTX.fullStr, partlen);
+		CTX.partialStr[partlen] = '\0';
+		CTX.displayIndex = 0;
+		// display fee
+		UX_DISPLAY(ui_displayFee, ui_prepro_displayFee);
+		break;
+	}
+	return 0;
+}
+
 static const bagl_element_t ui_displayRecipient[] = {
 	UI_BACKGROUND(),
 	UI_ICON_LEFT(0x01, BAGL_GLYPH_ICON_LEFT),
@@ -143,11 +203,11 @@ static unsigned int ui_displayRecipient_button(unsigned int button_mask, unsigne
 
 	case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT: // PROCEED
 
-		// display data credit transaction fee
-		len = bin2dec(CTX.fullStr, CTX.fee);
+		// display burn memo
+		len = u64_to_base64(CTX.fullStr, CTX.memo);
 		CTX.fullStr_len = len;
 		CTX.fullStr[len] = '\0';
-		
+
 		uint8_t partlen = 12;
 		if(len < 12){
 			partlen = len;
@@ -156,7 +216,7 @@ static unsigned int ui_displayRecipient_button(unsigned int button_mask, unsigne
 		CTX.partialStr[partlen] = '\0';
 		CTX.displayIndex = 0;
 
-		UX_DISPLAY(ui_displayFee, ui_prepro_displayFee);
+		UX_DISPLAY(ui_displayMemo, ui_prepro_displayMemo);
 		break;
 	}
 	return 0;

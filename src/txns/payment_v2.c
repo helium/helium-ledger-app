@@ -3,17 +3,7 @@
 #include "pb_encode.h"
 #include "../proto/blockchain_txn.pb.h"
 
-
-/* Field tags (for use in manual encoding/decoding) */
-#define helium_blockchain_txn_payment_v2_payer_tag 1
-#define helium_blockchain_txn_payment_v2_payments_tag 2
-#define helium_blockchain_txn_payment_v2_fee_tag 3
-#define helium_blockchain_txn_payment_v2_nonce_tag 4
-#define helium_blockchain_txn_payment_v2_signature_tag 5
-#define helium_payment_payee_tag                 1
-#define helium_payment_amount_tag                2
-
-
+// we only allow one payment
 // key + 2 x uint64 + some buffer
 #define MAX_PAYMENT_SIZE (SIZEOF_HELIUM_KEY+2*4+23)
 
@@ -44,6 +34,9 @@ uint32_t create_helium_pay_txn(uint8_t account){
 
     pb_encode_tag(&ostream, PB_WT_VARINT, helium_payment_amount_tag);
     pb_encode_varint(&ostream, ctx->amount);
+
+    pb_encode_tag(&ostream, PB_WT_VARINT, helium_payment_memo_tag);
+    pb_encode_varint(&ostream, ctx->memo);
 
     len_payments = ostream.bytes_written;
 
