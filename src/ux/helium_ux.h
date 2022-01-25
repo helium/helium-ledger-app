@@ -93,15 +93,30 @@ typedef struct {
     unsigned char payee[34];
 } burnContext_t;
 
+typedef struct {
+    uint8_t displayIndex;
+    uint8_t fullStr[55]; // variable length
+    // partialStr contains 12 characters of a longer string. This allows text
+    // to be scrolled.
+    uint8_t partialStr[13];
+    uint8_t fullStr_len;
+    uint8_t account_index;
+    uint64_t amount;
+    uint64_t nonce;
+    uint64_t fee;
+    unsigned char payee[34];
+} transferSec_t;
+
 // To save memory, we store all the context types in a single global union,
 // taking advantage of the fact that only one command is executed at a time.
 typedef union {
 	getPublicKeyContext_t getPublicKeyContext;
 	paymentContext_t paymentContext;
-	stakeValidatorContext_t stakeValidatorContext;
+    stakeValidatorContext_t stakeValidatorContext;
 	transferValidatorContext_t transferValidatorContext;
 	unstakeValidatorContext_t unstakeValidatorContext;
 	burnContext_t burnContext;
+    transferSec_t transferSecContext;
 } commandContext;
 extern commandContext global;
 
