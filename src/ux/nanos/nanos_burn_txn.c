@@ -203,7 +203,7 @@ static unsigned int ui_displayRecipient_button(unsigned int button_mask, unsigne
 
 	case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT: // PROCEED
 
-		// display data credit transaction fee
+		// display burn memo
 		len = u64_to_base64(CTX.fullStr, CTX.memo);
 		CTX.fullStr_len = len;
 		CTX.fullStr[len] = '\0';
