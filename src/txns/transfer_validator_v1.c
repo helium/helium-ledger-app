@@ -15,8 +15,8 @@ uint32_t create_helium_transfer_validator_txn(uint8_t account){
 #endif
     get_pubkey_bytes(account, &owner[1]);
 
-    bool is_new_owner = (memcmp(owner, &ctx->new_owner[1], 33) == 0);
-    bool is_old_owner = (memcmp(owner, &ctx->old_owner[1], 33) == 0);
+    bool is_new_owner = (memcmp(owner, &ctx->new_owner[1], SIZEOF_HELIUM_KEY) == 0);
+    bool is_old_owner = (memcmp(owner, &ctx->old_owner[1], SIZEOF_HELIUM_KEY) == 0);
 
     ostream = pb_ostream_from_buffer(G_io_apdu_buffer, sizeof(G_io_apdu_buffer));
 

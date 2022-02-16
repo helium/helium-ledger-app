@@ -9,6 +9,7 @@
 #include <cx.h>
 #include "helium.h"
 #include "helium_ux.h"
+#include "save_context.h"
 
 #define CTX global.burnContext
 
@@ -29,7 +30,7 @@ static const bagl_element_t* ui_prepro_signTxn_approve(const bagl_element_t *ele
 	return element;
 }
 
-static unsigned int ui_signTxn_approve_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_signTxn_approve_button(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
 	int adpu_tx;
 	switch (button_mask) {
 	case BUTTON_LEFT:
@@ -72,7 +73,7 @@ static const bagl_element_t* ui_prepro_displayFee(const bagl_element_t *element)
 	return element;
 }
 
-static unsigned int ui_displayFee_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_displayFee_button(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	switch (button_mask) {
 	case BUTTON_LEFT:
@@ -119,7 +120,7 @@ static const bagl_element_t* ui_prepro_displayMemo(const bagl_element_t *element
 	return element;
 }
 
-static unsigned int ui_displayMemo_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_displayMemo_button(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
     uint8_t len;
 	switch (button_mask) {
@@ -179,7 +180,7 @@ static const bagl_element_t* ui_prepro_displayRecipient(const bagl_element_t *el
 	return element;
 }
 
-static unsigned int ui_displayRecipient_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_displayRecipient_button(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	uint8_t len;
 	switch (button_mask) {
@@ -244,7 +245,7 @@ static const bagl_element_t* ui_prepro_displayAmount(const bagl_element_t *eleme
 	return element;
 }
 
-static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_displayAmount_button(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	cx_sha256_t hash;
 	unsigned char hash_buffer[32];
@@ -297,7 +298,7 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 	return 0;
 }
 
-void handle_burn_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
+void handle_burn_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags,__attribute__((unused)) volatile unsigned int *tx) {
     save_burn_context(p1, p2, dataBuffer, dataLength, &CTX);
 
 	// display amount on screen

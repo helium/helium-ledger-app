@@ -3,7 +3,7 @@
 #include "pb_encode.h"
 #include "../proto/blockchain_txn.pb.h"
 
-uint32_t create_helium_transfer_hst_txn(uint8_t account){
+uint32_t create_helium_transfer_sec(uint8_t account){
     transferSec_t * ctx = &global.transferSecContext;
     pb_ostream_t ostream;
 

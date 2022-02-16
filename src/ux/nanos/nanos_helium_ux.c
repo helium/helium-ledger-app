@@ -3,13 +3,7 @@
 #if defined(TARGET_NANOS) && !defined(HAVE_UX_FLOW)
 
 #include "helium_ux.h"
-/* #include "helium_types.h" */
-/* #include "helium_api.h" */
-/* #include "helium_vars.h" */
-/* #include "helium_format.h" */
-
 #include "glyphs.h"
-
 #include "ux.h"
 
 ux_state_t ux;

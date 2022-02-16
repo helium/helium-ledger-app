@@ -42,7 +42,6 @@ static void init_recipient(void)
     btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
     CTX.fullStr[output_len] = '\0';
     CTX.fullStr_len = output_len;
-    /* UX_DISPLAY(ui_displayRecipient, ui_prepro_displayRecipient); */
   }
 }
 
@@ -54,9 +53,6 @@ static void init_fee(void)
   len = bin2dec(CTX.fullStr, CTX.fee);
   CTX.fullStr_len = len;
   CTX.fullStr[len] = '\0';
-
-  /* UX_DISPLAY(ui_displayFee, ui_prepro_displayFee); */
-  /* break; */
 }
 
 static void validate_transaction(bool isApproved)
@@ -64,7 +60,7 @@ static void validate_transaction(bool isApproved)
   int adpu_tx;
 
   if (isApproved) {
-    adpu_tx = create_helium_transfer_hst_txn(CTX.account_index);
+    adpu_tx = create_helium_transfer_sec(CTX.account_index);
     io_exchange_with_code(SW_OK, adpu_tx);
   }
   else {
@@ -74,7 +70,6 @@ static void validate_transaction(bool isApproved)
     io_exchange_with_code(SW_OK, 1);
   }
 
-  // Go back to main menu
   ui_idle();
 }
 
@@ -147,9 +142,7 @@ static void ui_sign_transaction(void)
 
 void handle_sign_transfer_sec_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
     save_transfer_sec_context(p1, p2, dataBuffer, dataLength, &CTX);
-
 	ui_sign_transaction();
-
 	*flags |= IO_ASYNCH_REPLY;
 }
 

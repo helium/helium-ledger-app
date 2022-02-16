@@ -30,7 +30,7 @@ static const bagl_element_t* ui_prepro_signTxn_approve(const bagl_element_t *ele
 	return element;
 }
 
-static unsigned int ui_signTxn_approve_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_signTxn_approve_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int adpu_tx;
 	switch (button_mask) {
 	case BUTTON_LEFT:
@@ -73,7 +73,7 @@ static const bagl_element_t* ui_prepro_displayFee(const bagl_element_t *element)
 	return element;
 }
 
-static unsigned int ui_displayFee_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_displayFee_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	switch (button_mask) {
 	case BUTTON_LEFT:
@@ -120,7 +120,7 @@ static const bagl_element_t* ui_prepro_displayUnstakeAddress(const bagl_element_
 	return element;
 }
 
-static unsigned int ui_displayUnstakeAddress_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_displayUnstakeAddress_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	uint8_t len;
 	switch (button_mask) {
@@ -181,7 +181,7 @@ static const bagl_element_t* ui_prepro_displayReleaseHeight(const bagl_element_t
 	return element;
 }
 
-static unsigned int ui_displayReleaseHeight_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_displayReleaseHeight_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	cx_sha256_t hash;
 	unsigned char hash_buffer[32];
@@ -255,7 +255,7 @@ static const bagl_element_t* ui_prepro_displayAmount(const bagl_element_t *eleme
 	return element;
 }
 
-static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_displayAmount_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	uint8_t len;
 
@@ -274,7 +274,7 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 		if (CTX.displayIndex < fullSize-12) {
 			CTX.displayIndex++;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -289,7 +289,7 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 		if(len < 12){
 			partlen = len;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr, partlen);
+		memmove(CTX.partialStr, CTX.fullStr, partlen);
 		CTX.partialStr[partlen] = '\0';
 		CTX.displayIndex = 0;
 
@@ -300,7 +300,7 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 	return 0;
 }
 
-void handle_validator_unstake_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
+void handle_validator_unstake_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, __attribute__((unused)) volatile unsigned int *tx) {
     save_validator_unstake_context(p1,p2,dataBuffer, dataLength, &CTX);
 
 	// display amount on screen

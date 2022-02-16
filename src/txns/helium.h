@@ -28,6 +28,8 @@ int u64_to_base64(uint8_t *dst, uint64_t n);
 
 uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n);
 
+void sign_tx(uint8_t *dst, uint32_t account, const uint8_t *tx, uint16_t length);
+
 typedef struct transaction_arg_t {
     uint8_t * buf;
     uint16_t buf_len;
@@ -45,6 +47,7 @@ uint32_t create_helium_stake_txn(uint8_t account);
 uint32_t create_helium_transfer_validator_txn(uint8_t account);
 uint32_t create_helium_unstake_txn(uint8_t account);
 uint32_t create_helium_burn_txn(uint8_t account);
+uint32_t create_helium_transfer_sec(uint8_t account);
 
 #define SIZE_OF_PUB_KEY_BIN 	32
 #define SIZE_OF_SHA_CHECKSUM 	4
