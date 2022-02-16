@@ -40,13 +40,13 @@ static void init_stake_address(void)
   
   for(uint8_t i=0; i<2; i++){
     // display recipient address on screen
-    os_memmove(address_with_check, CTX.address, 34);
+    memmove(address_with_check, CTX.address, 34);
 
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, address_with_check, 34, hash_buffer, 32);
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
-    os_memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
+    memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
     btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
     CTX.fullStr[output_len] = '\0';
     CTX.fullStr_len = output_len;

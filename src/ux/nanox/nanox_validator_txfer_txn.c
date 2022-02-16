@@ -38,13 +38,13 @@ static void init_old_owner(void)
   uint8_t * address_with_check = G_io_apdu_buffer;
 
   for(uint8_t i=0; i<2; i++){
-    os_memmove(address_with_check, CTX.old_owner, 34);
+    memmove(address_with_check, CTX.old_owner, 34);
 
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, address_with_check, 34, hash_buffer, 32);
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
-    os_memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
+    memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
     btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
     CTX.fullStr[output_len] = '\0';
     CTX.fullStr_len = output_len;
@@ -60,13 +60,13 @@ static void init_new_owner(void)
   uint8_t * address_with_check = G_io_apdu_buffer;
 
   for(uint8_t i=0; i<2; i++){
-    os_memmove(address_with_check, CTX.new_owner, 34);
+    memmove(address_with_check, CTX.new_owner, 34);
 
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, address_with_check, 34, hash_buffer, 32);
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
-    os_memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
+    memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
     btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
     CTX.fullStr[output_len] = '\0';
     CTX.fullStr_len = output_len;
@@ -82,13 +82,13 @@ static void init_old_address(void)
   uint8_t * address_with_check = G_io_apdu_buffer;
 
   for(uint8_t i=0; i<2; i++){
-    os_memmove(address_with_check, CTX.old_address, 34);
+    memmove(address_with_check, CTX.old_address, 34);
 
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, address_with_check, 34, hash_buffer, 32);
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
-    os_memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
+    memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
     btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
     CTX.fullStr[output_len] = '\0';
     CTX.fullStr_len = output_len;
@@ -104,13 +104,13 @@ static void init_new_address(void)
   uint8_t * address_with_check = G_io_apdu_buffer;
 
   for(uint8_t i=0; i<2; i++){
-    os_memmove(address_with_check, CTX.new_address, 34);
+    memmove(address_with_check, CTX.new_address, 34);
 
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, address_with_check, 34, hash_buffer, 32);
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
-    os_memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
+    memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
     btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
     CTX.fullStr[output_len] = '\0';
     CTX.fullStr_len = output_len;

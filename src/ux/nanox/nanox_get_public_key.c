@@ -62,7 +62,7 @@ void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t
 	  cx_sha256_init(&hash);
 	  cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
 
-	  os_memmove(&G_io_apdu_buffer[adpu_tx], hash_buffer, SIZE_OF_SHA_CHECKSUM);
+	  memmove(&G_io_apdu_buffer[adpu_tx], hash_buffer, SIZE_OF_SHA_CHECKSUM);
 	  adpu_tx += SIZE_OF_SHA_CHECKSUM;
 
 	  // Encoding key as a base58 string
