@@ -1,3 +1,5 @@
+[![CI](https://github.com/helium/helium-ledger-app/actions/workflows/ci.yml/badge.svg)](https://github.com/helium/helium-ledger-app/actions/workflows/ci.yml)
+
 # Helium Application for Ledger
 
 This is the official Helium wallet app for Leger hardware wallets. It is built for
