@@ -9,4 +9,4 @@ obj/
 target/
 .idea/
 src/glyphs.*
-
+output-scan-build/
