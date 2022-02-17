@@ -1,4 +1,13 @@
-#include "helium.h"
+#include <string.h>
+
+#include "save_context.h"
+
+static inline uint32_t U4LE(const uint8_t *buf, size_t off) {
+    return (((uint32_t)buf[off + 3]) << 24) | (buf[off + 2] << 16) |
+                                              (buf[off + 1] << 8) | buf[off];
+}
+// macros for converting raw bytes to uint64_t
+#define U8LE(buf, off) (((uint64_t)(U4LE(buf, off + 4)) << 32) | ((uint64_t)(U4LE(buf, off))     & 0xFFFFFFFF))
 
 void save_payment_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, __attribute__((unused)) uint16_t dataLength, paymentContext_t *ctx) {
     ctx->amount = U8LE(dataBuffer, 0);
@@ -44,7 +53,7 @@ void save_burn_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *
     memmove(ctx->payee, &dataBuffer[32], sizeof(ctx->payee));
 }
 
-void save_transfer_sec_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, __attribute__((unused)) uint16_t dataLength, paymentContext_t *ctx) {
+void save_transfer_sec_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, __attribute__((unused)) uint16_t dataLength, transferSec_t *ctx) {
     ctx->amount = U8LE(dataBuffer, 0);
     ctx->fee = U8LE(dataBuffer, 8);
     ctx->nonce = U8LE(dataBuffer, 16);

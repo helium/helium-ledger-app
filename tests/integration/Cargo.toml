@@ -1,0 +1,11 @@
+[package]
+name = "integration"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+helium-crypto = {git = "https://github.com/helium/helium-crypto-rs", tag="v0.3.3"}
+helium-ledger = { path = "../../../helium-ledger-cli" }
+thiserror = "1"

@@ -10,3 +10,4 @@ target/
 .idea/
 src/glyphs.*
 output-scan-build/
+tests/unit/build

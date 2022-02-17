@@ -2,6 +2,7 @@
 #include "pb.h"
 #include "pb_encode.h"
 #include "../proto/blockchain_txn.pb.h"
+#include "save_context.h"
 
 // we only allow one payment
 // key + 2 x uint64 + some buffer

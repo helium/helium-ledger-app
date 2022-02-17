@@ -2,6 +2,7 @@
 #include "pb.h"
 #include "pb_encode.h"
 #include "../proto/blockchain_txn.pb.h"
+#include "save_context.h"
 
 uint32_t create_helium_burn_txn(uint8_t account){
     burnContext_t * ctx = &global.burnContext;
