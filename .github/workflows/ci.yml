@@ -49,3 +49,20 @@ jobs:
         with:
           name: scan-build
           path: scan-build
+
+
+  unit-tests:
+    name: ctest unit tests
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run tests
+        working-directory: tests/unit
+        run: |
+          cmake -Bbuild -H. && make -C build
+          CTEST_OUTPUT_ON_FAILURE=1 make -C build test
