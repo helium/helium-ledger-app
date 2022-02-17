@@ -19,7 +19,7 @@ void save_payment_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_
 }
 
 void save_validator_stake_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, __attribute__((unused)) uint16_t dataLength, stakeValidatorContext_t *ctx) {
-    ctx->stake_amount = U8LE(dataBuffer, 0);
+    ctx->stake = U8LE(dataBuffer, 0);
     ctx->fee  = U8LE(dataBuffer, 8);
     ctx->account_index = p1;
     memmove(ctx->address, &dataBuffer[16], sizeof(ctx->address));
