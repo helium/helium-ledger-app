@@ -242,7 +242,7 @@ void handle_stake_validator_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uin
     save_stake_validator_context(p1,p2,dataBuffer, dataLength, &CTX);
 
 	// display amount on screen
-	uint8_t len = pretty_print_hnt(CTX.fullStr, CTX.stake_amount);
+	uint8_t len = pretty_print_hnt(CTX.fullStr, CTX.stake);
 	uint8_t i = 0;
 	while(CTX.fullStr[i] != '\0' && i<12){
 		CTX.partialStr[i] = CTX.fullStr[i];

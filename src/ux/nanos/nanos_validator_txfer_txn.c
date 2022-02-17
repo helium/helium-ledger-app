@@ -366,7 +366,7 @@ static unsigned int ui_displayStakeAmount_button(unsigned int button_mask,  __at
 }
 
 
-void handle_transfer_validator(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, __attribute__((unused)) volatile unsigned int *tx) {
+void handle_transfer_validator_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, __attribute__((unused)) volatile unsigned int *tx) {
 
     save_transfer_validator_context(p1, p2, dataBuffer, dataLength, &CTX);
 	// display amount on screen
