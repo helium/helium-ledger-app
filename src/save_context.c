@@ -18,14 +18,14 @@ void save_payment_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_
     ctx->memo = U8LE(dataBuffer, 24+SIZEOF_B58_KEY);
 }
 
-void save_validator_stake_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, __attribute__((unused)) uint16_t dataLength, stakeValidatorContext_t *ctx) {
+void save_stake_validator_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, __attribute__((unused)) uint16_t dataLength, stakeValidatorContext_t *ctx) {
     ctx->stake = U8LE(dataBuffer, 0);
     ctx->fee  = U8LE(dataBuffer, 8);
     ctx->account_index = p1;
     memmove(ctx->address, &dataBuffer[16], sizeof(ctx->address));
 }
 
-void save_validator_transfer_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, __attribute__((unused)) uint16_t dataLength, transferValidatorContext_t *ctx) {
+void save_transfer_validator_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, __attribute__((unused)) uint16_t dataLength, transferValidatorContext_t *ctx) {
     ctx->stake_amount = U8LE(dataBuffer, 0);
     ctx->payment_amount  = U8LE(dataBuffer, 8);
     ctx->fee = U8LE(dataBuffer, 16);
@@ -36,7 +36,7 @@ void save_validator_transfer_context(uint8_t p1, __attribute__((unused)) uint8_t
     memmove(ctx->old_address, &dataBuffer[24+3*SIZEOF_B58_KEY], sizeof(ctx->old_address));
 }
 
-void save_validator_unstake_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, __attribute__((unused)) uint16_t dataLength, unstakeValidatorContext_t *ctx) {
+void save_unstake_validator_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, __attribute__((unused)) uint16_t dataLength, unstakeValidatorContext_t *ctx) {
     ctx->stake_amount = U8LE(dataBuffer, 0);
     ctx->stake_release_height = U8LE(dataBuffer, 8);
     ctx->fee  = U8LE(dataBuffer, 16);

@@ -238,8 +238,8 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask,  __attribu
 	return 0;
 }
 
-void handle_validator_stake_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, __attribute__((unused)) volatile unsigned int *tx) {
-    save_validator_stake_context(p1,p2,dataBuffer, dataLength, &CTX);
+void handle_stake_validator_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, __attribute__((unused)) volatile unsigned int *tx) {
+    save_stake_validator_context(p1,p2,dataBuffer, dataLength, &CTX);
 
 	// display amount on screen
 	uint8_t len = pretty_print_hnt(CTX.fullStr, CTX.stake_amount);

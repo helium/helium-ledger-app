@@ -159,8 +159,8 @@ static void ui_sign_transaction(void)
 }
 
 
-void handle_validator_unstake_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
-    save_validator_unstake_context(p1, p2, dataBuffer, dataLength, &CTX);
+void handle_unstake_validator_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
+    save_unstake_validator_context(p1, p2, dataBuffer, dataLength, &CTX);
 	ui_sign_transaction();
 	*flags |= IO_ASYNCH_REPLY;
 }
