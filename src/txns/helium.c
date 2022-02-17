@@ -1,3 +1,4 @@
+#include <string.h>
 #include "helium.h"
 
 uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n){
