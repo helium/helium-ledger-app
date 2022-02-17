@@ -9,3 +9,4 @@ edition = "2021"
 helium-crypto = {git = "https://github.com/helium/helium-crypto-rs", tag="v0.3.3"}
 helium-ledger = { path = "../../../helium-ledger-cli" }
 thiserror = "1"
+convert_case = "0"

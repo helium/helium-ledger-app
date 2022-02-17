@@ -21,10 +21,13 @@ pub fn array_in_c(data: &Vec<u8>) -> String {
 
 impl IntoSaveContextCall for APDUCommand {
     fn into_save_context_call(&self, label: &str) -> Result<String> {
+        use convert_case::{Case, Casing};
+
+        let label_camel_case = label.to_string().to_case(Case::Camel);
         let arr = array_in_c(&self.data);
         Ok(format!(
             "\
-            {label}Context_t ctx;\r\n\
+            {label_camel_case}Context_t ctx;\r\n\
             uint8_t {label}_buffer[] = {arr};\r\n\
             save_{label}_context({}, {}, {label}_buffer, {}, &ctx);",
             self.p1,
