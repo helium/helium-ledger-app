@@ -140,7 +140,8 @@ static void ui_sign_transaction(void)
 }
 
 
-void handle_sign_transfer_sec_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
+void handle_sign_transfer_sec_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags,
+                                  __attribute__((unused)) volatile unsigned int *tx) {
     save_transfer_sec_context(p1, p2, dataBuffer, dataLength, &CTX);
 	ui_sign_transaction();
 	*flags |= IO_ASYNCH_REPLY;

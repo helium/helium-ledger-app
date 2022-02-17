@@ -35,7 +35,11 @@ void ui_getPublicKey(void)
 // handleGetPublicKey is the entry point for the getPublicKey command. It
 // reads the command parameters, prepares and displays the approval screen,
 // and 
-void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
+void handle_get_public_key(uint8_t p1, uint8_t p2,
+                           __attribute__((unused)) uint8_t *dataBuffer,
+                           __attribute__((unused)) uint16_t dataLength,
+                           __attribute__((unused)) volatile unsigned int *flags,
+                           __attribute__((unused)) volatile unsigned int *tx) {
 	size_t output_len;
 	// Sanity-check the command parameters.
 	if ((p1 != P1_PUBKEY_DISPLAY_ON) && (p1 != P1_PUBKEY_DISPLAY_OFF)) {
