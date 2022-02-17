@@ -28,7 +28,7 @@ uint32_t create_helium_stake_txn(uint8_t account){
     pb_encode_string(&ostream, (const pb_byte_t*)&owner, SIZEOF_HELIUM_KEY);
 
     pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_stake_validator_v1_stake_tag);
-    pb_encode_varint(&ostream, ctx->stake_amount);
+    pb_encode_varint(&ostream, ctx->stake);
 
     if(ctx->fee) {
         pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_stake_validator_v1_fee_tag);
@@ -46,7 +46,7 @@ uint32_t create_helium_stake_txn(uint8_t account){
     pb_encode_string(&ostream, (const pb_byte_t*)&owner, SIZEOF_HELIUM_KEY);
 
     pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_stake_validator_v1_stake_tag);
-    pb_encode_varint(&ostream, ctx->stake_amount);
+    pb_encode_varint(&ostream, ctx->stake);
 
     pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_stake_validator_v1_owner_signature_tag);
     pb_encode_string(&ostream, (const pb_byte_t*)signature, SIZEOF_SIGNATURE);
