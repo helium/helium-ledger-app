@@ -102,7 +102,7 @@ typedef struct {
     uint64_t nonce;
     uint64_t fee;
     unsigned char payee[34];
-} transferSec_t;
+} transferSecContext_t;
 
 
 void save_payment_context(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, paymentContext_t *ctx);
@@ -110,7 +110,7 @@ void save_validator_stake_context(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, u
 void save_validator_transfer_context(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, transferValidatorContext_t *ctx);
 void save_validator_unstake_context(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, unstakeValidatorContext_t *ctx);
 void save_burn_context(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, burnContext_t *ctx);
-void save_transfer_sec_context(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, transferSec_t *ctx);
+void save_transfer_sec_context(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, transferSecContext_t *ctx);
 
 // Each command has some state associated with it that sticks around for the
 // life of the command. A separate context_t struct should be defined for each
@@ -122,7 +122,7 @@ typedef union {
     transferValidatorContext_t transferValidatorContext;
     unstakeValidatorContext_t unstakeValidatorContext;
     burnContext_t burnContext;
-    transferSec_t transferSecContext;
+    transferSecContext_t transferSecContext;
 } commandContext;
 
 extern commandContext global;

@@ -53,7 +53,7 @@ void save_burn_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *
     memmove(ctx->payee, &dataBuffer[32], sizeof(ctx->payee));
 }
 
-void save_transfer_sec_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, __attribute__((unused)) uint16_t dataLength, transferSec_t *ctx) {
+void save_transfer_sec_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, __attribute__((unused)) uint16_t dataLength, transferSecContext_t *ctx) {
     ctx->amount = U8LE(dataBuffer, 0);
     ctx->fee = U8LE(dataBuffer, 8);
     ctx->nonce = U8LE(dataBuffer, 16);
