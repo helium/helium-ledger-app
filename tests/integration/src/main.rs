@@ -6,13 +6,7 @@ mod util;
 use util::*;
 
 type Result<T = ()> = std::result::Result<T, Error>;
-/*
-pub use helium_proto::{
-    BlockchainTxnPaymentV2, BlockchainTxnSecurityExchangeV1, BlockchainTxnStakeValidatorV1,
-    BlockchainTxnTokenBurnV1, BlockchainTxnTransferValidatorStakeV1,
-    BlockchainTxnUnstakeValidatorV1, Payment,
-};
- */
+
 fn main() -> Result {
     test_save_payment_context(
         8,
