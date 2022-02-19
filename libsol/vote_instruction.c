@@ -237,6 +237,8 @@ static int print_vote_withdraw_info(
     const VoteWithdrawInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -258,6 +260,8 @@ static int print_vote_authorize_info(
     const VoteAuthorizeInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     const char* new_authority_title = NULL;
     SummaryItem* item;
 
@@ -286,6 +290,8 @@ static int print_vote_update_validator_id_info(
     const VoteUpdateValidatorIdInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -304,6 +310,8 @@ static int print_vote_update_commission_info(
     const VoteUpdateCommissionInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -360,6 +368,8 @@ int print_vote_initialize_info(
     const VoteInitializeInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
     if (primary_title != NULL) {
         item = transaction_summary_primary_item();

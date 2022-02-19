@@ -105,6 +105,8 @@ static int parse_stake_initialize_checked_instruction(
     const MessageHeader* header,
     StakeInitializeInfo* info
 ) {
+    UNUSED(parser);
+
     InstructionAccountsIterator it;
     instruction_accounts_iterator_init(&it, header, instruction);
 
@@ -192,6 +194,8 @@ static int parse_stake_deactivate_instruction(
     const MessageHeader* header,
     StakeDeactivateInfo* info
 ) {
+    UNUSED(parser);
+
     InstructionAccountsIterator it;
     instruction_accounts_iterator_init(&it, header, instruction);
 
@@ -434,6 +438,8 @@ static int print_stake_withdraw_info(
     const StakeWithdrawInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -455,6 +461,8 @@ static int print_stake_authorize_info(
     const StakeAuthorizeInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     const char* new_authority_title = NULL;
     SummaryItem* item;
 
@@ -488,6 +496,8 @@ static int print_stake_deactivate_info(
     const StakeDeactivateInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -503,6 +513,8 @@ static int print_stake_set_lockup_info(
     const StakeSetLockupInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -550,6 +562,8 @@ static int print_stake_merge_info(
     const StakeMergeInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -606,6 +620,8 @@ int print_stake_initialize_info(
     const StakeInitializeInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
     bool one_authority = pubkeys_equal(
         info->withdraw_authority,
@@ -671,6 +687,8 @@ int print_stake_split_info1(
     const StakeSplitInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -689,6 +707,8 @@ int print_stake_split_info2(
     const StakeSplitInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_general_item();

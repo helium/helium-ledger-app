@@ -498,6 +498,8 @@ static int print_spl_token_initialize_mint_info(
     const SplTokenInitializeMintInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     if (primary_title != NULL) {
@@ -524,6 +526,8 @@ static int print_spl_token_initialize_account_info(
     const SplTokenInitializeAccountInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     if (primary_title != NULL) {
@@ -545,6 +549,8 @@ static int print_spl_token_initialize_multisig_info(
     const SplTokenInitializeMultisigInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     if (primary_title != NULL) {
@@ -563,6 +569,8 @@ int print_spl_token_transfer_info(
     const MessageHeader* header,
     bool primary
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     if (primary) {
@@ -595,6 +603,8 @@ static int print_spl_token_approve_info(
     const SplTokenApproveInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -622,6 +632,8 @@ static int print_spl_token_revoke_info(
     const SplTokenRevokeInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -636,6 +648,8 @@ static int print_spl_token_set_authority_info(
     const SplTokenSetAuthorityInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -663,6 +677,8 @@ static int print_spl_token_mint_to_info(
     const SplTokenMintToInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -690,6 +706,8 @@ static int print_spl_token_burn_info(
     const SplTokenBurnInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -714,6 +732,8 @@ static int print_spl_token_close_account_info(
     const SplTokenCloseAccountInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -731,6 +751,8 @@ static int print_spl_token_freeze_account_info(
     const SplTokenFreezeAccountInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -748,6 +770,8 @@ static int print_spl_token_thaw_account_info(
     const SplTokenThawAccountInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -765,6 +789,8 @@ static int print_spl_token_sync_native_info(
     const SplTokenSyncNativeInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();

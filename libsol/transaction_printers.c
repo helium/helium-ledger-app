@@ -287,6 +287,8 @@ static int print_create_stake_account(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
     const StakeInitializeInfo* si_info = &infos[1]->stake.initialize;
 
@@ -304,6 +306,8 @@ static int print_create_stake_account_with_seed(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountWithSeedInfo* cws_info =
         &infos[0]->system.create_account_with_seed;
     const StakeInitializeInfo* si_info = &infos[1]->stake.initialize;
@@ -325,6 +329,8 @@ static int print_stake_split_with_seed(
     size_t infos_length,
     bool legacy
 ) {
+    UNUSED(infos_length);
+
     const Pubkey* base = NULL;
     const SizedString* seed = NULL;
 
@@ -359,6 +365,9 @@ static int print_stake_authorize_both(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(header);
+    UNUSED(infos_length);
+
     const StakeAuthorizeInfo* staker_info = &infos[0]->stake.authorize;
     const StakeAuthorizeInfo* withdrawer_info = &infos[1]->stake.authorize;
     SummaryItem* item;
@@ -413,6 +422,8 @@ static int print_create_nonce_account(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
     const SystemInitializeNonceInfo* ni_info =
         &infos[1]->system.initialize_nonce;
@@ -431,6 +442,8 @@ static int print_create_nonce_account_with_seed(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountWithSeedInfo* ca_info =
         &infos[0]->system.create_account_with_seed;
     const SystemInitializeNonceInfo* ni_info =
@@ -450,6 +463,8 @@ static int print_create_vote_account(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
     const VoteInitializeInfo* vi_info = &infos[1]->vote.initialize;
 
@@ -467,6 +482,8 @@ static int print_create_vote_account_with_seed(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountWithSeedInfo* ca_info =
         &infos[0]->system.create_account_with_seed;
     const VoteInitializeInfo* vi_info = &infos[1]->vote.initialize;
@@ -485,6 +502,9 @@ static int print_vote_authorize_both(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(header);
+    UNUSED(infos_length);
+
     const VoteAuthorizeInfo* voter_info = &infos[0]->vote.authorize;
     const VoteAuthorizeInfo* withdrawer_info = &infos[1]->vote.authorize;
     SummaryItem* item;
@@ -530,6 +550,9 @@ static int print_spl_token_create_mint(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(header);
+    UNUSED(infos_length);
+
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
     const SplTokenInitializeMintInfo* im_info =
         &infos[1]->spl_token.initialize_mint;
@@ -562,6 +585,9 @@ static int print_spl_token_create_account(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(header);
+    UNUSED(infos_length);
+
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
     const SplTokenInitializeAccountInfo* ia_info =
         &infos[1]->spl_token.initialize_account;
@@ -589,6 +615,9 @@ static int print_spl_token_create_multisig(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(header);
+    UNUSED(infos_length);
+
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
     const SplTokenInitializeMultisigInfo* im_info =
         &infos[1]->spl_token.initialize_multisig;
@@ -613,6 +642,9 @@ static int print_spl_token_create_mint_with_seed(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(header);
+    UNUSED(infos_length);
+
     const SystemCreateAccountWithSeedInfo* ca_info = &infos[0]->system.create_account_with_seed;
     const SplTokenInitializeMintInfo* im_info =
         &infos[1]->spl_token.initialize_mint;
@@ -651,6 +683,9 @@ static int print_spl_token_create_account_with_seed(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(header);
+    UNUSED(infos_length);
+
     const SystemCreateAccountWithSeedInfo* ca_info = &infos[0]->system.create_account_with_seed;
     const SplTokenInitializeAccountInfo* ia_info =
         &infos[1]->spl_token.initialize_account;
@@ -684,6 +719,9 @@ static int print_spl_token_create_multisig_with_seed(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(header);
+    UNUSED(infos_length);
+
     const SystemCreateAccountWithSeedInfo* ca_info = &infos[0]->system.create_account_with_seed;
     const SplTokenInitializeMultisigInfo* im_info =
         &infos[1]->spl_token.initialize_multisig;
@@ -714,6 +752,8 @@ static int print_spl_associated_token_account_create_with_transfer(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SplAssociatedTokenAccountCreateInfo* c_info =
         &infos[0]->spl_associated_token_account.create;
     const SplTokenTransferInfo* t_info = &infos[1]->spl_token.transfer;

@@ -95,6 +95,8 @@ static int parse_system_advance_nonce_account_instruction(
     const MessageHeader* header,
     SystemAdvanceNonceInfo* info
 ) {
+    UNUSED(parser);
+
     InstructionAccountsIterator it;
     instruction_accounts_iterator_init(&it, header, instruction);
 
@@ -354,6 +356,8 @@ static int print_system_withdraw_nonce_info(
     const SystemWithdrawNonceInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -375,6 +379,8 @@ static int print_system_authorize_nonce_info(
     const SystemAuthorizeNonceInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -393,6 +399,8 @@ static int print_system_allocate_info(
     const SystemAllocateInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -408,6 +416,8 @@ static int print_system_assign_info(
     const SystemAssignInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -477,6 +487,8 @@ int print_system_nonced_transaction_sentinel(
     const SystemInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     const SystemAdvanceNonceInfo* nonce_info = &info->advance_nonce;
     SummaryItem* item;
 
@@ -494,6 +506,8 @@ int print_system_create_account_info(
     const SystemCreateAccountInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
     if (primary_title != NULL) {
         item = transaction_summary_primary_item();
@@ -514,6 +528,8 @@ int print_system_create_account_with_seed_info(
     const SystemCreateAccountWithSeedInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
     if (primary_title != NULL) {
         item = transaction_summary_primary_item();
@@ -540,6 +556,8 @@ int print_system_initialize_nonce_info(
     const SystemInitializeNonceInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
     if (primary_title != NULL) {
         item = transaction_summary_primary_item();
@@ -557,6 +575,8 @@ int print_system_allocate_with_seed_info(
     const SystemAllocateWithSeedInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item;
 
     if (primary_title != NULL) {

@@ -47,6 +47,8 @@ int print_spl_associated_token_account_create_info(
     const SplAssociatedTokenAccountCreateInfo* info,
     const MessageHeader* header
 ) {
+    UNUSED(header);
+
     SummaryItem* item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Create token acct", info->address);
 

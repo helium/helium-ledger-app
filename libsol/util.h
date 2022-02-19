@@ -10,3 +10,7 @@
 
 #define assert_pubkey_equal(actual, expected) \
     assert(memcmp(actual, expected, 32) == 0)
+
+#ifndef UNUSED
+#define UNUSED(x) (void)x
+#endif

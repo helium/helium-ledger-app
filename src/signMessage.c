@@ -126,6 +126,8 @@ void handleSignMessage(
     volatile unsigned int *flags,
     volatile unsigned int *tx
 ) {
+    UNUSED(tx);
+
     if (dataLength == 0) {
         THROW(ApduReplySolanaInvalidMessage);
     }
