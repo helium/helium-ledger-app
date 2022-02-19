@@ -406,14 +406,17 @@ int parse_stake_instructions(
     return 1;
 }
 
-static int print_delegate_stake_info(
+int print_delegate_stake_info(
+    const char* primary_title,
     const StakeDelegateInfo* info,
     const MessageHeader* header
 ) {
     SummaryItem* item;
 
-    item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Delegate from", info->stake_pubkey);
+    if (primary_title != NULL) {
+      item = transaction_summary_primary_item();
+      summary_item_set_pubkey(item, primary_title, info->stake_pubkey);
+    }
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Authorized by", info->authorized_pubkey);
@@ -584,7 +587,11 @@ int print_stake_info(
 ) {
     switch (info->kind) {
         case StakeDelegate:
-            return print_delegate_stake_info(&info->delegate_stake, header);
+            return print_delegate_stake_info(
+                "Delegate from",
+                &info->delegate_stake,
+                header
+            );
         case StakeInitialize:
         case StakeInitializeChecked:
             return print_stake_initialize_info(

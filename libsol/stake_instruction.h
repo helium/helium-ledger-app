@@ -139,3 +139,9 @@ int print_stake_split_info2(
     const StakeSplitInfo* info,
     const MessageHeader* header
 );
+
+int print_delegate_stake_info(
+    const char* primary_title,
+    const StakeDelegateInfo* info,
+    const MessageHeader* header
+);

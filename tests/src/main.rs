@@ -136,6 +136,38 @@ fn test_ledger_delegate_stake_with_nonce() -> Result<(), RemoteWalletError> {
     Ok(())
 }
 
+fn test_create_stake_account_and_delegate() -> Result<(), RemoteWalletError> {
+    let (ledger, ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
+
+    let from = ledger.get_pubkey(&derivation_path, false)?;
+    let stake_account = ledger_base_pubkey;
+    let authorized = stake_state::Authorized {
+        staker: Pubkey::new(&[3u8; 32]),
+        withdrawer: Pubkey::new(&[4u8; 32]),
+    };
+    let mut instructions = stake_instruction::create_account(
+        &from,
+        &stake_account,
+        &authorized,
+        &stake_state::Lockup {
+            epoch: 1,
+            unix_timestamp: 1,
+            ..stake_state::Lockup::default()
+        },
+        42,
+    );
+    let vote_pubkey = Pubkey::new(&[5u8; 32]);
+    let instruction =
+        stake_instruction::delegate_stake(&stake_account, &authorized.staker, &vote_pubkey);
+    instructions.push(instruction);
+    let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(from.as_ref(), &message));
+    Ok(())
+}
+
 /// This test requires interactive approval of message signing on the ledger.
 fn test_ledger_advance_nonce_account() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
@@ -1707,6 +1739,7 @@ fn do_run_tests() -> Result<(), RemoteWalletError> {
     run!(test_ledger_sign_transaction_too_big);
     run!(test_ledger_delegate_stake);
     run!(test_ledger_delegate_stake_with_nonce);
+    run!(test_create_stake_account_and_delegate);
     run!(test_ledger_advance_nonce_account);
     run!(test_ledger_advance_nonce_account_separate_fee_payer);
     run!(test_ledger_delegate_stake_with_nonce);
