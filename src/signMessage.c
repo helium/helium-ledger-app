@@ -61,7 +61,7 @@ static uint8_t set_result_sign_message() {
                 SIGNATURE_LENGTH,
                 NULL
             );
-            os_memmove(G_io_apdu_buffer, signature, 64);
+            memcpy(G_io_apdu_buffer, signature, 64);
         }
         FINALLY {
             MEMCLEAR(privateKey);
@@ -185,7 +185,7 @@ void handleSignMessage(
     if (G_messageLength + messageLength > MAX_MESSAGE_LENGTH) {
         THROW(ApduReplySdkExceptionOverflow);
     }
-    os_memmove(G_message + G_messageLength, dataBuffer, messageLength);
+    memcpy(G_message + G_messageLength, dataBuffer, messageLength);
     G_messageLength += messageLength;
 
     if (p2 & P2_MORE) {
