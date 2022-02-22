@@ -152,6 +152,7 @@ include $(BOLOS_SDK)/Makefile.rules
 dep/%.d: %.c Makefile
 
 load: all
+load-only:
 	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
 load-offline: all
