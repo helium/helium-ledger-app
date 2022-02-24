@@ -13,7 +13,7 @@ and for code coverage generation:
 
 ## Overview
 
-In `unit-tests` folder, compile with
+In `tests/unit` folder, compile with
 
 ```
 cmake -Bbuild -H. && make -C build

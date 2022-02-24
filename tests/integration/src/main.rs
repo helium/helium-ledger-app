@@ -5,6 +5,9 @@ use std::str::FromStr;
 mod util;
 use util::*;
 
+#[cfg(test)]
+mod test;
+
 type Result<T = ()> = std::result::Result<T, Error>;
 
 fn main() -> Result {
@@ -41,20 +44,17 @@ fn main() -> Result {
         8,
         PublicKey::from_str("145kQhY9Asu5ZxCpd1zifSkr2VYhDLWXQqgpQhgs8TEwA6SWWLa")?,
         PublicKey::from_str("14sf44Spo6t7Qs6FNhBttitR16n9ZJXppPgj1NoQPfD55vRK4i3")?,
-
         PublicKey::from_str("11YzguYUdqCzonqrqCSMEcZPA2YGNdu9JQBQMbkwcErvUrixy4R")?,
         PublicKey::from_str("11u76hY8bzrbo7AdJ68qEkXDGPNP3CpUdt42Lgar9YSJ99KyYNS")?,
         9122219,
         11234,
         9123219,
-
     )?;
     test_save_validator_unstake_context(
         8,
         PublicKey::from_str("145kQhY9Asu5ZxCpd1zifSkr2VYhDLWXQqgpQhgs8TEwA6SWWLa")?,
         912114299,
         9103312219,
-
         771234,
     )?;
 
@@ -215,13 +215,24 @@ fn test_save_validator_transfer_context(
         fee,
         old_owner_signature: vec![],
         new_owner_signature: vec![],
-
     };
     let apdu = transfer_sec.apdu_serialize(account_index)?;
-    println!("uint8_t old_owner[] = {};", array_in_c(&pubkey_to_c_array(&old_owner)));
-    println!("uint8_t new_owner[] = {};", array_in_c(&pubkey_to_c_array(&new_owner)));
-    println!("uint8_t old_address[] = {};", array_in_c(&pubkey_to_c_array(&old_address)));
-    println!("uint8_t new_address[] = {};", array_in_c(&pubkey_to_c_array(&new_address)));
+    println!(
+        "uint8_t old_owner[] = {};",
+        array_in_c(&pubkey_to_c_array(&old_owner))
+    );
+    println!(
+        "uint8_t new_owner[] = {};",
+        array_in_c(&pubkey_to_c_array(&new_owner))
+    );
+    println!(
+        "uint8_t old_address[] = {};",
+        array_in_c(&pubkey_to_c_array(&old_address))
+    );
+    println!(
+        "uint8_t new_address[] = {};",
+        array_in_c(&pubkey_to_c_array(&new_address))
+    );
     println!("{}", apdu.into_save_context_call("transfer_validator")?);
     println!(
         "\
@@ -278,5 +289,3 @@ fn test_save_validator_unstake_context(
     );
     Ok(())
 }
-
-
