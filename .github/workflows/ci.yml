@@ -20,18 +20,32 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build app
+      - name: Build NanoS
         run: |
           make clean
           make DEBUG=1
-      - name: Upload app binary
+
+      - name: Upload nanos app binary
         uses: actions/upload-artifact@v2
         with:
-          name: app-debug
+          name: app-debug-nanos
+          path: bin
+
+      - name: Build NanoX
+        env:
+          BOLOS_SDK: /opt/nanox-secure-sdk
+        run: |
+          make clean
+          make DEBUG=1
+
+      - name: Upload nanox app binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-debug-nanox
           path: bin
 
   scan-build:
-    name: Clang Static Analyzer
+    name: clang static analyzer
     runs-on: ubuntu-latest
 
     container:
@@ -66,3 +80,50 @@ jobs:
         run: |
           cmake -Bbuild -H. && make -C build
           CTEST_OUTPUT_ON_FAILURE=1 make -C build test
+
+  integration-test-nanox:
+    name: integration-test
+    needs: build
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/ledgerhq/speculos:latest
+      options: --entrypoint /bin/bash
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          apt-get update -q
+          apt-get install -qy curl build-essential cmake libclang-dev pkg-config libudev-dev libssl-dev
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
+
+      - name: Download Nano X app binary
+        uses: actions/download-artifact@v2
+        with:
+          name: app-debug-nanox
+          path: /bin
+
+      - name: Run NanoX Integration Tests
+        working-directory: tests/integration
+        run: |
+          SPECULOS_DIR=/speculos BUILD_DIR=/ cargo test test::nanox
+
+      - name: Download Nano S app binary
+        uses: actions/download-artifact@v2
+        with:
+          name: app-debug-nanos
+          path: /bin
+
+      - name: Run Nanos Integration Tests
+        working-directory: tests/integration
+        run: |
+          SPECULOS_DIR=/speculos BUILD_DIR=/ cargo test test::nanos

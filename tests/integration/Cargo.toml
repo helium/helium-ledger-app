@@ -7,6 +7,17 @@ edition = "2021"
 
 [dependencies]
 helium-crypto = {git = "https://github.com/helium/helium-crypto-rs", tag="v0.3.3"}
-helium-ledger = { path = "../../../helium-ledger-cli" }
+helium-ledger = { git = "https://github.com/helium/helium-ledger-cli",  branch = "lthiery/payment_v2_hst" }
 thiserror = "1"
 convert_case = "0"
+reqwest = "0"
+tokio = {version = "1.2", features = ["full"]}
+nix = "0"
+serde = "1"
+serde_json = "1"
+
+[dependencies.ledger-transport]
+git = "https://github.com/helium/ledger-rs"
+branch = "lthiery/tcp-transport"
+default-features = false
+features = ["transport-tcp"]
