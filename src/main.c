@@ -261,7 +261,7 @@ unsigned char io_event(unsigned char channel) {
         case SEPROXYHAL_TAG_TICKER_EVENT:
             UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer,
             {
-#ifndef TARGET_NANOX
+#if !defined(TARGET_NANOX) && !defined(TARGET_NANOS2)
                 if (UX_ALLOWED) {
                     if (ux_step_count) {
                     // prepare next screen
@@ -330,7 +330,7 @@ void nv_app_state_init(){
     if (N_storage.initialized != 0x01) {
         internalStorage_t storage;
         storage.settings.allow_blind_sign = BlindSignDisabled;
-#ifdef TARGET_NANOX
+#if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
         storage.settings.pubkey_display = PubkeyDisplayLong;
 #else
         storage.settings.pubkey_display = PubkeyDisplayShort;
@@ -363,11 +363,11 @@ __attribute__((section(".boot"))) int main(void) {
                 USB_power(0);
                 USB_power(1);
 
-#ifdef TARGET_NANOX                            
-                // Grab the current plane mode setting. os_settings_get() is enabled by 
+#ifdef HAVE_BLE
+                // Grab the current plane mode setting. os_settings_get() is enabled by
                 // appFlags bit #9 set to 1 in Makefile (i.e. "--appFlags 0x2xx")
                 G_io_app.plane_mode = os_setting_get(OS_SETTING_PLANEMODE, NULL, 0);
-#endif // TARGET_NANOX
+#endif // HAVE_BLE
 
                 ui_idle();
 
