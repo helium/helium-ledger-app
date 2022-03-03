@@ -104,7 +104,7 @@ void handle_get_public_key(uint8_t p1, uint8_t p2,
 	memmove(&G_io_apdu_buffer[adpu_tx], hash_buffer, SIZE_OF_SHA_CHECKSUM);
 	adpu_tx += SIZE_OF_SHA_CHECKSUM;
 
-
+    uint8_t exchange_len = adpu_tx;
 	if (p1 == P1_PUBKEY_DISPLAY_ON) {
 		// for some reason this needs to run twice to get the display to work
 		// otherwise, first time running this command, key gets displayed blank
@@ -125,7 +125,7 @@ void handle_get_public_key(uint8_t p1, uint8_t p2,
 	}
 
 	// Flush the APDU buffer, sending the response.
-	io_exchange_with_code(SW_OK, adpu_tx);
+	io_exchange_with_code(SW_OK, exchange_len);
 }
 
 #endif

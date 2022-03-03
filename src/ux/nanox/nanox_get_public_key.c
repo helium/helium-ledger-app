@@ -60,6 +60,7 @@ void handle_get_public_key(uint8_t p1, uint8_t p2,
 	cx_sha256_t hash;
 	unsigned char hash_buffer[32];
 
+    uint8_t exchange_len = adpu_tx;
 	if (p1 == P1_PUBKEY_DISPLAY_ON) {
 	  cx_sha256_init(&hash);
 	  cx_hash(&hash.header, CX_LAST, G_io_apdu_buffer, adpu_tx, hash_buffer, 32);
@@ -81,7 +82,7 @@ void handle_get_public_key(uint8_t p1, uint8_t p2,
 	}
 
 	// Flush the APDU buffer, sending the response.
-	io_exchange_with_code(SW_OK, adpu_tx);
+	io_exchange_with_code(SW_OK, exchange_len);
 }
 
 #endif
