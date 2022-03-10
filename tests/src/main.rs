@@ -1706,6 +1706,7 @@ fn do_run_tests() -> Result<(), RemoteWalletError> {
     run!(test_ledger_sign_transaction);
     run!(test_ledger_sign_transaction_too_big);
     run!(test_ledger_delegate_stake);
+    run!(test_ledger_delegate_stake_with_nonce);
     run!(test_ledger_advance_nonce_account);
     run!(test_ledger_advance_nonce_account_separate_fee_payer);
     run!(test_ledger_delegate_stake_with_nonce);
