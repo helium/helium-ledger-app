@@ -72,7 +72,7 @@ fn test_ledger_sign_transaction() -> Result<(), RemoteWalletError> {
     let instruction = system_instruction::transfer(&from, &ledger_base_pubkey, 42);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
 
     // Test large transaction
     let recipients: Vec<(Pubkey, u64)> = (0..10).map(|_| (Pubkey::new_unique(), 42)).collect();
@@ -81,7 +81,7 @@ fn test_ledger_sign_transaction() -> Result<(), RemoteWalletError> {
     let hash = solana_sdk::hash::hash(&message);
     println!("Expected hash: {}", hash);
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
@@ -112,7 +112,7 @@ fn test_ledger_delegate_stake() -> Result<(), RemoteWalletError> {
         stake_instruction::delegate_stake(&stake_pubkey, &authorized_pubkey, &vote_pubkey);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
+    assert!(signature.verify(authorized_pubkey.as_ref(), &message));
     Ok(())
 }
 
@@ -132,7 +132,7 @@ fn test_ledger_delegate_stake_with_nonce() -> Result<(), RemoteWalletError> {
         Message::new_with_nonce(vec![instruction], None, &nonce_account, &authorized_pubkey)
             .serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
+    assert!(signature.verify(authorized_pubkey.as_ref(), &message));
     Ok(())
 }
 
@@ -147,7 +147,7 @@ fn test_ledger_advance_nonce_account() -> Result<(), RemoteWalletError> {
     let instruction = system_instruction::advance_nonce_account(&nonce_account, &authorized_pubkey);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
+    assert!(signature.verify(authorized_pubkey.as_ref(), &message));
     Ok(())
 }
 
@@ -163,7 +163,7 @@ fn test_ledger_advance_nonce_account_separate_fee_payer() -> Result<(), RemoteWa
     let instruction = system_instruction::advance_nonce_account(&nonce_account, &authorized_pubkey);
     let message = Message::new(&[instruction], Some(&fee_payer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&authorized_pubkey.as_ref(), &message));
+    assert!(signature.verify(authorized_pubkey.as_ref(), &message));
     Ok(())
 }
 
@@ -181,7 +181,7 @@ fn test_ledger_transfer_with_nonce() -> Result<(), RemoteWalletError> {
         Message::new_with_nonce(vec![instruction], None, &nonce_account, &nonce_authority)
             .serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
@@ -213,7 +213,7 @@ fn test_create_stake_account_with_seed_and_nonce() -> Result<(), RemoteWalletErr
     let message =
         Message::new_with_nonce(instructions, None, &nonce_account, &nonce_authority).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
@@ -242,7 +242,7 @@ fn test_create_stake_account() -> Result<(), RemoteWalletError> {
     );
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
@@ -266,7 +266,7 @@ fn test_create_stake_account_no_lockup() -> Result<(), RemoteWalletError> {
     );
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
@@ -286,7 +286,7 @@ fn test_create_stake_account_checked() -> Result<(), RemoteWalletError> {
         stake_instruction::create_account_checked(&from, &stake_account, &authorized, 42);
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
@@ -317,7 +317,7 @@ fn test_create_stake_account_checked_with_seed_and_nonce() -> Result<(), RemoteW
     let message =
         Message::new_with_nonce(instructions, None, &nonce_account, &nonce_authority).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
@@ -341,7 +341,7 @@ fn test_create_nonce_account_with_seed() -> Result<(), RemoteWalletError> {
     );
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
@@ -361,7 +361,7 @@ fn test_create_nonce_account() -> Result<(), RemoteWalletError> {
     );
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
@@ -386,7 +386,7 @@ fn test_sign_full_shred_of_garbage_tx() -> Result<(), RemoteWalletError> {
     let hash = solana_sdk::hash::hash(&message);
     println!("Expected hash: {}", hash);
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
@@ -407,7 +407,7 @@ fn test_create_vote_account() -> Result<(), RemoteWalletError> {
     let instructions = vote_instruction::create_account(&from, &vote_account, &vote_init, 42);
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
@@ -437,7 +437,7 @@ fn test_create_vote_account_with_seed() -> Result<(), RemoteWalletError> {
     );
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
@@ -454,7 +454,7 @@ fn test_nonce_withdraw() -> Result<(), RemoteWalletError> {
         system_instruction::withdraw_nonce_account(&nonce_account, &nonce_authority, &to, 42);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&nonce_authority.as_ref(), &message));
+    assert!(signature.verify(nonce_authority.as_ref(), &message));
     Ok(())
 }
 
@@ -470,7 +470,7 @@ fn test_stake_withdraw() -> Result<(), RemoteWalletError> {
     let instruction = stake_instruction::withdraw(&stake_account, &stake_authority, &to, 42, None);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&stake_authority.as_ref(), &message));
+    assert!(signature.verify(stake_authority.as_ref(), &message));
     Ok(())
 }
 
@@ -486,7 +486,7 @@ fn test_vote_withdraw() -> Result<(), RemoteWalletError> {
     let instruction = vote_instruction::withdraw(&vote_account, &vote_authority, 42, &to);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&vote_authority.as_ref(), &message));
+    assert!(signature.verify(vote_authority.as_ref(), &message));
     Ok(())
 }
 
@@ -506,7 +506,7 @@ fn test_nonce_authorize() -> Result<(), RemoteWalletError> {
     );
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&nonce_authority.as_ref(), &message));
+    assert!(signature.verify(nonce_authority.as_ref(), &message));
     Ok(())
 }
 
@@ -530,7 +530,7 @@ fn test_stake_authorize() -> Result<(), RemoteWalletError> {
     // Authorize staker
     let message = Message::new(&[stake_auth.clone()], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&stake_authority.as_ref(), &message));
+    assert!(signature.verify(stake_authority.as_ref(), &message));
 
     let custodian = Pubkey::new_unique();
     for maybe_custodian in &[None, Some(&custodian)] {
@@ -546,7 +546,7 @@ fn test_stake_authorize() -> Result<(), RemoteWalletError> {
         // Authorize withdrawer
         let message = Message::new(&[withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
         let signature = ledger.sign_message(&derivation_path, &message)?;
-        assert!(signature.verify(&stake_authority.as_ref(), &message));
+        assert!(signature.verify(stake_authority.as_ref(), &message));
 
         // Authorize both
         // Note: Instruction order must match CLI; staker first, withdrawer second
@@ -556,7 +556,7 @@ fn test_stake_authorize() -> Result<(), RemoteWalletError> {
         )
         .serialize();
         let signature = ledger.sign_message(&derivation_path, &message)?;
-        assert!(signature.verify(&stake_authority.as_ref(), &message));
+        assert!(signature.verify(stake_authority.as_ref(), &message));
     }
     Ok(())
 }
@@ -581,7 +581,7 @@ fn test_stake_authorize_checked() -> Result<(), RemoteWalletError> {
     // Authorize staker
     let message = Message::new(&[stake_auth.clone()], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&stake_authority.as_ref(), &message));
+    assert!(signature.verify(stake_authority.as_ref(), &message));
 
     let custodian = Pubkey::new_unique();
     for maybe_custodian in &[None, Some(&custodian)] {
@@ -597,7 +597,7 @@ fn test_stake_authorize_checked() -> Result<(), RemoteWalletError> {
         // Authorize withdrawer
         let message = Message::new(&[withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
         let signature = ledger.sign_message(&derivation_path, &message)?;
-        assert!(signature.verify(&stake_authority.as_ref(), &message));
+        assert!(signature.verify(stake_authority.as_ref(), &message));
 
         // Authorize both
         // Note: Instruction order must match CLI; staker first, withdrawer second
@@ -607,7 +607,7 @@ fn test_stake_authorize_checked() -> Result<(), RemoteWalletError> {
         )
         .serialize();
         let signature = ledger.sign_message(&derivation_path, &message)?;
-        assert!(signature.verify(&stake_authority.as_ref(), &message));
+        assert!(signature.verify(stake_authority.as_ref(), &message));
     }
     Ok(())
 }
@@ -631,7 +631,7 @@ fn test_vote_authorize() -> Result<(), RemoteWalletError> {
     // Authorize voter
     let message = Message::new(&[vote_auth.clone()], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&vote_authority.as_ref(), &message));
+    assert!(signature.verify(vote_authority.as_ref(), &message));
 
     let new_authority = Pubkey::new(&[2u8; 32]);
     let withdraw_auth = vote_instruction::authorize(
@@ -644,13 +644,13 @@ fn test_vote_authorize() -> Result<(), RemoteWalletError> {
     // Authorize withdrawer
     let message = Message::new(&[withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&vote_authority.as_ref(), &message));
+    assert!(signature.verify(vote_authority.as_ref(), &message));
 
     // Authorize both
     // Note: Instruction order must match CLI; voter first, withdrawer second
     let message = Message::new(&[vote_auth, withdraw_auth], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&vote_authority.as_ref(), &message));
+    assert!(signature.verify(vote_authority.as_ref(), &message));
     Ok(())
 }
 
@@ -673,7 +673,7 @@ fn test_vote_authorize_checked() -> Result<(), RemoteWalletError> {
     // Authorize voter
     let message = Message::new(&[vote_auth.clone()], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&vote_authority.as_ref(), &message));
+    assert!(signature.verify(vote_authority.as_ref(), &message));
 
     let new_authority = Pubkey::new(&[2u8; 32]);
     let withdraw_auth = vote_instruction::authorize_checked(
@@ -686,13 +686,13 @@ fn test_vote_authorize_checked() -> Result<(), RemoteWalletError> {
     // Authorize withdrawer
     let message = Message::new(&[withdraw_auth.clone()], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&vote_authority.as_ref(), &message));
+    assert!(signature.verify(vote_authority.as_ref(), &message));
 
     // Authorize both
     // Note: Instruction order must match CLI; voter first, withdrawer second
     let message = Message::new(&[vote_auth, withdraw_auth], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&vote_authority.as_ref(), &message));
+    assert!(signature.verify(vote_authority.as_ref(), &message));
     Ok(())
 }
 
@@ -709,7 +709,7 @@ fn test_vote_update_validator_identity() -> Result<(), RemoteWalletError> {
         vote_instruction::update_validator_identity(&vote_account, &vote_authority, &new_node);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&vote_authority.as_ref(), &message));
+    assert!(signature.verify(vote_authority.as_ref(), &message));
     Ok(())
 }
 
@@ -726,7 +726,7 @@ fn test_vote_update_commission() -> Result<(), RemoteWalletError> {
         vote_instruction::update_commission(&vote_account, &vote_authority, new_commission);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&vote_authority.as_ref(), &message));
+    assert!(signature.verify(vote_authority.as_ref(), &message));
     Ok(())
 }
 
@@ -741,7 +741,7 @@ fn test_stake_deactivate() -> Result<(), RemoteWalletError> {
     let instruction = stake_instruction::deactivate_stake(&stake_account, &stake_authority);
     let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&stake_authority.as_ref(), &message));
+    assert!(signature.verify(stake_authority.as_ref(), &message));
     Ok(())
 }
 
@@ -763,7 +763,7 @@ fn test_stake_set_lockup() -> Result<(), RemoteWalletError> {
         let instruction = stake_instruction::set_lockup(&stake_account, &lockup, &stake_custodian);
         let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
         let signature = ledger.sign_message(&derivation_path, &message)?;
-        assert!(signature.verify(&stake_custodian.as_ref(), &message));
+        assert!(signature.verify(stake_custodian.as_ref(), &message));
     }
     Ok(())
 }
@@ -787,7 +787,7 @@ fn test_stake_set_lockup_checked() -> Result<(), RemoteWalletError> {
             stake_instruction::set_lockup_checked(&stake_account, &lockup, &stake_custodian);
         let message = Message::new(&[instruction], Some(&ledger_base_pubkey)).serialize();
         let signature = ledger.sign_message(&derivation_path, &message)?;
-        assert!(signature.verify(&stake_custodian.as_ref(), &message));
+        assert!(signature.verify(stake_custodian.as_ref(), &message));
     }
     Ok(())
 }
@@ -809,7 +809,7 @@ fn test_stake_split_with_nonce() -> Result<(), RemoteWalletError> {
     let message =
         Message::new_with_nonce(instructions, None, &nonce_account, &nonce_authority).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&stake_authority.as_ref(), &message));
+    assert!(signature.verify(stake_authority.as_ref(), &message));
     Ok(())
 }
 
@@ -834,7 +834,7 @@ fn test_stake_split_with_seed() -> Result<(), RemoteWalletError> {
     );
     let message = Message::new(&instructions, Some(&ledger_base_pubkey)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&stake_authority.as_ref(), &message));
+    assert!(signature.verify(stake_authority.as_ref(), &message));
     Ok(())
 }
 
@@ -850,7 +850,7 @@ fn test_stake_merge() -> Result<(), RemoteWalletError> {
     let instructions = stake_instruction::merge(&destination, &source, &stake_authority);
     let message = Message::new(&instructions, Some(&stake_authority)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&stake_authority.as_ref(), &message));
+    assert!(signature.verify(stake_authority.as_ref(), &message));
     Ok(())
 }
 
@@ -886,7 +886,7 @@ fn test_spl_token_create_mint() -> Result<(), RemoteWalletError> {
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -911,7 +911,7 @@ fn test_spl_token_create_account() -> Result<(), RemoteWalletError> {
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -936,7 +936,7 @@ fn test_spl_token_create_account2() -> Result<(), RemoteWalletError> {
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -970,7 +970,7 @@ fn test_spl_token_create_multisig() -> Result<(), RemoteWalletError> {
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -988,7 +988,7 @@ fn test_spl_token_create_mint_with_seed() -> Result<(), RemoteWalletError> {
             &owner,
             &mint,
             &base,
-            &seed,
+            seed,
             501,
             std::mem::size_of::<spl_token::state::Mint>() as u64,
             &spl_token::id(),
@@ -997,7 +997,7 @@ fn test_spl_token_create_mint_with_seed() -> Result<(), RemoteWalletError> {
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -1016,7 +1016,7 @@ fn test_spl_token_create_account_with_seed() -> Result<(), RemoteWalletError> {
             &owner,
             &mint,
             &base,
-            &seed,
+            seed,
             501,
             std::mem::size_of::<spl_token::state::Mint>() as u64,
             &spl_token::id(),
@@ -1026,7 +1026,7 @@ fn test_spl_token_create_account_with_seed() -> Result<(), RemoteWalletError> {
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -1050,7 +1050,7 @@ fn test_spl_token_create_multisig_with_seed() -> Result<(), RemoteWalletError> {
             &owner,
             &mint,
             &base,
-            &seed,
+            seed,
             501,
             std::mem::size_of::<spl_token::state::Mint>() as u64,
             &spl_token::id(),
@@ -1065,7 +1065,7 @@ fn test_spl_token_create_multisig_with_seed() -> Result<(), RemoteWalletError> {
     ];
     let message = Message::new(&instructions, Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -1091,7 +1091,7 @@ fn test_spl_token_transfer() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -1117,7 +1117,7 @@ fn test_spl_token_approve() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -1132,7 +1132,7 @@ fn test_spl_token_revoke() -> Result<(), RemoteWalletError> {
         spl_token::instruction::revoke(&spl_token::id(), &account, &owner, &[]).unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -1155,7 +1155,7 @@ fn test_spl_token_set_authority() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -1179,7 +1179,7 @@ fn test_spl_token_mint_to() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -1196,7 +1196,7 @@ fn test_spl_token_burn() -> Result<(), RemoteWalletError> {
             .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -1218,7 +1218,7 @@ fn test_spl_token_close_account() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -1246,7 +1246,7 @@ fn test_spl_token_transfer_multisig() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&signer.as_ref(), &message));
+    assert!(signature.verify(signer.as_ref(), &message));
     Ok(())
 }
 
@@ -1274,7 +1274,7 @@ fn test_spl_token_approve_multisig() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&signer.as_ref(), &message));
+    assert!(signature.verify(signer.as_ref(), &message));
     Ok(())
 }
 
@@ -1296,7 +1296,7 @@ fn test_spl_token_revoke_multisig() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&signer.as_ref(), &message));
+    assert!(signature.verify(signer.as_ref(), &message));
     Ok(())
 }
 
@@ -1321,7 +1321,7 @@ fn test_spl_token_set_authority_multisig() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&signer.as_ref(), &message));
+    assert!(signature.verify(signer.as_ref(), &message));
     Ok(())
 }
 
@@ -1347,7 +1347,7 @@ fn test_spl_token_mint_to_multisig() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&signer.as_ref(), &message));
+    assert!(signature.verify(signer.as_ref(), &message));
     Ok(())
 }
 
@@ -1373,7 +1373,7 @@ fn test_spl_token_burn_multisig() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&signer.as_ref(), &message));
+    assert!(signature.verify(signer.as_ref(), &message));
     Ok(())
 }
 
@@ -1397,7 +1397,7 @@ fn test_spl_token_close_account_multisig() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&signer.as_ref(), &message));
+    assert!(signature.verify(signer.as_ref(), &message));
     Ok(())
 }
 
@@ -1420,7 +1420,7 @@ fn test_spl_token_freeze_account() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&signer.as_ref(), &message));
+    assert!(signature.verify(signer.as_ref(), &message));
     Ok(())
 }
 
@@ -1444,7 +1444,7 @@ fn test_spl_token_freeze_account_multisig() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&signer.as_ref(), &message));
+    assert!(signature.verify(signer.as_ref(), &message));
     Ok(())
 }
 
@@ -1462,7 +1462,7 @@ fn test_spl_token_thaw_account() -> Result<(), RemoteWalletError> {
             .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&signer.as_ref(), &message));
+    assert!(signature.verify(signer.as_ref(), &message));
     Ok(())
 }
 
@@ -1486,7 +1486,7 @@ fn test_spl_token_thaw_account_multisig() -> Result<(), RemoteWalletError> {
     .unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&signer.as_ref(), &message));
+    assert!(signature.verify(signer.as_ref(), &message));
     Ok(())
 }
 
@@ -1500,7 +1500,7 @@ fn test_spl_token_sync_native() -> Result<(), RemoteWalletError> {
     let instruction = spl_token::instruction::sync_native(&spl_token::id(), &account).unwrap();
     let message = Message::new(&[instruction], Some(&signer)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&signer.as_ref(), &message));
+    assert!(signature.verify(signer.as_ref(), &message));
     Ok(())
 }
 
@@ -1513,7 +1513,7 @@ fn test_spl_associated_token_account_create() -> Result<(), RemoteWalletError> {
     let instruction = create_associated_token_account(&owner, &owner, &mint);
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&owner.as_ref(), &message));
+    assert!(signature.verify(owner.as_ref(), &message));
     Ok(())
 }
 
@@ -1543,7 +1543,7 @@ fn test_spl_associated_token_account_create_with_transfer_checked() -> Result<()
     ];
     let message = Message::new(&instructions, Some(&sender)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&sender.as_ref(), &message));
+    assert!(signature.verify(sender.as_ref(), &message));
     Ok(())
 }
 
@@ -1592,7 +1592,7 @@ fn test_spl_associated_token_account_create_with_transfer_checked_and_serum_asse
     ];
     let message = Message::new(&instructions, Some(&sender)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&sender.as_ref(), &message));
+    assert!(signature.verify(sender.as_ref(), &message));
     Ok(())
 }
 
@@ -1610,7 +1610,7 @@ fn test_ledger_transfer_with_memos() -> Result<(), RemoteWalletError> {
     ];
     let message = Message::new(&instructions, Some(&from)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
-    assert!(signature.verify(&from.as_ref(), &message));
+    assert!(signature.verify(from.as_ref(), &message));
     Ok(())
 }
 
