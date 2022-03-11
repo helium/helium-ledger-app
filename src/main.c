@@ -337,6 +337,7 @@ void nv_app_state_init(){
 #else
         storage.settings.pubkey_display = PubkeyDisplayShort;
 #endif
+        storage.settings.display_mode = DisplayModeUser;
         storage.initialized = 0x01;
         nvm_write(
             (internalStorage_t*)&N_storage,

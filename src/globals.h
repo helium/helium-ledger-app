@@ -75,9 +75,15 @@ enum PubkeyDisplay {
     PubkeyDisplayShort = 1,
 };
 
+enum DisplayMode {
+    DisplayModeUser = 0,
+    DisplayModeExpert = 1,
+};
+
 typedef struct AppSettings {
     uint8_t allow_blind_sign;
     uint8_t pubkey_display;
+    uint8_t display_mode;
 } AppSettings;
 
 typedef struct internalStorage_t {

@@ -92,11 +92,53 @@ static void pubkey_display_data_selector(unsigned int idx) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
+// Display mode submenu
+
+void display_mode_data_change(enum DisplayMode display_mode) {
+    uint8_t value;
+    switch (display_mode) {
+        case DisplayModeUser:
+        case DisplayModeExpert:
+            value = (uint8_t) display_mode;
+            nvm_write((void *)&N_storage.settings.display_mode, &value, sizeof(value));
+            break;
+    }
+    ui_idle();
+}
+
+const char* const display_mode_data_getter_values[] = {
+    "User",
+    "Expert",
+    "Back"
+};
+
+static const char* display_mode_data_getter(unsigned int idx) {
+    if (idx < ARRAYLEN(display_mode_data_getter_values)) {
+        return display_mode_data_getter_values[idx];
+    }
+    return NULL;
+}
+
+static void display_mode_data_selector(unsigned int idx) {
+    switch (idx) {
+        case 0:
+            display_mode_data_change(DisplayModeUser);
+            break;
+        case 1:
+            display_mode_data_change(DisplayModeExpert);
+            break;
+        default:
+            ux_menulist_init(0, settings_submenu_getter, settings_submenu_selector);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
 // Settings menu:
 
 const char* const settings_submenu_getter_values[] = {
   "Allow blind sign",
-  "Pubkey display",
+  "Pubkey length",
+  "Display mode",
   "Back",
 };
 
@@ -114,6 +156,9 @@ void settings_submenu_selector(unsigned int idx) {
       break;
     case 1:
       ux_menulist_init_select(0, pubkey_display_data_getter, pubkey_display_data_selector, N_storage.settings.pubkey_display);
+      break;
+    case 2:
+      ux_menulist_init_select(0, display_mode_data_getter, display_mode_data_selector, N_storage.settings.display_mode);
       break;
     default:
       ui_idle();
