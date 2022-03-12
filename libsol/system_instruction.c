@@ -585,6 +585,9 @@ int print_system_allocate_with_seed_info(
     }
 
     item = transaction_summary_general_item();
+    summary_item_set_u64(item, "Data size", info->space);
+
+    item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Base", info->base);
 
     item = transaction_summary_general_item();
