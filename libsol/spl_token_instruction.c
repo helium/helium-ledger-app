@@ -478,12 +478,17 @@ int parse_spl_token_instructions(
     return 1;
 }
 
-static int print_spl_token_sign(const SplTokenSign* sign) {
+static int print_spl_token_sign(
+    const SplTokenSign* sign,
+    const PrintConfig* print_config
+) {
     SummaryItem* item;
 
     item = transaction_summary_general_item();
     if (sign->kind == SplTokenSignKindSingle) {
-        summary_item_set_pubkey(item, "Owner", sign->single.signer);
+        if (print_config_show_authority(print_config, sign->single.signer)) {
+            summary_item_set_pubkey(item, "Owner", sign->single.signer);
+        }
     } else {
         summary_item_set_pubkey(item, "Owner", sign->multi.account);
         item = transaction_summary_general_item();
@@ -569,8 +574,6 @@ int print_spl_token_transfer_info(
     const PrintConfig* print_config,
     bool primary
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     if (primary) {
@@ -594,7 +597,7 @@ int print_spl_token_transfer_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "To", info->dest_account);
 
-    print_spl_token_sign(&info->sign);
+    print_spl_token_sign(&info->sign, print_config);
 
     return 0;
 }
@@ -603,8 +606,6 @@ static int print_spl_token_approve_info(
     const SplTokenApproveInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -623,7 +624,7 @@ static int print_spl_token_approve_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "From", info->token_account);
 
-    print_spl_token_sign(&info->sign);
+    print_spl_token_sign(&info->sign, print_config);
 
     return 0;
 }
@@ -639,7 +640,7 @@ static int print_spl_token_revoke_info(
     item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Revoke delegate", info->token_account);
 
-    print_spl_token_sign(&info->sign);
+    print_spl_token_sign(&info->sign, print_config);
 
     return 0;
 }
@@ -670,7 +671,7 @@ static int print_spl_token_set_authority_info(
         summary_item_set_pubkey(item, "Authority", info->new_authority);
     }
 
-    print_spl_token_sign(&info->sign);
+    print_spl_token_sign(&info->sign, print_config);
 
     return 0;
 }
@@ -699,7 +700,7 @@ static int print_spl_token_mint_to_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "To", info->token_account);
 
-    print_spl_token_sign(&info->sign);
+    print_spl_token_sign(&info->sign, print_config);
 
     return 0;
 }
@@ -725,7 +726,7 @@ static int print_spl_token_burn_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "From", info->token_account);
 
-    print_spl_token_sign(&info->sign);
+    print_spl_token_sign(&info->sign, print_config);
 
     return 0;
 }
@@ -744,7 +745,7 @@ static int print_spl_token_close_account_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Withdraw to", info->dest_account);
 
-    print_spl_token_sign(&info->sign);
+    print_spl_token_sign(&info->sign, print_config);
 
     return 0;
 }
@@ -763,7 +764,7 @@ static int print_spl_token_freeze_account_info(
         summary_item_set_pubkey(item, "Mint", info->mint_account);
     }
 
-    print_spl_token_sign(&info->sign);
+    print_spl_token_sign(&info->sign, print_config);
 
     return 0;
 }
@@ -782,7 +783,7 @@ static int print_spl_token_thaw_account_info(
         summary_item_set_pubkey(item, "Mint", info->mint_account);
     }
 
-    print_spl_token_sign(&info->sign);
+    print_spl_token_sign(&info->sign, print_config);
 
     return 0;
 }

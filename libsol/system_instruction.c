@@ -311,15 +311,15 @@ static int print_system_transfer_info(
     const SystemTransferInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
     summary_item_set_amount(item, "Transfer", info->lamports);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Sender", info->from);
+    if (print_config_show_authority(print_config, info->from)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Sender", info->from);
+    }
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Recipient", info->to);
@@ -331,15 +331,15 @@ static int print_system_advance_nonce_account(
     const SystemAdvanceNonceInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Advance nonce", info->account);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }
@@ -348,8 +348,6 @@ static int print_system_withdraw_nonce_info(
     const SystemWithdrawNonceInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -361,8 +359,10 @@ static int print_system_withdraw_nonce_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "To", info->to);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }
@@ -371,8 +371,6 @@ static int print_system_authorize_nonce_info(
     const SystemAuthorizeNonceInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -381,8 +379,10 @@ static int print_system_authorize_nonce_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "New authority", info->new_authority);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }
@@ -498,8 +498,6 @@ int print_system_create_account_info(
     const SystemCreateAccountInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
     if (primary_title != NULL) {
         item = transaction_summary_primary_item();
@@ -509,8 +507,10 @@ int print_system_create_account_info(
     item = transaction_summary_general_item();
     summary_item_set_amount(item, "Deposit", info->lamports);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "From", info->from);
+    if (print_config_show_authority(print_config, info->from)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "From", info->from);
+    }
 
     return 0;
 }
@@ -529,8 +529,10 @@ int print_system_create_account_with_seed_info(
     item = transaction_summary_general_item();
     summary_item_set_amount(item, "Deposit", info->lamports);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "From", info->from);
+    if (print_config_show_authority(print_config, info->from)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "From", info->from);
+    }
 
     if (print_config->expert_mode) {
         item = transaction_summary_general_item();

@@ -201,6 +201,7 @@ void handleSignMessage(
     Parser parser = {G_message, G_messageLength};
     PrintConfig print_config;
     print_config.expert_mode = (N_storage.settings.display_mode == DisplayModeExpert);
+    print_config.signer_pubkey = NULL;
     MessageHeader* header = &print_config.header;
     if (parse_message_header(&parser, header)) {
         // This is not a valid Solana message
@@ -220,6 +221,7 @@ void handleSignMessage(
         if (i >= signer_count) {
             THROW(ApduReplySdkInvalidParameter);
         }
+        print_config.signer_pubkey = &header->pubkeys[i];
     }
 
     if (p1 == P1_NON_CONFIRM) {
@@ -250,7 +252,10 @@ void handleSignMessage(
         }
     }
 
-    transaction_summary_set_fee_payer_pubkey(&header->pubkeys[0]);
+    const Pubkey* fee_payer = &header->pubkeys[0];
+    if (print_config_show_authority(&print_config, fee_payer)) {
+        transaction_summary_set_fee_payer_pubkey(fee_payer);
+    }
 
     enum SummaryItemKind summary_step_kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_summary_steps = 0;

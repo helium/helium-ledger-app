@@ -357,7 +357,6 @@ static int print_stake_authorize_both(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
-    UNUSED(print_config);
     UNUSED(infos_length);
 
     const StakeAuthorizeInfo* staker_info = &infos[0]->stake.authorize;
@@ -403,8 +402,10 @@ static int print_stake_authorize_both(
         );
     }
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", withdrawer_info->authority);
+    if (print_config_show_authority(print_config, withdrawer_info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", withdrawer_info->authority);
+    }
 
     return 0;
 }
@@ -494,7 +495,6 @@ static int print_vote_authorize_both(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
-    UNUSED(print_config);
     UNUSED(infos_length);
 
     const VoteAuthorizeInfo* voter_info = &infos[0]->vote.authorize;
@@ -531,8 +531,10 @@ static int print_vote_authorize_both(
         );
     }
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", withdrawer_info->authority);
+    if (print_config_show_authority(print_config, withdrawer_info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", withdrawer_info->authority);
+    }
 
     return 0;
 }
@@ -542,7 +544,6 @@ static int print_spl_token_create_mint(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
-    UNUSED(print_config);
     UNUSED(infos_length);
 
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
@@ -563,8 +564,10 @@ static int print_spl_token_create_mint(
         summary_item_set_pubkey(item, "Freeze authority", im_info->freeze_authority);
     }
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Funded by", ca_info->from);
+    if (print_config_show_authority(print_config, ca_info->from)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Funded by", ca_info->from);
+    }
 
     item = transaction_summary_general_item();
     summary_item_set_amount(item, "Funded with", ca_info->lamports);
@@ -577,7 +580,6 @@ static int print_spl_token_create_account(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
-    UNUSED(print_config);
     UNUSED(infos_length);
 
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
@@ -593,8 +595,10 @@ static int print_spl_token_create_account(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Owned by", ia_info->owner);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Funded by", ca_info->from);
+    if (print_config_show_authority(print_config, ca_info->from)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Funded by", ca_info->from);
+    }
 
     item = transaction_summary_general_item();
     summary_item_set_amount(item, "Funded with", ca_info->lamports);
@@ -607,7 +611,6 @@ static int print_spl_token_create_multisig(
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
-    UNUSED(print_config);
     UNUSED(infos_length);
 
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
@@ -620,8 +623,10 @@ static int print_spl_token_create_multisig(
     item = transaction_summary_general_item();
     summary_item_set_multisig_m_of_n(item, im_info->body.m, im_info->signers.count);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Funded by", ca_info->from);
+    if (print_config_show_authority(print_config, ca_info->from)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Funded by", ca_info->from);
+    }
 
     item = transaction_summary_general_item();
     summary_item_set_amount(item, "Funded with", ca_info->lamports);

@@ -238,8 +238,6 @@ static int print_vote_withdraw_info(
     const VoteWithdrawInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -251,8 +249,10 @@ static int print_vote_withdraw_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "To", info->to);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }
@@ -261,8 +261,6 @@ static int print_vote_authorize_info(
     const VoteAuthorizeInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     const char* new_authority_title = NULL;
     SummaryItem* item;
 
@@ -281,8 +279,10 @@ static int print_vote_authorize_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, new_authority_title, info->new_authority);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }
@@ -291,8 +291,6 @@ static int print_vote_update_validator_id_info(
     const VoteUpdateValidatorIdInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -301,8 +299,10 @@ static int print_vote_update_validator_id_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "New validator ID", info->new_validator_id);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }
@@ -311,8 +311,6 @@ static int print_vote_update_commission_info(
     const VoteUpdateCommissionInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -321,8 +319,10 @@ static int print_vote_update_commission_info(
     item = transaction_summary_general_item();
     summary_item_set_u64(item, "Commission", info->commission);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }

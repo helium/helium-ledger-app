@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -92,6 +93,6 @@ int parse_message_header(Parser* parser, MessageHeader* header);
 int parse_instruction(Parser* parser, Instruction* instruction);
 
 // FIXME: I don't belong here
-static inline int pubkeys_equal(const Pubkey* pubkey1, const Pubkey* pubkey2) {
+static inline bool pubkeys_equal(const Pubkey* pubkey1, const Pubkey* pubkey2) {
     return memcmp(pubkey1, pubkey2, PUBKEY_SIZE) == 0;
 }
