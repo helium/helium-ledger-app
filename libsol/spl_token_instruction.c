@@ -651,21 +651,23 @@ static int print_spl_token_set_authority_info(
     UNUSED(header);
 
     SummaryItem* item;
+    bool clear_authority = info->new_authority == NULL;
+    const char* primary_title = "Set authority";
+    if (clear_authority) {
+        primary_title = "Clear authority";
+    }
 
     item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Set authority", info->account);
+    summary_item_set_pubkey(item, primary_title, info->account);
 
     const char* authority_type = stringify_token_authority_type(info->authority_type);
     BAIL_IF(authority_type == NULL);
     item = transaction_summary_general_item();
     summary_item_set_string(item, "Type", authority_type);
 
-    item = transaction_summary_general_item();
-    const char* new_auth_title = "Authority";
-    if (info->new_authority == NULL) {
-        summary_item_set_string(item, new_auth_title, "None");
-    } else {
-        summary_item_set_pubkey(item, new_auth_title, info->new_authority);
+    if (!clear_authority) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authority", info->new_authority);
     }
 
     print_spl_token_sign(&info->sign);
