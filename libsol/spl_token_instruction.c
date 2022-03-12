@@ -496,9 +496,9 @@ static int print_spl_token_sign(const SplTokenSign* sign) {
 static int print_spl_token_initialize_mint_info(
     const char* primary_title,
     const SplTokenInitializeMintInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -524,9 +524,9 @@ static int print_spl_token_initialize_mint_info(
 static int print_spl_token_initialize_account_info(
     const char* primary_title,
     const SplTokenInitializeAccountInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -547,9 +547,9 @@ static int print_spl_token_initialize_account_info(
 static int print_spl_token_initialize_multisig_info(
     const char* primary_title,
     const SplTokenInitializeMultisigInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -566,10 +566,10 @@ static int print_spl_token_initialize_multisig_info(
 
 int print_spl_token_transfer_info(
     const SplTokenTransferInfo* info,
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     bool primary
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -601,9 +601,9 @@ int print_spl_token_transfer_info(
 
 static int print_spl_token_approve_info(
     const SplTokenApproveInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -630,9 +630,9 @@ static int print_spl_token_approve_info(
 
 static int print_spl_token_revoke_info(
     const SplTokenRevokeInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -646,9 +646,9 @@ static int print_spl_token_revoke_info(
 
 static int print_spl_token_set_authority_info(
     const SplTokenSetAuthorityInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
     bool clear_authority = info->new_authority == NULL;
@@ -677,9 +677,9 @@ static int print_spl_token_set_authority_info(
 
 static int print_spl_token_mint_to_info(
     const SplTokenMintToInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -706,9 +706,9 @@ static int print_spl_token_mint_to_info(
 
 static int print_spl_token_burn_info(
     const SplTokenBurnInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -732,9 +732,9 @@ static int print_spl_token_burn_info(
 
 static int print_spl_token_close_account_info(
     const SplTokenCloseAccountInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -751,9 +751,9 @@ static int print_spl_token_close_account_info(
 
 static int print_spl_token_freeze_account_info(
     const SplTokenFreezeAccountInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -770,9 +770,9 @@ static int print_spl_token_freeze_account_info(
 
 static int print_spl_token_thaw_account_info(
     const SplTokenThawAccountInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -789,9 +789,9 @@ static int print_spl_token_thaw_account_info(
 
 static int print_spl_token_sync_native_info(
     const SplTokenSyncNativeInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -803,48 +803,48 @@ static int print_spl_token_sync_native_info(
 
 int print_spl_token_info(
     const SplTokenInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     switch (info->kind) {
         case SplTokenKind(InitializeMint):
             return print_spl_token_initialize_mint_info(
                 "Init mint",
                 &info->initialize_mint,
-                header
+                print_config
             );
         case SplTokenKind(InitializeAccount):
         case SplTokenKind(InitializeAccount2):
             return print_spl_token_initialize_account_info(
                 "Init acct",
                 &info->initialize_account,
-                header
+                print_config
             );
         case SplTokenKind(InitializeMultisig):
             return print_spl_token_initialize_multisig_info(
                 "Init multisig",
                 &info->initialize_multisig,
-                header
+                print_config
             );
         case SplTokenKind(Revoke):
-            return print_spl_token_revoke_info(&info->revoke, header);
+            return print_spl_token_revoke_info(&info->revoke, print_config);
         case SplTokenKind(SetAuthority):
-            return print_spl_token_set_authority_info(&info->set_owner, header);
+            return print_spl_token_set_authority_info(&info->set_owner, print_config);
         case SplTokenKind(CloseAccount):
-            return print_spl_token_close_account_info(&info->close_account, header);
+            return print_spl_token_close_account_info(&info->close_account, print_config);
         case SplTokenKind(FreezeAccount):
-            return print_spl_token_freeze_account_info(&info->freeze_account, header);
+            return print_spl_token_freeze_account_info(&info->freeze_account, print_config);
         case SplTokenKind(ThawAccount):
-            return print_spl_token_thaw_account_info(&info->thaw_account, header);
+            return print_spl_token_thaw_account_info(&info->thaw_account, print_config);
         case SplTokenKind(TransferChecked):
-            return print_spl_token_transfer_info(&info->transfer, header, true);
+            return print_spl_token_transfer_info(&info->transfer, print_config, true);
         case SplTokenKind(ApproveChecked):
-            return print_spl_token_approve_info(&info->approve, header);
+            return print_spl_token_approve_info(&info->approve, print_config);
         case SplTokenKind(MintToChecked):
-            return print_spl_token_mint_to_info(&info->mint_to, header);
+            return print_spl_token_mint_to_info(&info->mint_to, print_config);
         case SplTokenKind(BurnChecked):
-            return print_spl_token_burn_info(&info->burn, header);
+            return print_spl_token_burn_info(&info->burn, print_config);
         case SplTokenKind(SyncNative):
-            return print_spl_token_sync_native_info(&info->sync_native, header);
+            return print_spl_token_sync_native_info(&info->sync_native, print_config);
         // Deprecated instructions
         case SplTokenKind(Transfer):
         case SplTokenKind(Approve):

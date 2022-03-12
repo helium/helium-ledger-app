@@ -45,9 +45,9 @@ int parse_spl_associated_token_account_instructions(
 
 int print_spl_associated_token_account_create_info(
     const SplAssociatedTokenAccountCreateInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Create token acct", info->address);
@@ -71,10 +71,10 @@ int print_spl_associated_token_account_create_info(
 
 int print_spl_associated_token_account_info(
     const SplAssociatedTokenAccountInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     return print_spl_associated_token_account_create_info(
         &info->create,
-        header
+        print_config
     );
 }

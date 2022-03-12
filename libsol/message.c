@@ -2,6 +2,7 @@
 #include "serum_assert_owner_instruction.h"
 #include "sol/parser.h"
 #include "sol/message.h"
+#include "sol/print_config.h"
 #include "spl_associated_token_account_instruction.h"
 #include "spl_token_instruction.h"
 #include "system_instruction.h"
@@ -16,8 +17,10 @@
 int process_message_body(
     const uint8_t* message_body,
     int message_body_length,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
+    const MessageHeader* header = &print_config->header;
+
     BAIL_IF(header->instructions_length == 0);
     BAIL_IF(header->instructions_length > MAX_INSTRUCTIONS);
 
@@ -135,5 +138,5 @@ int process_message_body(
         BAIL_IF(instruction_info[i].kind == ProgramIdUnknown);
     }
 
-    return print_transaction(header, display_instruction_info, display_instruction_count);
+    return print_transaction(print_config, display_instruction_info, display_instruction_count);
 }

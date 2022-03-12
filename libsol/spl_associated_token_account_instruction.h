@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sol/print_config.h"
+
 struct Instruction;
 struct MessageHeader;
 struct Pubkey;
@@ -27,10 +29,10 @@ int parse_spl_associated_token_account_instructions(
 
 int print_spl_associated_token_account_info(
     const SplAssociatedTokenAccountInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 );
 
 int print_spl_associated_token_account_create_info(
     const SplAssociatedTokenAccountCreateInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 );

@@ -99,12 +99,12 @@ void test_parse_system_advance_nonce_account_instruction() {
                 4, 0, 0, 0
     };
     Parser parser = {message, sizeof(message)};
-    MessageHeader header;
-    assert(parse_message_header(&parser, &header) == 0);
+    PrintConfig print_config;
+    assert(parse_message_header(&parser, &print_config.header) == 0);
 
     Instruction instruction;
     assert(parse_instruction(&parser, &instruction) == 0);
-    assert(instruction_validate(&instruction, &header) == 0);
+    assert(instruction_validate(&instruction, &print_config.header) == 0);
 
     enum SystemInstructionKind kind;
     Parser instruction_parser = { instruction.data, instruction.data_length };
@@ -115,7 +115,7 @@ void test_parse_system_advance_nonce_account_instruction() {
     assert(
         parse_system_advance_nonce_account_instruction(
             &instruction_parser,
-            &instruction, &header,
+            &instruction, &print_config.header,
             &info
         ) == 0
     );
@@ -124,45 +124,45 @@ void test_parse_system_advance_nonce_account_instruction() {
     assert(
         memcmp(
             info.account,
-            &header.pubkeys[account_index],
+            &print_config.header.pubkeys[account_index],
             PUBKEY_SIZE
         ) == 0
     );
     assert(
         memcmp(
             info.authority,
-            &header.pubkeys[authority_index],
+            &print_config.header.pubkeys[authority_index],
             PUBKEY_SIZE
         ) == 0
     );
 
     transaction_summary_reset();
-    assert(print_system_advance_nonce_account(&info, &header) == 0);
+    assert(print_system_advance_nonce_account(&info, &print_config) == 0);
     enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_kinds;
     assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
     assert(num_kinds == 3);
 
     SystemInfo info2;
-    assert(parse_system_instructions(&instruction, &header, &info2) == 0);
+    assert(parse_system_instructions(&instruction, &print_config.header, &info2) == 0);
     assert(
         memcmp(
             info.account,
-            &header.pubkeys[account_index],
+            &print_config.header.pubkeys[account_index],
             PUBKEY_SIZE
         ) == 0
     );
     assert(
         memcmp(
             info.authority,
-            &header.pubkeys[authority_index],
+            &print_config.header.pubkeys[authority_index],
             PUBKEY_SIZE
         ) == 0
     );
 
     num_kinds = 0;
     transaction_summary_reset();
-    assert(print_system_info(&info2, &header) == 0);
+    assert(print_system_info(&info2, &print_config) == 0);
     assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
     assert(num_kinds == 3);
 }
@@ -255,18 +255,18 @@ void test_process_system_transfer() {
                 42, 0, 0, 0, 0, 0, 0, 0
     };
     Parser parser = {message, sizeof(message)};
-    MessageHeader header;
-    assert(parse_message_header(&parser, &header) == 0);
+    PrintConfig print_config;
+    assert(parse_message_header(&parser, &print_config.header) == 0);
 
     Instruction instruction;
     assert(parse_instruction(&parser, &instruction) == 0);
-    assert(instruction_validate(&instruction, &header) == 0);
+    assert(instruction_validate(&instruction, &print_config.header) == 0);
 
     SystemInfo info;
-    assert(parse_system_instructions(&instruction, &header, &info) == 0);
+    assert(parse_system_instructions(&instruction, &print_config.header, &info) == 0);
 
     transaction_summary_reset();
-    assert(print_system_info(&info, &header) == 0);
+    assert(print_system_info(&info, &print_config) == 0);
 
     enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_kinds;

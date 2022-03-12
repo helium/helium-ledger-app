@@ -409,7 +409,7 @@ int parse_stake_instructions(
 int print_delegate_stake_info(
     const char* primary_title,
     const StakeDelegateInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
@@ -426,7 +426,7 @@ int print_delegate_stake_info(
 
     item = transaction_summary_fee_payer_item();
     if (memcmp(
-            &header->pubkeys[0],
+            &print_config->header.pubkeys[0],
             info->authorized_pubkey,
             PUBKEY_SIZE
         ) == 0
@@ -439,9 +439,9 @@ int print_delegate_stake_info(
 
 static int print_stake_withdraw_info(
     const StakeWithdrawInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -462,9 +462,9 @@ static int print_stake_withdraw_info(
 
 static int print_stake_authorize_info(
     const StakeAuthorizeInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     const char* new_authority_title = NULL;
     SummaryItem* item;
@@ -497,9 +497,9 @@ static int print_stake_authorize_info(
 
 static int print_stake_deactivate_info(
     const StakeDeactivateInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -514,9 +514,9 @@ static int print_stake_deactivate_info(
 
 static int print_stake_set_lockup_info(
     const StakeSetLockupInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -555,17 +555,17 @@ static int print_stake_set_lockup_info(
 
 static int print_stake_split_info(
     const StakeSplitInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    BAIL_IF(print_stake_split_info1(info, header));
-    return print_stake_split_info2(info, header);
+    BAIL_IF(print_stake_split_info1(info, print_config));
+    return print_stake_split_info2(info, print_config);
 }
 
 static int print_stake_merge_info(
     const StakeMergeInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -583,36 +583,36 @@ static int print_stake_merge_info(
 
 int print_stake_info(
     const StakeInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     switch (info->kind) {
         case StakeDelegate:
             return print_delegate_stake_info(
                 "Delegate from",
                 &info->delegate_stake,
-                header
+                print_config
             );
         case StakeInitialize:
         case StakeInitializeChecked:
             return print_stake_initialize_info(
                 "Init stake acct",
                 &info->initialize,
-                header
+                print_config
             );
         case StakeWithdraw:
-            return print_stake_withdraw_info(&info->withdraw, header);
+            return print_stake_withdraw_info(&info->withdraw, print_config);
         case StakeAuthorize:
         case StakeAuthorizeChecked:
-            return print_stake_authorize_info(&info->authorize, header);
+            return print_stake_authorize_info(&info->authorize, print_config);
         case StakeDeactivate:
-            return print_stake_deactivate_info(&info->deactivate, header);
+            return print_stake_deactivate_info(&info->deactivate, print_config);
         case StakeSetLockup:
         case StakeSetLockupChecked:
-            return print_stake_set_lockup_info(&info->set_lockup, header);
+            return print_stake_set_lockup_info(&info->set_lockup, print_config);
         case StakeSplit:
-            return print_stake_split_info(&info->split, header);
+            return print_stake_split_info(&info->split, print_config);
         case StakeMerge:
-            return print_stake_merge_info(&info->merge, header);
+            return print_stake_merge_info(&info->merge, print_config);
         // Unsupported instructions
         case StakeAuthorizeWithSeed:
         case StakeAuthorizeCheckedWithSeed:
@@ -625,9 +625,9 @@ int print_stake_info(
 int print_stake_initialize_info(
     const char* primary_title,
     const StakeInitializeInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
     bool one_authority = pubkeys_equal(
@@ -692,9 +692,9 @@ int print_stake_initialize_info(
 
 int print_stake_split_info1(
     const StakeSplitInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -712,9 +712,9 @@ int print_stake_split_info1(
 
 int print_stake_split_info2(
     const StakeSplitInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 

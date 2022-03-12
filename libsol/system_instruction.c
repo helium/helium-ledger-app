@@ -309,7 +309,7 @@ int parse_system_instructions(
 
 static int print_system_transfer_info(
     const SystemTransferInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
@@ -323,9 +323,9 @@ static int print_system_transfer_info(
     summary_item_set_pubkey(item, "Recipient", info->to);
 
     item = transaction_summary_fee_payer_item();
-    if (memcmp(&header->pubkeys[0], info->to, PUBKEY_SIZE) == 0) {
+    if (memcmp(&print_config->header.pubkeys[0], info->to, PUBKEY_SIZE) == 0) {
         transaction_summary_set_fee_payer_string("recipient");
-    } else if (memcmp(&header->pubkeys[0], info->from, PUBKEY_SIZE) == 0) {
+    } else if (memcmp(&print_config->header.pubkeys[0], info->from, PUBKEY_SIZE) == 0) {
         transaction_summary_set_fee_payer_string("sender");
     }
 
@@ -334,7 +334,7 @@ static int print_system_transfer_info(
 
 static int print_system_advance_nonce_account(
     const SystemAdvanceNonceInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
@@ -345,7 +345,7 @@ static int print_system_advance_nonce_account(
     summary_item_set_pubkey(item, "Authorized by", info->authority);
 
     item = transaction_summary_fee_payer_item();
-    if (memcmp(&header->pubkeys[0], info->authority, PUBKEY_SIZE) == 0) {
+    if (memcmp(&print_config->header.pubkeys[0], info->authority, PUBKEY_SIZE) == 0) {
         transaction_summary_set_fee_payer_string("authority");
     }
 
@@ -354,9 +354,9 @@ static int print_system_advance_nonce_account(
 
 static int print_system_withdraw_nonce_info(
     const SystemWithdrawNonceInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -377,9 +377,9 @@ static int print_system_withdraw_nonce_info(
 
 static int print_system_authorize_nonce_info(
     const SystemAuthorizeNonceInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -397,9 +397,9 @@ static int print_system_authorize_nonce_info(
 
 static int print_system_allocate_info(
     const SystemAllocateInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -414,9 +414,9 @@ static int print_system_allocate_info(
 
 static int print_system_assign_info(
     const SystemAssignInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 
@@ -429,52 +429,52 @@ static int print_system_assign_info(
     return 0;
 }
 
-int print_system_info(const SystemInfo* info, const MessageHeader* header) {
+int print_system_info(const SystemInfo* info, const PrintConfig* print_config) {
     switch (info->kind) {
         case SystemTransfer:
-            return print_system_transfer_info(&info->transfer, header);
+            return print_system_transfer_info(&info->transfer, print_config);
         case SystemAdvanceNonceAccount:
             return print_system_advance_nonce_account(
                 &info->advance_nonce,
-                header
+                print_config
             );
         case SystemCreateAccount:
             return print_system_create_account_info(
                 CREATE_ACCOUNT_TITLE,
                 &info->create_account,
-                header
+                print_config
             );
         case SystemCreateAccountWithSeed:
             return print_system_create_account_with_seed_info(
                 CREATE_ACCOUNT_TITLE,
                 &info->create_account_with_seed,
-                header
+                print_config
             );
         case SystemInitializeNonceAccount:
             return print_system_initialize_nonce_info(
                 "Init nonce acct",
                 &info->initialize_nonce,
-                header
+                print_config
             );
         case SystemWithdrawNonceAccount:
             return print_system_withdraw_nonce_info(
                 &info->withdraw_nonce,
-                header
+                print_config
             );
         case SystemAuthorizeNonceAccount:
             return print_system_authorize_nonce_info(
                 &info->authorize_nonce,
-                header
+                print_config
             );
         case SystemAssign:
-            return print_system_assign_info(&info->assign, header);
+            return print_system_assign_info(&info->assign, print_config);
         case SystemAllocate:
-            return print_system_allocate_info(&info->allocate, header);
+            return print_system_allocate_info(&info->allocate, print_config);
         case SystemAllocateWithSeed:
             return print_system_allocate_with_seed_info(
                 "Allocate acct",
                 &info->allocate_with_seed,
-                header
+                print_config
             );
         case SystemAssignWithSeed:
             break;
@@ -485,9 +485,9 @@ int print_system_info(const SystemInfo* info, const MessageHeader* header) {
 
 int print_system_nonced_transaction_sentinel(
     const SystemInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     const SystemAdvanceNonceInfo* nonce_info = &info->advance_nonce;
     SummaryItem* item;
@@ -504,9 +504,9 @@ int print_system_nonced_transaction_sentinel(
 int print_system_create_account_info(
     const char* primary_title,
     const SystemCreateAccountInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
     if (primary_title != NULL) {
@@ -526,9 +526,9 @@ int print_system_create_account_info(
 int print_system_create_account_with_seed_info(
     const char* primary_title,
     const SystemCreateAccountWithSeedInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
     if (primary_title != NULL) {
@@ -554,9 +554,9 @@ int print_system_create_account_with_seed_info(
 int print_system_initialize_nonce_info(
     const char* primary_title,
     const SystemInitializeNonceInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
     if (primary_title != NULL) {
@@ -573,9 +573,9 @@ int print_system_initialize_nonce_info(
 int print_system_allocate_with_seed_info(
     const char* primary_title,
     const SystemAllocateWithSeedInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    UNUSED(header);
+    UNUSED(print_config);
 
     SummaryItem* item;
 

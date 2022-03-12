@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "sol/parser.h"
 #include "sol/printer.h"
+#include "sol/print_config.h"
 #include "sol/message.h"
 #include "sol/transaction_summary.h"
 
@@ -198,18 +199,19 @@ void handleSignMessage(
     G_numDerivationPaths = 0;
 
     Parser parser = {G_message, G_messageLength};
-    MessageHeader header;
-    if (parse_message_header(&parser, &header)) {
+    PrintConfig print_config;
+    MessageHeader* header = &print_config.header;
+    if (parse_message_header(&parser, header)) {
         // This is not a valid Solana message
         THROW(ApduReplySolanaInvalidMessage);
         return;
     } else {
         uint8_t signer_pubkey[32];
         getPublicKey(G_derivationPath, signer_pubkey, G_derivationPathLength);
-        size_t signer_count = header.pubkeys_header.num_required_signatures;
+        size_t signer_count = header->pubkeys_header.num_required_signatures;
         size_t i;
         for (i = 0; i < signer_count; i++) {
-            const Pubkey* pubkey = &header.pubkeys[i];
+            const Pubkey* pubkey = &header->pubkeys[i];
             if (memcmp(pubkey, signer_pubkey, PUBKEY_SIZE) == 0) {
                 break;
             }
@@ -228,7 +230,7 @@ void handleSignMessage(
     }
 
     transaction_summary_reset();
-    if (process_message_body(parser.buffer, parser.buffer_length, &header)) {
+    if (process_message_body(parser.buffer, parser.buffer_length, &print_config)) {
         if (N_storage.settings.allow_blind_sign == BlindSignEnabled) {
             SummaryItem* item = transaction_summary_primary_item();
             summary_item_set_string(item, "Unrecognized", "format");
@@ -249,7 +251,7 @@ void handleSignMessage(
 
     // Set fee-payer if it hasn't already been resolved by
     // the transaction printer
-    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
+    transaction_summary_set_fee_payer_pubkey(&header->pubkeys[0]);
 
     enum SummaryItemKind summary_step_kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_summary_steps = 0;
