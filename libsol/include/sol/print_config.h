@@ -5,4 +5,5 @@
 
 typedef struct PrintConfig {
     MessageHeader header;
+    bool expert_mode;
 } PrintConfig;

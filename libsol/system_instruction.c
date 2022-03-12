@@ -487,16 +487,16 @@ int print_system_nonced_transaction_sentinel(
     const SystemInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
+    if (print_config->expert_mode)  {
+        const SystemAdvanceNonceInfo* nonce_info = &info->advance_nonce;
+        SummaryItem* item;
 
-    const SystemAdvanceNonceInfo* nonce_info = &info->advance_nonce;
-    SummaryItem* item;
+        item = transaction_summary_nonce_account_item();
+        summary_item_set_pubkey(item, "Nonce account", nonce_info->account);
 
-    item = transaction_summary_nonce_account_item();
-    summary_item_set_pubkey(item, "Nonce account", nonce_info->account);
-
-    item = transaction_summary_nonce_authority_item();
-    summary_item_set_pubkey(item, "Nonce authority", nonce_info->authority);
+        item = transaction_summary_nonce_authority_item();
+        summary_item_set_pubkey(item, "Nonce authority", nonce_info->authority);
+    }
 
     return 0;
 }
@@ -528,8 +528,6 @@ int print_system_create_account_with_seed_info(
     const SystemCreateAccountWithSeedInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
     if (primary_title != NULL) {
         item = transaction_summary_primary_item();
@@ -542,11 +540,13 @@ int print_system_create_account_with_seed_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "From", info->from);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Base", info->base);
+    if (print_config->expert_mode) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Base", info->base);
 
-    item = transaction_summary_general_item();
-    summary_item_set_sized_string(item, "Seed", &info->seed);
+        item = transaction_summary_general_item();
+        summary_item_set_sized_string(item, "Seed", &info->seed);
+    }
 
     return 0;
 }
@@ -575,8 +575,6 @@ int print_system_allocate_with_seed_info(
     const SystemAllocateWithSeedInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     if (primary_title != NULL) {
@@ -587,11 +585,13 @@ int print_system_allocate_with_seed_info(
     item = transaction_summary_general_item();
     summary_item_set_u64(item, "Data size", info->space);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Base", info->base);
+    if (print_config->expert_mode) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Base", info->base);
 
-    item = transaction_summary_general_item();
-    summary_item_set_sized_string(item, "Seed", &info->seed);
+        item = transaction_summary_general_item();
+        summary_item_set_sized_string(item, "Seed", &info->seed);
+    }
 
     return 0;
 }

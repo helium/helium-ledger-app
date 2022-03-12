@@ -13,7 +13,7 @@ void test_process_message_body_ok() {
         {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
     };
     Blockhash blockhash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 1}};
+    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 1}, .expert_mode = true };
     uint8_t msg_body[] = {2, 2, 0, 1, 12, 2, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0};
 
     transaction_summary_reset();
@@ -31,7 +31,7 @@ void test_process_message_body_xfer_w_nonce_ok() {
         {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
     };
     Blockhash blockhash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 2}};
+    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 2}, .expert_mode = true };
     uint8_t msg_body[] = {
         2, 3, 0, 1, 0, 4, 4, 0, 0, 0, // Nonce
         2, 2, 0, 1, 12, 2, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0
@@ -45,7 +45,7 @@ void test_process_message_body_xfer_w_nonce_ok() {
 }
 
 void test_process_message_body_too_few_ix_fail() {
-    PrintConfig print_config = { .header = {{0, 0, 0, 0}, NULL, NULL, 0}};
+    PrintConfig print_config = { .header = {{0, 0, 0, 0}, NULL, NULL, 0}, .expert_mode = true };
     assert(process_message_body(NULL, 0, &print_config) == 1);
 }
 
@@ -66,12 +66,12 @@ void test_process_message_body_too_many_ix_fail() {
         uint8_t* start = msg_body + (i * XFER_IX_LEN);
         memcpy(start, xfer_ix, XFER_IX_LEN);
     }
-    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, TOO_MANY_IX}};
+    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, TOO_MANY_IX}, .expert_mode = true };
     assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &print_config) == 1);
 }
 
 void test_process_message_body_data_too_short_fail() {
-    PrintConfig print_config = { .header = {{0, 0, 0, 0}, NULL, NULL, 1}};
+    PrintConfig print_config = { .header = {{0, 0, 0, 0}, NULL, NULL, 1}, .expert_mode = true };
     assert(process_message_body(NULL, 0, &print_config) == 1);
 }
 
@@ -82,7 +82,7 @@ void test_process_message_body_data_too_long_fail() {
         {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
     };
     Blockhash blockhash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 1}};
+    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 1}, .expert_mode = true };
     uint8_t msg_body[] = {
         2, 2, 0, 1, 12, 2, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0,
         0
@@ -91,7 +91,7 @@ void test_process_message_body_data_too_long_fail() {
 }
 
 void test_process_message_body_bad_ix_account_index_fail() {
-    PrintConfig print_config = { .header = {{0, 0, 0, 1}, NULL, NULL, 1}};
+    PrintConfig print_config = { .header = {{0, 0, 0, 1}, NULL, NULL, 1}, .expert_mode = true };
     uint8_t msg_body[] = {1, 0, 0};
     assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &print_config) == 1);
 }
@@ -103,7 +103,7 @@ void test_process_message_body_unknown_ix_enum_fail() {
         {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
     };
     Blockhash blockhash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 1}};
+    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 1}, .expert_mode = true };
     uint8_t msg_body[] = {
         2, 2, 0, 1, 12, 255, 255, 255, 255, 42, 0, 0, 0, 0, 0, 0, 0,
     };
@@ -117,7 +117,7 @@ void test_process_message_body_ix_with_unknown_program_id_fail() {
         {{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}},
     };
     Blockhash blockhash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 1}};
+    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 1}, .expert_mode = true };
     uint8_t msg_body[] = {
         2, 2, 0, 1, 12, 2, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0,
     };
@@ -126,6 +126,7 @@ void test_process_message_body_ix_with_unknown_program_id_fail() {
 
 static void process_message_body_and_sanity_check(const uint8_t* message, size_t message_length, size_t expected_fields) {
     PrintConfig print_config;
+    print_config.expert_mode = true;
     Parser parser = { message, message_length };
     assert(parse_message_header(&parser, &print_config.header) == 0);
     transaction_summary_reset();

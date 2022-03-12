@@ -200,6 +200,7 @@ void handleSignMessage(
 
     Parser parser = {G_message, G_messageLength};
     PrintConfig print_config;
+    print_config.expert_mode = (N_storage.settings.display_mode == DisplayModeExpert);
     MessageHeader* header = &print_config.header;
     if (parse_message_header(&parser, header)) {
         // This is not a valid Solana message

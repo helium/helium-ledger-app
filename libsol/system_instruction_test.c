@@ -100,6 +100,7 @@ void test_parse_system_advance_nonce_account_instruction() {
     };
     Parser parser = {message, sizeof(message)};
     PrintConfig print_config;
+    print_config.expert_mode = true;
     assert(parse_message_header(&parser, &print_config.header) == 0);
 
     Instruction instruction;
@@ -256,6 +257,7 @@ void test_process_system_transfer() {
     };
     Parser parser = {message, sizeof(message)};
     PrintConfig print_config;
+    print_config.expert_mode = true;
     assert(parse_message_header(&parser, &print_config.header) == 0);
 
     Instruction instruction;

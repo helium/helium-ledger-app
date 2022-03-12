@@ -384,10 +384,12 @@ static int print_stake_split_with_seed(
 
     BAIL_IF(print_stake_split_info1(ss_info, print_config));
 
-    SummaryItem* item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Base", base);
-    item = transaction_summary_general_item();
-    summary_item_set_sized_string(item, "Seed", seed);
+    if (print_config->expert_mode) {
+        SummaryItem* item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Base", base);
+        item = transaction_summary_general_item();
+        summary_item_set_sized_string(item, "Seed", seed);
+    }
 
     BAIL_IF(print_stake_split_info2(ss_info, print_config));
 

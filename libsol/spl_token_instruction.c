@@ -679,8 +679,6 @@ static int print_spl_token_mint_to_info(
     const SplTokenMintToInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -693,8 +691,10 @@ static int print_spl_token_mint_to_info(
         info->body.decimals
     );
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "From", info->mint_account);
+    if (print_config->expert_mode) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "From", info->mint_account);
+    }
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "To", info->token_account);
@@ -753,15 +753,15 @@ static int print_spl_token_freeze_account_info(
     const SplTokenFreezeAccountInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Freeze acct", info->token_account);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Mint", info->mint_account);
+    if (print_config->expert_mode) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Mint", info->mint_account);
+    }
 
     print_spl_token_sign(&info->sign);
 
@@ -772,15 +772,15 @@ static int print_spl_token_thaw_account_info(
     const SplTokenThawAccountInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Thaw acct", info->token_account);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Mint", info->mint_account);
+    if (print_config->expert_mode) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Mint", info->mint_account);
+    }
 
     print_spl_token_sign(&info->sign);
 

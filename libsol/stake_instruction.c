@@ -627,8 +627,6 @@ int print_stake_initialize_info(
     const StakeInitializeInfo* info,
     const PrintConfig* print_config
 ) {
-    UNUSED(print_config);
-
     SummaryItem* item;
     bool one_authority = pubkeys_equal(
         info->withdraw_authority,
@@ -678,7 +676,7 @@ int print_stake_initialize_info(
             "Lockup authority",
             info->lockup.custodian
         );
-    } else {
+    } else if (print_config->expert_mode) {
         item = transaction_summary_general_item();
         summary_item_set_string(
             item,
