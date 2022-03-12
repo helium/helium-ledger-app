@@ -250,8 +250,6 @@ void handleSignMessage(
         }
     }
 
-    // Set fee-payer if it hasn't already been resolved by
-    // the transaction printer
     transaction_summary_set_fee_payer_pubkey(&header->pubkeys[0]);
 
     enum SummaryItemKind summary_step_kinds[MAX_TRANSACTION_SUMMARY_ITEMS];

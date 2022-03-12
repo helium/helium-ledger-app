@@ -141,6 +141,7 @@ void test_parse_system_advance_nonce_account_instruction() {
     assert(print_system_advance_nonce_account(&info, &print_config) == 0);
     enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_kinds;
+    transaction_summary_set_fee_payer_pubkey(&print_config.header.pubkeys[0]);
     assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
     assert(num_kinds == 3);
 
@@ -164,6 +165,7 @@ void test_parse_system_advance_nonce_account_instruction() {
     num_kinds = 0;
     transaction_summary_reset();
     assert(print_system_info(&info2, &print_config) == 0);
+    transaction_summary_set_fee_payer_pubkey(&print_config.header.pubkeys[0]);
     assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
     assert(num_kinds == 3);
 }
@@ -272,15 +274,12 @@ void test_process_system_transfer() {
 
     enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_kinds;
+    transaction_summary_set_fee_payer_pubkey(&print_config.header.pubkeys[0]);
     assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
     assert(num_kinds == 4);
 
     transaction_summary_display_item(0, DisplayFlagNone);
     assert_string_equal(G_transaction_summary_text, "0.000000042 SOL");
-
-    // Fee-payer is sender
-    transaction_summary_display_item(3, DisplayFlagNone);
-    assert_string_equal(G_transaction_summary_text, "sender");
 }
 
 void test_parse_system_instruction_kind() {

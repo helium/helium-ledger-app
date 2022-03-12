@@ -411,6 +411,8 @@ int print_delegate_stake_info(
     const StakeDelegateInfo* info,
     const PrintConfig* print_config
 ) {
+    UNUSED(print_config);
+
     SummaryItem* item;
 
     if (primary_title != NULL) {
@@ -423,16 +425,6 @@ int print_delegate_stake_info(
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Vote account", info->vote_pubkey);
-
-    item = transaction_summary_fee_payer_item();
-    if (memcmp(
-            &print_config->header.pubkeys[0],
-            info->authorized_pubkey,
-            PUBKEY_SIZE
-        ) == 0
-    ) {
-        transaction_summary_set_fee_payer_string("authorizer");
-    }
 
     return 0;
 }

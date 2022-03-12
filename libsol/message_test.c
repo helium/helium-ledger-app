@@ -18,6 +18,7 @@ void test_process_message_body_ok() {
 
     transaction_summary_reset();
     assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &print_config) == 0);
+    transaction_summary_set_fee_payer_pubkey(&print_config.header.pubkeys[0]);
     enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_kinds;
     assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
@@ -38,6 +39,7 @@ void test_process_message_body_xfer_w_nonce_ok() {
     };
     transaction_summary_reset();
     assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &print_config) == 0);
+    transaction_summary_set_fee_payer_pubkey(&print_config.header.pubkeys[0]);
     enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_kinds;
     assert(transaction_summary_finalize(kinds, &num_kinds) == 0);

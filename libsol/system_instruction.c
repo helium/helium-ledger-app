@@ -311,6 +311,8 @@ static int print_system_transfer_info(
     const SystemTransferInfo* info,
     const PrintConfig* print_config
 ) {
+    UNUSED(print_config);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -322,13 +324,6 @@ static int print_system_transfer_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Recipient", info->to);
 
-    item = transaction_summary_fee_payer_item();
-    if (memcmp(&print_config->header.pubkeys[0], info->to, PUBKEY_SIZE) == 0) {
-        transaction_summary_set_fee_payer_string("recipient");
-    } else if (memcmp(&print_config->header.pubkeys[0], info->from, PUBKEY_SIZE) == 0) {
-        transaction_summary_set_fee_payer_string("sender");
-    }
-
     return 0;
 }
 
@@ -336,6 +331,8 @@ static int print_system_advance_nonce_account(
     const SystemAdvanceNonceInfo* info,
     const PrintConfig* print_config
 ) {
+    UNUSED(print_config);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -343,11 +340,6 @@ static int print_system_advance_nonce_account(
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Authorized by", info->authority);
-
-    item = transaction_summary_fee_payer_item();
-    if (memcmp(&print_config->header.pubkeys[0], info->authority, PUBKEY_SIZE) == 0) {
-        transaction_summary_set_fee_payer_string("authority");
-    }
 
     return 0;
 }
