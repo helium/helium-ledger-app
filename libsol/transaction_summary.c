@@ -345,9 +345,7 @@ int transaction_summary_finalize(
     const TransactionSummary* summary = &G_transaction_summary;
     size_t index = 0;
 
-    if ((summary->primary.kind == SummaryItemNone)
-        || (summary->fee_payer.kind == SummaryItemNone)
-    ) {
+    if (summary->primary.kind == SummaryItemNone) {
         return 1;
     }
 
