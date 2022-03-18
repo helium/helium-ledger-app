@@ -8,6 +8,60 @@ void switch_pubkey_display_data(void);
 //////////////////////////////////////////////////////////////////////
 const char* settings_submenu_getter(unsigned int idx);
 void settings_submenu_selector(unsigned int idx);
+static const char* allow_blind_sign_data_getter(unsigned int idx);
+static void allow_blind_sign_data_selector(unsigned int idx);
+static const char* pubkey_display_data_getter(unsigned int idx);
+static void pubkey_display_data_selector(unsigned int idx);
+static const char* display_mode_data_getter(unsigned int idx);
+static void display_mode_data_selector(unsigned int idx);
+
+//////////////////////////////////////////////////////////////////////////////////////
+// Settings menu:
+
+const char* const settings_submenu_getter_values[] = {
+    "Allow blind sign",
+    "Pubkey length",
+    "Display mode",
+    "Back",
+};
+
+const char* settings_submenu_getter(unsigned int idx) {
+    if (idx < ARRAYLEN(settings_submenu_getter_values)) {
+        return settings_submenu_getter_values[idx];
+    }
+    return NULL;
+}
+
+void settings_submenu_selector(unsigned int idx) {
+    switch(idx) {
+        case 0:
+            ux_menulist_init_select(
+                0,
+                allow_blind_sign_data_getter,
+                allow_blind_sign_data_selector,
+                N_storage.settings.allow_blind_sign
+            );
+            break;
+        case 1:
+            ux_menulist_init_select(
+                0,
+                pubkey_display_data_getter,
+                pubkey_display_data_selector,
+                N_storage.settings.pubkey_display
+            );
+            break;
+        case 2:
+            ux_menulist_init_select(
+                0,
+                display_mode_data_getter,
+                display_mode_data_selector,
+                N_storage.settings.display_mode
+            );
+            break;
+        default:
+            ui_idle();
+    }
+}
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Allow blind signing submenu
@@ -130,39 +184,6 @@ static void display_mode_data_selector(unsigned int idx) {
         default:
             ux_menulist_init(0, settings_submenu_getter, settings_submenu_selector);
     }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// Settings menu:
-
-const char* const settings_submenu_getter_values[] = {
-  "Allow blind sign",
-  "Pubkey length",
-  "Display mode",
-  "Back",
-};
-
-const char* settings_submenu_getter(unsigned int idx) {
-  if (idx < ARRAYLEN(settings_submenu_getter_values)) {
-    return settings_submenu_getter_values[idx];
-  }
-  return NULL;
-}
-
-void settings_submenu_selector(unsigned int idx) {
-  switch(idx) {
-    case 0:
-      ux_menulist_init_select(0, allow_blind_sign_data_getter, allow_blind_sign_data_selector, N_storage.settings.allow_blind_sign);
-      break;
-    case 1:
-      ux_menulist_init_select(0, pubkey_display_data_getter, pubkey_display_data_selector, N_storage.settings.pubkey_display);
-      break;
-    case 2:
-      ux_menulist_init_select(0, display_mode_data_getter, display_mode_data_selector, N_storage.settings.display_mode);
-      break;
-    default:
-      ui_idle();
-  }
 }
 
 //////////////////////////////////////////////////////////////////////
