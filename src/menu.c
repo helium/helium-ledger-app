@@ -18,6 +18,26 @@ static void display_mode_data_selector(unsigned int idx);
 //////////////////////////////////////////////////////////////////////////////////////
 // Settings menu:
 
+enum SettingsMenuOption {
+    SettingsMenuOptionAllowBlindSign,
+    SettingsMenuOptionPubkeyLength,
+    SettingsMenuOptionDisplayMode,
+    // back must remain last
+    SettingsMenuOptionBack
+};
+
+unsigned int settings_submenu_option_index(enum SettingsMenuOption settings_menu_option) {
+    switch (settings_menu_option) {
+        case SettingsMenuOptionAllowBlindSign:
+        case SettingsMenuOptionPubkeyLength:
+        case SettingsMenuOptionDisplayMode:
+            return (unsigned int) settings_menu_option;
+        default:
+            break;
+    }
+    return 0;
+}
+
 const char* const settings_submenu_getter_values[] = {
     "Allow blind sign",
     "Pubkey length",
@@ -75,7 +95,6 @@ static void allow_blind_sign_data_change(enum BlindSign blind_sign) {
             nvm_write((void *)&N_storage.settings.allow_blind_sign, &value, sizeof(value));
             break;
     }
-    ui_idle();
 }
 
 const char * const no_yes_data_getter_values[] = {
@@ -100,8 +119,11 @@ void allow_blind_sign_data_selector(unsigned int idx) {
       allow_blind_sign_data_change(BlindSignEnabled);
       break;
     default:
-      ux_menulist_init(0, settings_submenu_getter, settings_submenu_selector);
+      break;
   }
+  unsigned int select_item =
+    settings_submenu_option_index(SettingsMenuOptionAllowBlindSign);
+  ux_menulist_init_select(0, settings_submenu_getter, settings_submenu_selector, select_item);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +138,6 @@ void pubkey_display_data_change(enum PubkeyDisplay pubkey_display) {
             nvm_write((void *)&N_storage.settings.pubkey_display, &value, sizeof(value));
             break;
     }
-    ui_idle();
 }
 
 const char* const pubkey_display_data_getter_values[] = {
@@ -141,8 +162,11 @@ static void pubkey_display_data_selector(unsigned int idx) {
       pubkey_display_data_change(PubkeyDisplayShort);
       break;
     default:
-      ux_menulist_init(0, settings_submenu_getter, settings_submenu_selector);
+      break;
   }
+  unsigned int select_item =
+    settings_submenu_option_index(SettingsMenuOptionPubkeyLength);
+  ux_menulist_init_select(0, settings_submenu_getter, settings_submenu_selector, select_item);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +181,6 @@ void display_mode_data_change(enum DisplayMode display_mode) {
             nvm_write((void *)&N_storage.settings.display_mode, &value, sizeof(value));
             break;
     }
-    ui_idle();
 }
 
 const char* const display_mode_data_getter_values[] = {
@@ -182,8 +205,11 @@ static void display_mode_data_selector(unsigned int idx) {
             display_mode_data_change(DisplayModeExpert);
             break;
         default:
-            ux_menulist_init(0, settings_submenu_getter, settings_submenu_selector);
+            break;
     }
+    unsigned int select_item =
+        settings_submenu_option_index(SettingsMenuOptionDisplayMode);
+    ux_menulist_init_select(0, settings_submenu_getter, settings_submenu_selector, select_item);
 }
 
 //////////////////////////////////////////////////////////////////////
