@@ -39,7 +39,7 @@ static const bagl_element_t* ui_prepro_getPublicKey(const bagl_element_t *elemen
 
 // Define the button handler for the comparison screen. Again, this is nearly
 // identical to the signHash comparison button handler.
-static unsigned int ui_getPublicKey_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_getPublicKey_button(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	switch (button_mask) {
 	case BUTTON_LEFT:
@@ -47,7 +47,7 @@ static unsigned int ui_getPublicKey_button(unsigned int button_mask, unsigned in
 		if (CTX.displayIndex > 0) {
 			CTX.displayIndex--;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -56,7 +56,7 @@ static unsigned int ui_getPublicKey_button(unsigned int button_mask, unsigned in
 		if (CTX.displayIndex < fullSize-12) {
 			CTX.displayIndex++;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -71,7 +71,11 @@ static unsigned int ui_getPublicKey_button(unsigned int button_mask, unsigned in
 // handleGetPublicKey is the entry point for the getPublicKey command. It
 // reads the command parameters, prepares and displays the approval screen,
 // and 
-void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
+void handle_get_public_key(uint8_t p1, uint8_t p2,
+                           __attribute__((unused)) uint8_t *dataBuffer,
+                           __attribute__((unused)) uint16_t dataLength,
+                           __attribute__((unused)) volatile unsigned int *flags,
+                           __attribute__((unused)) volatile unsigned int *tx) {
 	size_t output_len;
 	// Sanity-check the command parameters.
 	if ((p1 != P1_PUBKEY_DISPLAY_ON) && (p1 != P1_PUBKEY_DISPLAY_OFF)) {
@@ -97,7 +101,7 @@ void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t
 	cx_sha256_init(&hash);
 	cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
 
-	os_memmove(&G_io_apdu_buffer[adpu_tx], hash_buffer, SIZE_OF_SHA_CHECKSUM);
+	memmove(&G_io_apdu_buffer[adpu_tx], hash_buffer, SIZE_OF_SHA_CHECKSUM);
 	adpu_tx += SIZE_OF_SHA_CHECKSUM;
 
 
@@ -108,7 +112,7 @@ void handle_get_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t
 			btchip_encode_base58(G_io_apdu_buffer, adpu_tx, CTX.fullStr, &output_len);
 			CTX.fullStr[51] = '\0';
 			CTX.fullStr_len = output_len;
-			os_memmove(CTX.partialStr, CTX.fullStr, 12);
+			memmove(CTX.partialStr, CTX.fullStr, 12);
 			CTX.partialStr[12] = '\0';
 			CTX.displayIndex = 0;
 

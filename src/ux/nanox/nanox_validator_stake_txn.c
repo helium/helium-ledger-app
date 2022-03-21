@@ -17,7 +17,7 @@ static void init_stake_amount(void)
 {
   uint8_t len;
 
-  len = pretty_print_hnt(CTX.fullStr, CTX.stake_amount);
+  len = pretty_print_hnt(CTX.fullStr, CTX.stake);
   CTX.fullStr_len = len;
 }
 
@@ -31,13 +31,13 @@ static void init_stake_address(void)
   
   for(uint8_t i=0; i<2; i++){
     // display recipient address on screen
-    os_memmove(address_with_check, CTX.address, 34);
+    memmove(address_with_check, CTX.address, 34);
 
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, address_with_check, 34, hash_buffer, 32);
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
-    os_memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
+    memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
     btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
     CTX.fullStr[output_len] = '\0';
     CTX.fullStr_len = output_len;
@@ -144,8 +144,9 @@ static void ui_sign_transaction(void)
 }
 
 
-void handle_validator_stake_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
-    save_validator_stake_context(p1, p2, dataBuffer, dataLength, &CTX);
+void handle_stake_validator_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags,
+                                __attribute__((unused)) volatile unsigned int *tx) {
+    save_stake_validator_context(p1, p2, dataBuffer, dataLength, &CTX);
 	ui_sign_transaction();
 	*flags |= IO_ASYNCH_REPLY;
 }

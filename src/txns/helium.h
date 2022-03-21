@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <os.h>
 #include <cx.h>
-#include "../ux/helium_ux.h"
 
 // exception codes
 #define SW_DEVELOPER_ERR 0x6B00
@@ -10,10 +9,6 @@
 #define SW_IMPROPER_INIT 0x6B02
 #define SW_USER_REJECTED 0x6985
 #define SW_OK            0x9000
-
-// macros for converting raw bytes to uint64_t
-#define U8BE(buf, off) (((uint64_t)(U4BE(buf, off))     << 32) | ((uint64_t)(U4BE(buf, off + 4)) & 0xFFFFFFFF))
-#define U8LE(buf, off) (((uint64_t)(U4LE(buf, off + 4)) << 32) | ((uint64_t)(U4LE(buf, off))     & 0xFFFFFFFF))
 
 // bin2hex converts binary to hex and appends a final NUL byte.
 void bin2hex(uint8_t *dst, uint8_t *data, uint64_t inlen);
@@ -27,6 +22,8 @@ int bin2dec(uint8_t *dst, uint64_t n);
 int u64_to_base64(uint8_t *dst, uint64_t n);
 
 uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n);
+
+void sign_tx(uint8_t *dst, uint32_t account, const uint8_t *tx, uint16_t length);
 
 typedef struct transaction_arg_t {
     uint8_t * buf;
@@ -45,6 +42,7 @@ uint32_t create_helium_stake_txn(uint8_t account);
 uint32_t create_helium_transfer_validator_txn(uint8_t account);
 uint32_t create_helium_unstake_txn(uint8_t account);
 uint32_t create_helium_burn_txn(uint8_t account);
+uint32_t create_helium_transfer_sec(uint8_t account);
 
 #define SIZE_OF_PUB_KEY_BIN 	32
 #define SIZE_OF_SHA_CHECKSUM 	4

@@ -11,7 +11,7 @@
 #include "helium_ux.h"
 #include "save_context.h"
 
-#define CTX global.paymentContext
+#define CTX global.transferSecContext
 
 static const bagl_element_t ui_signTxn_approve[] = {
 	UI_BACKGROUND(),
@@ -30,7 +30,7 @@ static const bagl_element_t* ui_prepro_signTxn_approve(const bagl_element_t *ele
 	return element;
 }
 
-static unsigned int ui_signTxn_approve_button(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
+static unsigned int ui_signTxn_approve_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int adpu_tx;
 	switch (button_mask) {
 	case BUTTON_LEFT:
@@ -44,7 +44,7 @@ static unsigned int ui_signTxn_approve_button(unsigned int button_mask, __attrib
 
 	case BUTTON_RIGHT:
 	case BUTTON_EVT_FAST | BUTTON_RIGHT: // SEEK RIGHT
-		adpu_tx = create_helium_pay_txn(CTX.account_index);
+		adpu_tx = create_helium_transfer_sec(CTX.account_index);
 		io_exchange_with_code(SW_OK, adpu_tx);
 		ui_idle();
 		break;
@@ -73,7 +73,7 @@ static const bagl_element_t* ui_prepro_displayFee(const bagl_element_t *element)
 	return element;
 }
 
-static unsigned int ui_displayFee_button(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
+static unsigned int ui_displayFee_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	switch (button_mask) {
 	case BUTTON_LEFT:
@@ -102,66 +102,6 @@ static unsigned int ui_displayFee_button(unsigned int button_mask, __attribute__
 	return 0;
 }
 
-static const bagl_element_t ui_displayMemo[] = {
-	UI_BACKGROUND(),
-	UI_ICON_LEFT(0x01, BAGL_GLYPH_ICON_LEFT),
-	UI_ICON_RIGHT(0x02, BAGL_GLYPH_ICON_RIGHT),
-	UI_TEXT(0x00, 0, 12, 128, "Payment Memo"),
-	// The visible portion of fee
-	UI_TEXT(0x00, 0, 26, 128, CTX.partialStr),
-};
-
-static const bagl_element_t* ui_prepro_displayMemo(const bagl_element_t *element) {
-	int fullSize = CTX.fullStr_len;
-	if ((element->component.userid == 1 && CTX.displayIndex == 0) ||
-	    (element->component.userid == 2 && CTX.displayIndex == fullSize-12)) {
-		return NULL;
-	}
-	return element;
-}
-
-static unsigned int ui_displayMemo_button(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
-	int fullSize = CTX.fullStr_len;
-    uint8_t len;
-	switch (button_mask) {
-	case BUTTON_LEFT:
-	case BUTTON_EVT_FAST | BUTTON_LEFT: // SEEK LEFT
-		if (CTX.displayIndex > 0) {
-			CTX.displayIndex--;
-		}
-		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
-		UX_REDISPLAY();
-		break;
-
-	case BUTTON_RIGHT:
-	case BUTTON_EVT_FAST | BUTTON_RIGHT: // SEEK RIGHT
-		if (CTX.displayIndex < fullSize-12) {
-			CTX.displayIndex++;
-		}
-		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
-		UX_REDISPLAY();
-		break;
-
-	case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT: // PROCEED
-        // display data credit transaction fee
-		len = bin2dec(CTX.fullStr, CTX.fee);
-		CTX.fullStr_len = len;
-		CTX.fullStr[len] = '\0';
-
-		uint8_t partlen = 12;
-		if(len < 12){
-			partlen = len;
-		}
-		memmove(CTX.partialStr, CTX.fullStr, partlen);
-		CTX.partialStr[partlen] = '\0';
-		CTX.displayIndex = 0;
-		// display fee
-		UX_DISPLAY(ui_displayFee, ui_prepro_displayFee);
-		break;
-	}
-	return 0;
-}
-
 static const bagl_element_t ui_displayRecipient[] = {
 	UI_BACKGROUND(),
 	UI_ICON_LEFT(0x01, BAGL_GLYPH_ICON_LEFT),
@@ -180,7 +120,7 @@ static const bagl_element_t* ui_prepro_displayRecipient(const bagl_element_t *el
 	return element;
 }
 
-static unsigned int ui_displayRecipient_button(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
+static unsigned int ui_displayRecipient_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	uint8_t len;
 	switch (button_mask) {
@@ -204,8 +144,8 @@ static unsigned int ui_displayRecipient_button(unsigned int button_mask, __attri
 
 	case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT: // PROCEED
 
-		// display burn memo
-		len = u64_to_base64(CTX.fullStr, CTX.memo);
+		// display data credit transaction fee
+		len = bin2dec(CTX.fullStr, CTX.fee);
 		CTX.fullStr_len = len;
 		CTX.fullStr[len] = '\0';
 
@@ -217,7 +157,7 @@ static unsigned int ui_displayRecipient_button(unsigned int button_mask, __attri
 		CTX.partialStr[partlen] = '\0';
 		CTX.displayIndex = 0;
 
-		UX_DISPLAY(ui_displayMemo, ui_prepro_displayMemo);
+		UX_DISPLAY(ui_displayFee, ui_prepro_displayFee);
 		break;
 	}
 	return 0;
@@ -228,9 +168,9 @@ static const bagl_element_t ui_displayAmount[] = {
 	UI_ICON_LEFT(0x01, BAGL_GLYPH_ICON_LEFT),
 	UI_ICON_RIGHT(0x02, BAGL_GLYPH_ICON_RIGHT),
 #ifdef HELIUM_TESTNET
-	UI_TEXT(0x00, 0, 12, 128, "Amount TNT"),
+	UI_TEXT(0x00, 0, 12, 128, "Amount TST"),
 #else
-	UI_TEXT(0x00, 0, 12, 128, "Amount HNT"),
+	UI_TEXT(0x00, 0, 12, 128, "Amount HST"),
 #endif
 	// The visible portion of the amount
 	UI_TEXT(0x00, 0, 26, 128, CTX.partialStr),
@@ -245,7 +185,7 @@ static const bagl_element_t* ui_prepro_displayAmount(const bagl_element_t *eleme
 	return element;
 }
 
-static unsigned int ui_displayAmount_button(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
+static unsigned int ui_displayAmount_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	cx_sha256_t hash;
 	unsigned char hash_buffer[32];
@@ -298,11 +238,12 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, __attribut
 	return 0;
 }
 
-void handle_sign_payment_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength,
-                             volatile unsigned int *flags, __attribute__((unused)) volatile unsigned int *tx) {
-    save_payment_context(p1, p2, dataBuffer, dataLength, &CTX);
+void handle_sign_transfer_sec_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags,  __attribute__((unused))  volatile unsigned int *tx) {
+    save_transfer_sec_context(p1, p2, dataBuffer, dataLength, &CTX);
 
 	// display amount on screen
+    // hst and hnt share the same amount of decimals so
+    // the pretty_print_hnt function works here too
 	uint8_t len = pretty_print_hnt(CTX.fullStr, CTX.amount);
 	uint8_t i = 0;
 	while(CTX.fullStr[i] != '\0' && i<12){

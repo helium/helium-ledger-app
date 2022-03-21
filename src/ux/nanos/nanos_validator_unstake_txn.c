@@ -30,7 +30,7 @@ static const bagl_element_t* ui_prepro_signTxn_approve(const bagl_element_t *ele
 	return element;
 }
 
-static unsigned int ui_signTxn_approve_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_signTxn_approve_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int adpu_tx;
 	switch (button_mask) {
 	case BUTTON_LEFT:
@@ -73,7 +73,7 @@ static const bagl_element_t* ui_prepro_displayFee(const bagl_element_t *element)
 	return element;
 }
 
-static unsigned int ui_displayFee_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_displayFee_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	switch (button_mask) {
 	case BUTTON_LEFT:
@@ -81,7 +81,7 @@ static unsigned int ui_displayFee_button(unsigned int button_mask, unsigned int 
 		if (CTX.displayIndex > 0) {
 			CTX.displayIndex--;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -90,7 +90,7 @@ static unsigned int ui_displayFee_button(unsigned int button_mask, unsigned int 
 		if (CTX.displayIndex < fullSize-12) {
 			CTX.displayIndex++;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -120,7 +120,7 @@ static const bagl_element_t* ui_prepro_displayUnstakeAddress(const bagl_element_
 	return element;
 }
 
-static unsigned int ui_displayUnstakeAddress_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_displayUnstakeAddress_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	uint8_t len;
 	switch (button_mask) {
@@ -129,7 +129,7 @@ static unsigned int ui_displayUnstakeAddress_button(unsigned int button_mask, un
 		if (CTX.displayIndex > 0) {
 			CTX.displayIndex--;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -138,7 +138,7 @@ static unsigned int ui_displayUnstakeAddress_button(unsigned int button_mask, un
 		if (CTX.displayIndex < fullSize-12) {
 			CTX.displayIndex++;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -153,7 +153,7 @@ static unsigned int ui_displayUnstakeAddress_button(unsigned int button_mask, un
 		if(len < 12){
 			partlen = len;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr, partlen);
+		memmove(CTX.partialStr, CTX.fullStr, partlen);
 		CTX.partialStr[partlen] = '\0';
 		CTX.displayIndex = 0;
 
@@ -181,7 +181,7 @@ static const bagl_element_t* ui_prepro_displayReleaseHeight(const bagl_element_t
 	return element;
 }
 
-static unsigned int ui_displayReleaseHeight_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_displayReleaseHeight_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	cx_sha256_t hash;
 	unsigned char hash_buffer[32];
@@ -194,7 +194,7 @@ static unsigned int ui_displayReleaseHeight_button(unsigned int button_mask, uns
 		if (CTX.displayIndex > 0) {
 			CTX.displayIndex--;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -203,7 +203,7 @@ static unsigned int ui_displayReleaseHeight_button(unsigned int button_mask, uns
 		if (CTX.displayIndex < fullSize-12) {
 			CTX.displayIndex++;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -211,18 +211,18 @@ static unsigned int ui_displayReleaseHeight_button(unsigned int button_mask, uns
 
 	    for(uint8_t i=0; i<2; i++){
 			// display recipient address on screen
-			os_memmove(address_with_check, CTX.address, 34);
+			memmove(address_with_check, CTX.address, 34);
 
 			cx_sha256_init(&hash);
 			cx_hash(&hash.header, CX_LAST, address_with_check, 34, hash_buffer, 32);
 			cx_sha256_init(&hash);
 			cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
-			os_memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
+			memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
 			size_t output_len;
 			btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
 			CTX.fullStr[output_len] = '\0';
 			CTX.fullStr_len = output_len;
-			os_memmove(CTX.partialStr, CTX.fullStr, 12);
+			memmove(CTX.partialStr, CTX.fullStr, 12);
 			CTX.partialStr[12] = '\0';
 			CTX.displayIndex = 0;
 
@@ -255,7 +255,7 @@ static const bagl_element_t* ui_prepro_displayAmount(const bagl_element_t *eleme
 	return element;
 }
 
-static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned int button_mask_counter) {
+static unsigned int ui_displayAmount_button(unsigned int button_mask,  __attribute__((unused)) unsigned int button_mask_counter) {
 	int fullSize = CTX.fullStr_len;
 	uint8_t len;
 
@@ -265,7 +265,7 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 		if (CTX.displayIndex > 0) {
 			CTX.displayIndex--;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -274,7 +274,7 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 		if (CTX.displayIndex < fullSize-12) {
 			CTX.displayIndex++;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
+		memmove(CTX.partialStr, CTX.fullStr+CTX.displayIndex, 12);
 		UX_REDISPLAY();
 		break;
 
@@ -289,7 +289,7 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 		if(len < 12){
 			partlen = len;
 		}
-		os_memmove(CTX.partialStr, CTX.fullStr, partlen);
+		memmove(CTX.partialStr, CTX.fullStr, partlen);
 		CTX.partialStr[partlen] = '\0';
 		CTX.displayIndex = 0;
 
@@ -300,8 +300,8 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, unsigned i
 	return 0;
 }
 
-void handle_validator_unstake_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
-    save_validator_unstake_context(p1,p2,dataBuffer, dataLength, &CTX);
+void handle_unstake_validator_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, __attribute__((unused)) volatile unsigned int *tx) {
+    save_unstake_validator_context(p1,p2,dataBuffer, dataLength, &CTX);
 
 	// display amount on screen
 	uint8_t len = pretty_print_hnt(CTX.fullStr, CTX.stake_amount);

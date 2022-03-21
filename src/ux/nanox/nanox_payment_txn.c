@@ -32,13 +32,13 @@ static void init_recipient(void)
   
   for(uint8_t i=0; i<2; i++){
     // display recipient address on screen
-    os_memmove(address_with_check, CTX.payee, 34);
+    memmove(address_with_check, CTX.payee, 34);
 
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, address_with_check, 34, hash_buffer, 32);
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
-    os_memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
+    memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
     btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
     CTX.fullStr[output_len] = '\0';
     CTX.fullStr_len = output_len;
@@ -54,10 +54,18 @@ static void init_fee(void)
   len = bin2dec(CTX.fullStr, CTX.fee);
   CTX.fullStr_len = len;
   CTX.fullStr[len] = '\0';
-		
-  /* UX_DISPLAY(ui_displayFee, ui_prepro_displayFee); */
-  /* break; */
 }
+
+static void init_memo(void)
+{
+  uint8_t len;
+
+  // display memo
+  len = u64_to_base64(CTX.fullStr, CTX.memo);
+  CTX.fullStr_len = len;
+  CTX.fullStr[len] = '\0';
+}
+
 
 static void validate_transaction(bool isApproved)
 {
@@ -101,6 +109,15 @@ UX_STEP_NOCB_INIT(
     });
 
 UX_STEP_NOCB_INIT(
+    ux_payment_display_burn,
+    bnnn_paging,
+    init_memo(),
+    {
+      .title = "Payment Memo",
+      .text = (char *)global.burnContext.fullStr
+    });
+
+UX_STEP_NOCB_INIT(
     ux_payment_display_fee,
     bnnn_paging,
     init_fee(),
@@ -131,6 +148,7 @@ UX_STEP_CB(
 UX_DEF(ux_payment_sign_transaction_flow,
        &ux_payment_display_amount,
        &ux_payment_display_recipient_address,
+       &ux_payment_display_burn,
        &ux_payment_display_fee,
        &ux_payment_sign_approve,
        &ux_payment_sign_decline
@@ -145,7 +163,8 @@ static void ui_sign_transaction(void)
 }
 
 
-void handle_sign_payment_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
+void handle_sign_payment_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags,
+                             __attribute__((unused)) volatile unsigned int *tx) {
     save_payment_context(p1, p2, dataBuffer, dataLength, &CTX);
 
 	ui_sign_transaction();

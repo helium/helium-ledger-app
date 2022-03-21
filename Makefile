@@ -95,7 +95,6 @@ DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_LIGHT_16PX
 DEFINES       += HAVE_UX_FLOW
 else
 	DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=128
-	DEFINES	      += HAVE_UX_LEGACY
 endif
 
 # Enabling debug PRINTF
@@ -134,15 +133,7 @@ include $(BOLOS_SDK)/Makefile.glyphs
 # import generic rules from the sdk
 include $(BOLOS_SDK)/Makefile.rules
 
-# include nanopb/extra/nanopb.mk
-
-# NANOPB_DIR := nanopb
-
-# SOURCE_FILES += $(NANOPB_DIR)/pb_encode.c  # The nanopb encoder
-# SOURCE_FILES += $(NANOPB_DIR)/pb_decode.c  # The nanopb decoder
-# SOURCE_FILES += $(NANOPB_DIR)/pb_common.c  # The nanopb common parts
-
-dep/tx.d: 
+dep/tx.d:
 
 dep/%.d: %.c Makefile
 

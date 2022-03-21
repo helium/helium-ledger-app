@@ -1,3 +1,4 @@
+#include <string.h>
 #include "helium.h"
 
 uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n){
@@ -81,8 +82,8 @@ void derive_helium_public_key
 	if (privateKey) {
 		*privateKey = pk;
 	}
-	os_memset(keySeed, 0, sizeof(keySeed));
-	os_memset(&pk, 0, sizeof(pk));
+	memset(keySeed, 0, sizeof(keySeed));
+	memset(&pk, 0, sizeof(pk));
 }
 
 #include "pb.h"
@@ -94,11 +95,8 @@ void sign_tx(uint8_t *dst, uint32_t account, const uint8_t *tx, uint16_t length)
 	cx_ecfp_private_key_t privateKey;
     derive_helium_public_key(account, &privateKey, NULL);
 	cx_eddsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA512, tx, length, NULL, 0, dst, 64, NULL);
-	os_memset(&privateKey, 0, sizeof(privateKey));
+	memset(&privateKey, 0, sizeof(privateKey));
 }
-
-
-
 
 void extract_pubkey_bytes(unsigned char *dst, cx_ecfp_public_key_t *publicKey) {
 	for (int i = 0; i < 32; i++) {
@@ -186,7 +184,7 @@ int btchip_encode_base58(const unsigned char *in, size_t length,
     return -1;
   }
 
-  os_memset(out, BASE58ALPHABET[0], zeroCount);
+  memset(out, BASE58ALPHABET[0], zeroCount);
 
   i = zeroCount;
   while (j < outputSize) {

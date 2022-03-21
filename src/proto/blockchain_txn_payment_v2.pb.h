@@ -42,6 +42,7 @@ extern "C" {
 #define helium_blockchain_txn_payment_v2_signature_tag 5
 #define helium_payment_payee_tag                 1
 #define helium_payment_amount_tag                2
+#define helium_payment_memo_tag                  3
 
 /* Struct field encoding specification for nanopb */
 #define helium_blockchain_txn_payment_v2_FIELDLIST(X, a) \

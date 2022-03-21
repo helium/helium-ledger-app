@@ -132,7 +132,7 @@ bool pb_write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count);
  * structure. Call this from the callback before writing out field contents. */
 bool pb_encode_tag_for_field(pb_ostream_t *stream, const pb_field_iter_t *field);
 
-/* Encode field header by manually specifing wire type. You need to use this
+/* Encode field header by manually specifying wire type. You need to use this
  * if you want to write out packed arrays from a callback field. */
 bool pb_encode_tag(pb_ostream_t *stream, pb_wire_type_t wiretype, uint32_t field_number);
 
@@ -163,6 +163,12 @@ bool pb_encode_fixed32(pb_ostream_t *stream, const void *value);
 /* Encode a fixed64, sfixed64 or double value.
  * You need to pass a pointer to a 8-byte wide C variable. */
 bool pb_encode_fixed64(pb_ostream_t *stream, const void *value);
+#endif
+
+#ifdef PB_CONVERT_DOUBLE_FLOAT
+/* Encode a float value so that it appears like a double in the encoded
+ * message. */
+bool pb_encode_float_as_double(pb_ostream_t *stream, float value);
 #endif
 
 /* Encode a submessage field.

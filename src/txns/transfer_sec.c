@@ -2,9 +2,10 @@
 #include "pb.h"
 #include "pb_encode.h"
 #include "../proto/blockchain_txn.pb.h"
+#include "save_context.h"
 
-uint32_t create_helium_pay_txn(uint8_t account){
-    paymentContext_t * ctx = &global.paymentContext;
+uint32_t create_helium_transfer_sec(uint8_t account){
+    transferSecContext_t * ctx = &global.transferSecContext;
     pb_ostream_t ostream;
 
     unsigned char payer[SIZEOF_HELIUM_KEY];
@@ -20,22 +21,22 @@ uint32_t create_helium_pay_txn(uint8_t account){
 
     ostream = pb_ostream_from_buffer(G_io_apdu_buffer, sizeof(G_io_apdu_buffer));
 
-    pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_payment_v1_payer_tag);
+    pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_security_exchange_v1_payer_tag);
     pb_encode_string(&ostream, (const pb_byte_t*)payer, SIZEOF_HELIUM_KEY);
 
-    pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_payment_v1_payee_tag);
+    pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_security_exchange_v1_payee_tag);
     pb_encode_string(&ostream, (const pb_byte_t*)&ctx->payee[1], SIZEOF_HELIUM_KEY);
 
-    pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_payment_v1_amount_tag);
+    pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_security_exchange_v1_amount_tag);
     pb_encode_varint(&ostream, ctx->amount);
 
     if(ctx->fee) {
-        pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_payment_v1_fee_tag);
+        pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_security_exchange_v1_fee_tag);
         pb_encode_varint(&ostream, ctx->fee);
     }
 
     if(ctx->nonce) {
-        pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_payment_v1_nonce_tag);
+        pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_security_exchange_v1_nonce_tag);
         pb_encode_varint(&ostream, ctx->nonce);
     }
 
@@ -43,26 +44,26 @@ uint32_t create_helium_pay_txn(uint8_t account){
 
     ostream = pb_ostream_from_buffer(G_io_apdu_buffer, sizeof(G_io_apdu_buffer));
 
-    pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_payment_v1_payer_tag);
+    pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_security_exchange_v1_payer_tag);
     pb_encode_string(&ostream, (const pb_byte_t*)payer, SIZEOF_HELIUM_KEY);
 
-    pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_payment_v1_payee_tag);
+    pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_security_exchange_v1_payee_tag);
     pb_encode_string(&ostream, (const pb_byte_t*)&ctx->payee[1], SIZEOF_HELIUM_KEY);
 
-    pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_payment_v1_amount_tag);
+    pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_security_exchange_v1_amount_tag);
     pb_encode_varint(&ostream, ctx->amount);
 
     if(ctx->fee) {
-        pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_payment_v1_fee_tag);
+        pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_security_exchange_v1_fee_tag);
         pb_encode_varint(&ostream, ctx->fee);
     }
 
     if(ctx->nonce) {
-        pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_payment_v1_nonce_tag);
+        pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_security_exchange_v1_nonce_tag);
         pb_encode_varint(&ostream, ctx->nonce);
     }
 
-    pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_payment_v1_signature_tag);
+    pb_encode_tag(&ostream, PB_WT_STRING, helium_blockchain_txn_security_exchange_v1_signature_tag);
     pb_encode_string(&ostream, (const pb_byte_t*)signature, SIZEOF_SIGNATURE);
 
     return ostream.bytes_written;

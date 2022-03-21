@@ -113,6 +113,9 @@ bool pb_decode_ex(pb_istream_t *stream, const pb_msgdesc_t *fields, void *dest_s
  * pb_decode() returns with an error, the message is already released.
  */
 void pb_release(const pb_msgdesc_t *fields, void *dest_struct);
+#else
+/* Allocation is not supported, so release is no-op */
+#define pb_release(fields, dest_struct) PB_UNUSED(fields); PB_UNUSED(dest_struct);
 #endif
 
 
@@ -122,10 +125,13 @@ void pb_release(const pb_msgdesc_t *fields, void *dest_struct);
 
 /* Create an input stream for reading from a memory buffer.
  *
+ * msglen should be the actual length of the message, not the full size of
+ * allocated buffer.
+ *
  * Alternatively, you can use a custom stream that reads directly from e.g.
  * a file or a network socket.
  */
-pb_istream_t pb_istream_from_buffer(const pb_byte_t *buf, size_t bufsize);
+pb_istream_t pb_istream_from_buffer(const pb_byte_t *buf, size_t msglen);
 
 /* Function to read from a pb_istream_t. You can use this if you need to
  * read some custom header data, or to read data in field callbacks.
@@ -175,6 +181,11 @@ bool pb_decode_fixed32(pb_istream_t *stream, void *dest);
 /* Decode a fixed64, sfixed64 or double value. You need to pass a pointer to
  * a 8-byte wide C variable. */
 bool pb_decode_fixed64(pb_istream_t *stream, void *dest);
+#endif
+
+#ifdef PB_CONVERT_DOUBLE_FLOAT
+/* Decode a double value into float variable. */
+bool pb_decode_double_as_float(pb_istream_t *stream, float *dest);
 #endif
 
 /* Make a limited-length substream for reading a PB_WT_STRING field. */
