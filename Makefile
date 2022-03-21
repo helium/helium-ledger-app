@@ -35,10 +35,10 @@ APPNAME    = Helium
 endif
 
 
-ifeq ($(TARGET_NAME),TARGET_NANOX)
-	ICONNAME   = nanox_app_helium.gif
-else
+ifeq ($(TARGET_NAME),TARGET_NANOS)
 	ICONNAME   = nanos_app_helium.gif
+else
+	ICONNAME   = nanox_app_helium.gif
 endif
 
 APPVERSION = 2.2.2
@@ -57,10 +57,10 @@ DEFINES += HAVE_PENDING_REVIEW_SCREEN
 
 APP_SOURCE_PATH = src
 SDK_SOURCE_PATH = lib_stusb lib_stusb_impl
+SDK_SOURCE_PATH += lib_ux
 
 ifeq ($(TARGET_NAME),TARGET_NANOX)
 	SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
-	SDK_SOURCE_PATH  += lib_ux
 endif
 
 all: default
@@ -84,26 +84,28 @@ DEFINES   +=  LEDGER_MAJOR_VERSION=$(APPVERSION_M) LEDGER_MINOR_VERSION=$(APPVER
 
 
 ifeq ($(TARGET_NAME),TARGET_NANOX)
-DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=300
 DEFINES       += HAVE_BLE BLE_COMMAND_TIMEOUT_MS=2000
 DEFINES       += HAVE_BLE_APDU # basic ledger apdu transport over BLE
+endif
 
+ifeq ($(TARGET_NAME),TARGET_NANOS)
+DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=128
+else
+DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=300
 DEFINES       += HAVE_BAGL BAGL_WIDTH=128 BAGL_HEIGHT=64
 DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_REGULAR_11PX
 DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_EXTRABOLD_11PX
 DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_LIGHT_16PX
 DEFINES       += HAVE_UX_FLOW
-else
-	DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=128
 endif
 
 # Enabling debug PRINTF
 DEBUG = 0
 ifdef DEBUG
-	ifeq ($(TARGET_NAME),TARGET_NANOX)
-		DEFINES   += HAVE_PRINTF PRINTF=mcu_usb_printf
-	else
+	ifeq ($(TARGET_NAME),TARGET_NANOS)
 		DEFINES   += HAVE_PRINTF PRINTF=screen_printf
+	else
+		DEFINES   += HAVE_PRINTF PRINTF=mcu_usb_printf
 	endif
 else
 	DEFINES   += PRINTF\(...\)=
@@ -119,7 +121,7 @@ CFLAGS += -O3 -Os
 
 AS := $(GCCPATH)arm-none-eabi-gcc
 LD := $(GCCPATH)arm-none-eabi-gcc
-LDFLAGS += -O3 -Os 
+LDFLAGS += -O3 -Os
 LDLIBS += -lm -lgcc -lc
 
 ##################
