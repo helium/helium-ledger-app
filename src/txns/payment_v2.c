@@ -36,9 +36,10 @@ uint32_t create_helium_pay_txn(uint8_t account){
     pb_encode_tag(&ostream, PB_WT_VARINT, helium_payment_amount_tag);
     pb_encode_varint(&ostream, ctx->amount);
 
-    pb_encode_tag(&ostream, PB_WT_VARINT, helium_payment_memo_tag);
-    pb_encode_varint(&ostream, ctx->memo);
-
+    if(ctx->memo) {
+        pb_encode_tag(&ostream, PB_WT_VARINT, helium_payment_memo_tag);
+        pb_encode_varint(&ostream, ctx->memo);
+    }
     len_payments = ostream.bytes_written;
 
     // now do the top-level message
