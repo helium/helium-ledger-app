@@ -95,6 +95,8 @@ static int parse_system_advance_nonce_account_instruction(
     const MessageHeader* header,
     SystemAdvanceNonceInfo* info
 ) {
+    UNUSED(parser);
+
     InstructionAccountsIterator it;
     instruction_accounts_iterator_init(&it, header, instruction);
 
@@ -307,44 +309,36 @@ int parse_system_instructions(
 
 static int print_system_transfer_info(
     const SystemTransferInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
     summary_item_set_amount(item, "Transfer", info->lamports);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Sender", info->from);
+    if (print_config_show_authority(print_config, info->from)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Sender", info->from);
+    }
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Recipient", info->to);
-
-    item = transaction_summary_fee_payer_item();
-    if (memcmp(&header->pubkeys[0], info->to, PUBKEY_SIZE) == 0) {
-        transaction_summary_set_fee_payer_string("recipient");
-    } else if (memcmp(&header->pubkeys[0], info->from, PUBKEY_SIZE) == 0) {
-        transaction_summary_set_fee_payer_string("sender");
-    }
 
     return 0;
 }
 
 static int print_system_advance_nonce_account(
     const SystemAdvanceNonceInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Advance nonce", info->account);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
-
-    item = transaction_summary_fee_payer_item();
-    if (memcmp(&header->pubkeys[0], info->authority, PUBKEY_SIZE) == 0) {
-        transaction_summary_set_fee_payer_string("authority");
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
     }
 
     return 0;
@@ -352,7 +346,7 @@ static int print_system_advance_nonce_account(
 
 static int print_system_withdraw_nonce_info(
     const SystemWithdrawNonceInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
@@ -365,15 +359,17 @@ static int print_system_withdraw_nonce_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "To", info->to);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }
 
 static int print_system_authorize_nonce_info(
     const SystemAuthorizeNonceInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
@@ -383,16 +379,20 @@ static int print_system_authorize_nonce_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "New authority", info->new_authority);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }
 
 static int print_system_allocate_info(
     const SystemAllocateInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
+    UNUSED(print_config);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -406,8 +406,10 @@ static int print_system_allocate_info(
 
 static int print_system_assign_info(
     const SystemAssignInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
+    UNUSED(print_config);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -419,52 +421,52 @@ static int print_system_assign_info(
     return 0;
 }
 
-int print_system_info(const SystemInfo* info, const MessageHeader* header) {
+int print_system_info(const SystemInfo* info, const PrintConfig* print_config) {
     switch (info->kind) {
         case SystemTransfer:
-            return print_system_transfer_info(&info->transfer, header);
+            return print_system_transfer_info(&info->transfer, print_config);
         case SystemAdvanceNonceAccount:
             return print_system_advance_nonce_account(
                 &info->advance_nonce,
-                header
+                print_config
             );
         case SystemCreateAccount:
             return print_system_create_account_info(
                 CREATE_ACCOUNT_TITLE,
                 &info->create_account,
-                header
+                print_config
             );
         case SystemCreateAccountWithSeed:
             return print_system_create_account_with_seed_info(
                 CREATE_ACCOUNT_TITLE,
                 &info->create_account_with_seed,
-                header
+                print_config
             );
         case SystemInitializeNonceAccount:
             return print_system_initialize_nonce_info(
                 "Init nonce acct",
                 &info->initialize_nonce,
-                header
+                print_config
             );
         case SystemWithdrawNonceAccount:
             return print_system_withdraw_nonce_info(
                 &info->withdraw_nonce,
-                header
+                print_config
             );
         case SystemAuthorizeNonceAccount:
             return print_system_authorize_nonce_info(
                 &info->authorize_nonce,
-                header
+                print_config
             );
         case SystemAssign:
-            return print_system_assign_info(&info->assign, header);
+            return print_system_assign_info(&info->assign, print_config);
         case SystemAllocate:
-            return print_system_allocate_info(&info->allocate, header);
+            return print_system_allocate_info(&info->allocate, print_config);
         case SystemAllocateWithSeed:
             return print_system_allocate_with_seed_info(
                 "Allocate acct",
                 &info->allocate_with_seed,
-                header
+                print_config
             );
         case SystemAssignWithSeed:
             break;
@@ -475,16 +477,18 @@ int print_system_info(const SystemInfo* info, const MessageHeader* header) {
 
 int print_system_nonced_transaction_sentinel(
     const SystemInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    const SystemAdvanceNonceInfo* nonce_info = &info->advance_nonce;
-    SummaryItem* item;
+    if (print_config->expert_mode)  {
+        const SystemAdvanceNonceInfo* nonce_info = &info->advance_nonce;
+        SummaryItem* item;
 
-    item = transaction_summary_nonce_account_item();
-    summary_item_set_pubkey(item, "Nonce account", nonce_info->account);
+        item = transaction_summary_nonce_account_item();
+        summary_item_set_pubkey(item, "Nonce account", nonce_info->account);
 
-    item = transaction_summary_nonce_authority_item();
-    summary_item_set_pubkey(item, "Nonce authority", nonce_info->authority);
+        item = transaction_summary_nonce_authority_item();
+        summary_item_set_pubkey(item, "Nonce authority", nonce_info->authority);
+    }
 
     return 0;
 }
@@ -492,7 +496,7 @@ int print_system_nonced_transaction_sentinel(
 int print_system_create_account_info(
     const char* primary_title,
     const SystemCreateAccountInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
     if (primary_title != NULL) {
@@ -503,8 +507,10 @@ int print_system_create_account_info(
     item = transaction_summary_general_item();
     summary_item_set_amount(item, "Deposit", info->lamports);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "From", info->from);
+    if (print_config_show_authority(print_config, info->from)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "From", info->from);
+    }
 
     return 0;
 }
@@ -512,7 +518,7 @@ int print_system_create_account_info(
 int print_system_create_account_with_seed_info(
     const char* primary_title,
     const SystemCreateAccountWithSeedInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
     if (primary_title != NULL) {
@@ -523,14 +529,18 @@ int print_system_create_account_with_seed_info(
     item = transaction_summary_general_item();
     summary_item_set_amount(item, "Deposit", info->lamports);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "From", info->from);
+    if (print_config_show_authority(print_config, info->from)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "From", info->from);
+    }
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Base", info->base);
+    if (print_config->expert_mode) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Base", info->base);
 
-    item = transaction_summary_general_item();
-    summary_item_set_sized_string(item, "Seed", &info->seed);
+        item = transaction_summary_general_item();
+        summary_item_set_sized_string(item, "Seed", &info->seed);
+    }
 
     return 0;
 }
@@ -538,8 +548,10 @@ int print_system_create_account_with_seed_info(
 int print_system_initialize_nonce_info(
     const char* primary_title,
     const SystemInitializeNonceInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
+    UNUSED(print_config);
+
     SummaryItem* item;
     if (primary_title != NULL) {
         item = transaction_summary_primary_item();
@@ -555,7 +567,7 @@ int print_system_initialize_nonce_info(
 int print_system_allocate_with_seed_info(
     const char* primary_title,
     const SystemAllocateWithSeedInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
@@ -565,10 +577,15 @@ int print_system_allocate_with_seed_info(
     }
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Base", info->base);
+    summary_item_set_u64(item, "Data size", info->space);
 
-    item = transaction_summary_general_item();
-    summary_item_set_sized_string(item, "Seed", &info->seed);
+    if (print_config->expert_mode) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Base", info->base);
+
+        item = transaction_summary_general_item();
+        summary_item_set_sized_string(item, "Seed", &info->seed);
+    }
 
     return 0;
 }

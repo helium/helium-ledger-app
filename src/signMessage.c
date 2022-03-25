@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "sol/parser.h"
 #include "sol/printer.h"
+#include "sol/print_config.h"
 #include "sol/message.h"
 #include "sol/transaction_summary.h"
 
@@ -61,7 +62,7 @@ static uint8_t set_result_sign_message() {
                 SIGNATURE_LENGTH,
                 NULL
             );
-            os_memmove(G_io_apdu_buffer, signature, 64);
+            memcpy(G_io_apdu_buffer, signature, 64);
         }
         FINALLY {
             MEMCLEAR(privateKey);
@@ -126,6 +127,8 @@ void handleSignMessage(
     volatile unsigned int *flags,
     volatile unsigned int *tx
 ) {
+    UNUSED(tx);
+
     if (dataLength == 0) {
         THROW(ApduReplySolanaInvalidMessage);
     }
@@ -183,7 +186,7 @@ void handleSignMessage(
     if (G_messageLength + messageLength > MAX_MESSAGE_LENGTH) {
         THROW(ApduReplySdkExceptionOverflow);
     }
-    os_memmove(G_message + G_messageLength, dataBuffer, messageLength);
+    memcpy(G_message + G_messageLength, dataBuffer, messageLength);
     G_messageLength += messageLength;
 
     if (p2 & P2_MORE) {
@@ -196,17 +199,20 @@ void handleSignMessage(
     G_numDerivationPaths = 0;
 
     Parser parser = {G_message, G_messageLength};
-    MessageHeader header;
-    if (parse_message_header(&parser, &header)) {
+    PrintConfig print_config;
+    print_config.expert_mode = (N_storage.settings.display_mode == DisplayModeExpert);
+    print_config.signer_pubkey = NULL;
+    MessageHeader* header = &print_config.header;
+    if (parse_message_header(&parser, header)) {
         // This is not a valid Solana message
         THROW(ApduReplySolanaInvalidMessage);
     } else {
         uint8_t signer_pubkey[32];
         getPublicKey(G_derivationPath, signer_pubkey, G_derivationPathLength);
-        size_t signer_count = header.pubkeys_header.num_required_signatures;
+        size_t signer_count = header->pubkeys_header.num_required_signatures;
         size_t i;
         for (i = 0; i < signer_count; i++) {
-            const Pubkey* pubkey = &header.pubkeys[i];
+            const Pubkey* pubkey = &header->pubkeys[i];
             if (memcmp(pubkey, signer_pubkey, PUBKEY_SIZE) == 0) {
                 break;
             }
@@ -214,6 +220,7 @@ void handleSignMessage(
         if (i >= signer_count) {
             THROW(ApduReplySdkInvalidParameter);
         }
+        print_config.signer_pubkey = &header->pubkeys[i];
     }
 
     if (p1 == P1_NON_CONFIRM) {
@@ -225,7 +232,7 @@ void handleSignMessage(
     }
 
     transaction_summary_reset();
-    if (process_message_body(parser.buffer, parser.buffer_length, &header)) {
+    if (process_message_body(parser.buffer, parser.buffer_length, &print_config)) {
         if (N_storage.settings.allow_blind_sign == BlindSignEnabled) {
             SummaryItem* item = transaction_summary_primary_item();
             summary_item_set_string(item, "Unrecognized", "format");
@@ -244,9 +251,10 @@ void handleSignMessage(
         }
     }
 
-    // Set fee-payer if it hasn't already been resolved by
-    // the transaction printer
-    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
+    const Pubkey* fee_payer = &header->pubkeys[0];
+    if (print_config_show_authority(&print_config, fee_payer)) {
+        transaction_summary_set_fee_payer_pubkey(fee_payer);
+    }
 
     enum SummaryItemKind summary_step_kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_summary_steps = 0;

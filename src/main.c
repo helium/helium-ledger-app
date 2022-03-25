@@ -224,6 +224,8 @@ void io_seproxyhal_display(const bagl_element_t *element) {
 }
 
 unsigned char io_event(unsigned char channel) {
+    UNUSED(channel);
+
     // nothing done with the event, throw an error on the transport layer if
     // needed
 
@@ -330,6 +332,7 @@ void nv_app_state_init(){
 #else
         storage.settings.pubkey_display = PubkeyDisplayShort;
 #endif
+        storage.settings.display_mode = DisplayModeUser;
         storage.initialized = 0x01;
         nvm_write(
             (internalStorage_t*)&N_storage,

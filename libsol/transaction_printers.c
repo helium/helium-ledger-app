@@ -1,5 +1,6 @@
 #include "instruction.h"
 #include "sol/parser.h"
+#include "sol/print_config.h"
 #include "sol/transaction_summary.h"
 #include "transaction_printers.h"
 #include "util.h"
@@ -46,6 +47,18 @@ const InstructionBrief create_stake_account_with_seed_checked_brief[] = {
         infos,                                                          \
         create_stake_account_with_seed_checked_brief,                   \
         infos_length                                                    \
+    )
+
+const InstructionBrief create_stake_account_and_delegate_brief[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccount),
+    STAKE_IX_BRIEF(StakeInitialize),
+    STAKE_IX_BRIEF(StakeDelegate),
+};
+#define is_create_stake_account_and_delegate(infos, infos_length)   \
+    instruction_infos_match_briefs(                                 \
+        infos,                                                      \
+        create_stake_account_and_delegate_brief,                    \
+        infos_length                                                \
     )
 
 const InstructionBrief stake_split_brief_v1_1[] = {
@@ -192,17 +205,6 @@ const InstructionBrief spl_token_create_mint_brief[] = {
         infos_length                                    \
     )
 
-const InstructionBrief spl_token_create_mint_with_seed_brief[] = {
-    SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
-    SPL_TOKEN_IX_BRIEF(SplTokenKind(InitializeMint)),
-};
-#define is_spl_token_create_mint_with_seed(infos, infos_length) \
-    instruction_infos_match_briefs(                             \
-        infos,                                                  \
-        spl_token_create_mint_with_seed_brief,                  \
-        infos_length                                            \
-    )
-
 const InstructionBrief spl_token_create_account_brief[] = {
     SYSTEM_IX_BRIEF(SystemCreateAccount),
     SPL_TOKEN_IX_BRIEF(SplTokenKind(InitializeAccount)),
@@ -225,28 +227,6 @@ const InstructionBrief spl_token_create_account2_brief[] = {
         infos_length                                        \
     )
 
-const InstructionBrief spl_token_create_account_with_seed_brief[] = {
-    SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
-    SPL_TOKEN_IX_BRIEF(SplTokenKind(InitializeAccount)),
-};
-#define is_spl_token_create_account_with_seed(infos, infos_length)  \
-    instruction_infos_match_briefs(                                 \
-        infos,                                                      \
-        spl_token_create_account_with_seed_brief,                   \
-        infos_length                                                \
-    )
-
-const InstructionBrief spl_token_create_account2_with_seed_brief[] = {
-    SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
-    SPL_TOKEN_IX_BRIEF(SplTokenKind(InitializeAccount2)),
-};
-#define is_spl_token_create_account2_with_seed(infos, infos_length)  \
-    instruction_infos_match_briefs(                                 \
-        infos,                                                      \
-        spl_token_create_account2_with_seed_brief,                  \
-        infos_length                                                \
-    )
-
 const InstructionBrief spl_token_create_multisig_brief[] = {
     SYSTEM_IX_BRIEF(SystemCreateAccount),
     SPL_TOKEN_IX_BRIEF(SplTokenKind(InitializeMultisig)),
@@ -256,17 +236,6 @@ const InstructionBrief spl_token_create_multisig_brief[] = {
         infos,                                              \
         spl_token_create_multisig_brief,                    \
         infos_length                                        \
-    )
-
-const InstructionBrief spl_token_create_multisig_with_seed_brief[] = {
-    SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
-    SPL_TOKEN_IX_BRIEF(SplTokenKind(InitializeMultisig)),
-};
-#define is_spl_token_create_multisig_with_seed(infos, infos_length) \
-    instruction_infos_match_briefs(                                 \
-        infos,                                                      \
-        spl_token_create_multisig_with_seed_brief,                  \
-        infos_length                                                \
     )
 
 const InstructionBrief
@@ -283,27 +252,31 @@ is_spl_associated_token_account_create_with_transfer(infos, infos_length) \
     )
 
 static int print_create_stake_account(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
     const StakeInitializeInfo* si_info = &infos[1]->stake.initialize;
 
     SummaryItem* item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Create stake acct", ca_info->to);
 
-    BAIL_IF(print_system_create_account_info(NULL, ca_info, header));
-    BAIL_IF(print_stake_initialize_info(NULL, si_info, header));
+    BAIL_IF(print_system_create_account_info(NULL, ca_info, print_config));
+    BAIL_IF(print_stake_initialize_info(NULL, si_info, print_config));
 
     return 0;
 }
 
 static int print_create_stake_account_with_seed(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountWithSeedInfo* cws_info =
         &infos[0]->system.create_account_with_seed;
     const StakeInitializeInfo* si_info = &infos[1]->stake.initialize;
@@ -312,19 +285,42 @@ static int print_create_stake_account_with_seed(
     summary_item_set_pubkey(item, "Create stake acct", cws_info->to);
 
     BAIL_IF(
-        print_system_create_account_with_seed_info(NULL, cws_info, header)
+        print_system_create_account_with_seed_info(NULL, cws_info, print_config)
     );
-    BAIL_IF(print_stake_initialize_info(NULL, si_info, header));
+    BAIL_IF(print_stake_initialize_info(NULL, si_info, print_config));
+
+    return 0;
+}
+
+static int print_create_stake_account_and_delegate(
+    const PrintConfig* print_config,
+    InstructionInfo* const * infos,
+    size_t infos_length
+) {
+    UNUSED(infos_length);
+
+    const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
+    const StakeInitializeInfo* si_info = &infos[1]->stake.initialize;
+    const StakeDelegateInfo* sd_info = &infos[2]->stake.delegate_stake;
+
+    SummaryItem* item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Delegate from", ca_info->to);
+
+    BAIL_IF(print_system_create_account_info(NULL, ca_info, print_config));
+    BAIL_IF(print_stake_initialize_info(NULL, si_info, print_config));
+    BAIL_IF(print_delegate_stake_info(NULL, sd_info, print_config));
 
     return 0;
 }
 
 static int print_stake_split_with_seed(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length,
     bool legacy
 ) {
+    UNUSED(infos_length);
+
     const Pubkey* base = NULL;
     const SizedString* seed = NULL;
 
@@ -342,23 +338,27 @@ static int print_stake_split_with_seed(
 
     const StakeSplitInfo* ss_info = &infos[1]->stake.split;
 
-    BAIL_IF(print_stake_split_info1(ss_info, header));
+    BAIL_IF(print_stake_split_info1(ss_info, print_config));
 
-    SummaryItem* item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Base", base);
-    item = transaction_summary_general_item();
-    summary_item_set_sized_string(item, "Seed", seed);
+    if (print_config->expert_mode) {
+        SummaryItem* item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Base", base);
+        item = transaction_summary_general_item();
+        summary_item_set_sized_string(item, "Seed", seed);
+    }
 
-    BAIL_IF(print_stake_split_info2(ss_info, header));
+    BAIL_IF(print_stake_split_info2(ss_info, print_config));
 
     return 0;
 }
 
 static int print_stake_authorize_both(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const StakeAuthorizeInfo* staker_info = &infos[0]->stake.authorize;
     const StakeAuthorizeInfo* withdrawer_info = &infos[1]->stake.authorize;
     SummaryItem* item;
@@ -402,17 +402,21 @@ static int print_stake_authorize_both(
         );
     }
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", withdrawer_info->authority);
+    if (print_config_show_authority(print_config, withdrawer_info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", withdrawer_info->authority);
+    }
 
     return 0;
 }
 
 static int print_create_nonce_account(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
     const SystemInitializeNonceInfo* ni_info =
         &infos[1]->system.initialize_nonce;
@@ -420,17 +424,19 @@ static int print_create_nonce_account(
     SummaryItem* item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Create nonce acct", ca_info->to);
 
-    BAIL_IF(print_system_create_account_info(NULL, ca_info, header));
-    BAIL_IF(print_system_initialize_nonce_info(NULL, ni_info, header));
+    BAIL_IF(print_system_create_account_info(NULL, ca_info, print_config));
+    BAIL_IF(print_system_initialize_nonce_info(NULL, ni_info, print_config));
 
     return 0;
 }
 
 static int print_create_nonce_account_with_seed(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountWithSeedInfo* ca_info =
         &infos[0]->system.create_account_with_seed;
     const SystemInitializeNonceInfo* ni_info =
@@ -439,34 +445,38 @@ static int print_create_nonce_account_with_seed(
     SummaryItem* item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Create nonce acct", ca_info->to);
 
-    BAIL_IF(print_system_create_account_with_seed_info(NULL, ca_info, header));
-    BAIL_IF(print_system_initialize_nonce_info(NULL, ni_info, header));
+    BAIL_IF(print_system_create_account_with_seed_info(NULL, ca_info, print_config));
+    BAIL_IF(print_system_initialize_nonce_info(NULL, ni_info, print_config));
 
     return 0;
 }
 
 static int print_create_vote_account(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
     const VoteInitializeInfo* vi_info = &infos[1]->vote.initialize;
 
     SummaryItem* item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Create vote acct", ca_info->to);
 
-    BAIL_IF(print_system_create_account_info(NULL, ca_info, header));
-    BAIL_IF(print_vote_initialize_info(NULL, vi_info, header));
+    BAIL_IF(print_system_create_account_info(NULL, ca_info, print_config));
+    BAIL_IF(print_vote_initialize_info(NULL, vi_info, print_config));
 
     return 0;
 }
 
 static int print_create_vote_account_with_seed(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountWithSeedInfo* ca_info =
         &infos[0]->system.create_account_with_seed;
     const VoteInitializeInfo* vi_info = &infos[1]->vote.initialize;
@@ -474,17 +484,19 @@ static int print_create_vote_account_with_seed(
     SummaryItem* item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Create vote acct", ca_info->to);
 
-    BAIL_IF(print_system_create_account_with_seed_info(NULL, ca_info, header));
-    BAIL_IF(print_vote_initialize_info(NULL, vi_info, header));
+    BAIL_IF(print_system_create_account_with_seed_info(NULL, ca_info, print_config));
+    BAIL_IF(print_vote_initialize_info(NULL, vi_info, print_config));
 
     return 0;
 }
 
 static int print_vote_authorize_both(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const VoteAuthorizeInfo* voter_info = &infos[0]->vote.authorize;
     const VoteAuthorizeInfo* withdrawer_info = &infos[1]->vote.authorize;
     SummaryItem* item;
@@ -519,17 +531,21 @@ static int print_vote_authorize_both(
         );
     }
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", withdrawer_info->authority);
+    if (print_config_show_authority(print_config, withdrawer_info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", withdrawer_info->authority);
+    }
 
     return 0;
 }
 
 static int print_spl_token_create_mint(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
     const SplTokenInitializeMintInfo* im_info =
         &infos[1]->spl_token.initialize_mint;
@@ -548,8 +564,10 @@ static int print_spl_token_create_mint(
         summary_item_set_pubkey(item, "Freeze authority", im_info->freeze_authority);
     }
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Funded by", ca_info->from);
+    if (print_config_show_authority(print_config, ca_info->from)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Funded by", ca_info->from);
+    }
 
     item = transaction_summary_general_item();
     summary_item_set_amount(item, "Funded with", ca_info->lamports);
@@ -558,10 +576,12 @@ static int print_spl_token_create_mint(
 }
 
 static int print_spl_token_create_account(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
     const SplTokenInitializeAccountInfo* ia_info =
         &infos[1]->spl_token.initialize_account;
@@ -575,8 +595,10 @@ static int print_spl_token_create_account(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Owned by", ia_info->owner);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Funded by", ca_info->from);
+    if (print_config_show_authority(print_config, ca_info->from)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Funded by", ca_info->from);
+    }
 
     item = transaction_summary_general_item();
     summary_item_set_amount(item, "Funded with", ca_info->lamports);
@@ -585,10 +607,12 @@ static int print_spl_token_create_account(
 }
 
 static int print_spl_token_create_multisig(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SystemCreateAccountInfo* ca_info = &infos[0]->system.create_account;
     const SplTokenInitializeMultisigInfo* im_info =
         &infos[1]->spl_token.initialize_multisig;
@@ -599,133 +623,36 @@ static int print_spl_token_create_multisig(
     item = transaction_summary_general_item();
     summary_item_set_multisig_m_of_n(item, im_info->body.m, im_info->signers.count);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Funded by", ca_info->from);
-
-    item = transaction_summary_general_item();
-    summary_item_set_amount(item, "Funded with", ca_info->lamports);
-
-    return 0;
-}
-
-static int print_spl_token_create_mint_with_seed(
-    const MessageHeader* header,
-    InstructionInfo* const * infos,
-    size_t infos_length
-) {
-    const SystemCreateAccountWithSeedInfo* ca_info = &infos[0]->system.create_account_with_seed;
-    const SplTokenInitializeMintInfo* im_info =
-        &infos[1]->spl_token.initialize_mint;
-
-    SummaryItem* item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Create token mint", im_info->mint_account);
-
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Mint authority", im_info->mint_authority);
-
-    item = transaction_summary_general_item();
-    summary_item_set_u64(item, "Mint decimals", im_info->decimals);
-
-    if (im_info->freeze_authority != NULL) {
+    if (print_config_show_authority(print_config, ca_info->from)) {
         item = transaction_summary_general_item();
-        summary_item_set_pubkey(item, "Freeze authority", im_info->freeze_authority);
+        summary_item_set_pubkey(item, "Funded by", ca_info->from);
     }
 
     item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Funded by", ca_info->from);
-
-    item = transaction_summary_general_item();
     summary_item_set_amount(item, "Funded with", ca_info->lamports);
-
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Base", ca_info->base);
-
-    item = transaction_summary_general_item();
-    summary_item_set_sized_string(item, "Seed", &ca_info->seed);
-
-    return 0;
-}
-
-static int print_spl_token_create_account_with_seed(
-    const MessageHeader* header,
-    InstructionInfo* const * infos,
-    size_t infos_length
-) {
-    const SystemCreateAccountWithSeedInfo* ca_info = &infos[0]->system.create_account_with_seed;
-    const SplTokenInitializeAccountInfo* ia_info =
-        &infos[1]->spl_token.initialize_account;
-
-    SummaryItem* item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Create token acct", ia_info->token_account);
-
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "From mint", ia_info->mint_account);
-
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Owned by", ia_info->owner);
-
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Funded by", ca_info->from);
-
-    item = transaction_summary_general_item();
-    summary_item_set_amount(item, "Funded with", ca_info->lamports);
-
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Base", ca_info->base);
-
-    item = transaction_summary_general_item();
-    summary_item_set_sized_string(item, "Seed", &ca_info->seed);
-
-    return 0;
-}
-
-static int print_spl_token_create_multisig_with_seed(
-    const MessageHeader* header,
-    InstructionInfo* const * infos,
-    size_t infos_length
-) {
-    const SystemCreateAccountWithSeedInfo* ca_info = &infos[0]->system.create_account_with_seed;
-    const SplTokenInitializeMultisigInfo* im_info =
-        &infos[1]->spl_token.initialize_multisig;
-
-    SummaryItem* item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Create multisig", im_info->multisig_account);
-
-    item = transaction_summary_general_item();
-    summary_item_set_multisig_m_of_n(item, im_info->body.m, im_info->signers.count);
-
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Funded by", ca_info->from);
-
-    item = transaction_summary_general_item();
-    summary_item_set_amount(item, "Funded with", ca_info->lamports);
-
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Base", ca_info->base);
-
-    item = transaction_summary_general_item();
-    summary_item_set_sized_string(item, "Seed", &ca_info->seed);
 
     return 0;
 }
 
 static int print_spl_associated_token_account_create_with_transfer(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
+    UNUSED(infos_length);
+
     const SplAssociatedTokenAccountCreateInfo* c_info =
         &infos[0]->spl_associated_token_account.create;
     const SplTokenTransferInfo* t_info = &infos[1]->spl_token.transfer;
 
-    print_spl_associated_token_account_create_info(c_info, header);
-    print_spl_token_transfer_info(t_info, header, false);
+    print_spl_associated_token_account_create_info(c_info, print_config);
+    print_spl_token_transfer_info(t_info, print_config, false);
 
     return 0;
 }
 
 int print_transaction(
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     InstructionInfo* const * infos,
     size_t infos_length
 ) {
@@ -734,7 +661,7 @@ int print_transaction(
         InstructionBrief nonce_brief =
             SYSTEM_IX_BRIEF(SystemAdvanceNonceAccount);
         if (instruction_info_matches_brief(display_info, &nonce_brief)) {
-            print_system_nonced_transaction_sentinel(&display_info->system, header);
+            print_system_nonced_transaction_sentinel(&display_info->system, print_config);
             infos++;
             infos_length--;
         }
@@ -745,17 +672,17 @@ int print_transaction(
             InstructionInfo* display_info = infos[0];
             switch (display_info->kind) {
                 case ProgramIdSystem:
-                    return print_system_info(&display_info->system, header);
+                    return print_system_info(&display_info->system, print_config);
                 case ProgramIdStake:
-                    return print_stake_info(&display_info->stake, header);
+                    return print_stake_info(&display_info->stake, print_config);
                 case ProgramIdVote:
-                    return print_vote_info(&display_info->vote, header);
+                    return print_vote_info(&display_info->vote, print_config);
                 case ProgramIdSplToken:
-                    return print_spl_token_info(&display_info->spl_token, header);
+                    return print_spl_token_info(&display_info->spl_token, print_config);
                 case ProgramIdSplAssociatedTokenAccount:
                     return print_spl_associated_token_account_info(
                         &display_info->spl_associated_token_account,
-                        header
+                        print_config
                     );
                 case ProgramIdSerumAssertOwner:
                 case ProgramIdSplMemo:
@@ -767,39 +694,39 @@ int print_transaction(
         case 2: {
             if (is_create_stake_account(infos, infos_length)
                 || is_create_stake_account_checked(infos, infos_length)) {
-                return print_create_stake_account(header, infos, infos_length);
+                return print_create_stake_account(print_config, infos, infos_length);
             } else if (is_create_stake_account_with_seed(infos, infos_length)
                 || is_create_stake_account_with_seed_checked(infos, infos_length)) {
                 return print_create_stake_account_with_seed(
-                    header,
+                    print_config,
                     infos,
                     infos_length
                 );
             } else if (is_create_nonce_account(infos, infos_length)) {
-                return print_create_nonce_account(header, infos, infos_length);
+                return print_create_nonce_account(print_config, infos, infos_length);
             } else if (is_create_nonce_account_with_seed(infos, infos_length)) {
                 return print_create_nonce_account_with_seed(
-                    header,
+                    print_config,
                     infos,
                     infos_length
                 );
             } else if (is_create_vote_account(infos, infos_length)) {
-                return print_create_vote_account(header, infos, infos_length);
+                return print_create_vote_account(print_config, infos, infos_length);
             } else if (is_create_vote_account_with_seed(infos, infos_length)) {
                 return print_create_vote_account_with_seed(
-                    header,
+                    print_config,
                     infos,
                     infos_length
                 );
             } else if (is_stake_authorize_both(infos, infos_length)
                 || is_stake_authorize_checked_both(infos, infos_length)) {
-                return print_stake_authorize_both(header, infos, infos_length);
+                return print_stake_authorize_both(print_config, infos, infos_length);
             } else if (is_vote_authorize_both(infos, infos_length)
                 || is_vote_authorize_checked_both(infos, infos_length)) {
-                return print_vote_authorize_both(header, infos, infos_length);
+                return print_vote_authorize_both(print_config, infos, infos_length);
             } else if (is_stake_split_with_seed_v1_1(infos, infos_length)) {
                 return print_stake_split_with_seed(
-                    header,
+                    print_config,
                     infos,
                     infos_length,
                     true
@@ -808,43 +735,27 @@ int print_transaction(
                 // System create account is issued with zero lamports in this
                 // case, so it has no interesting info to add. Print stake
                 // split as if it were a single instruction
-                return print_stake_info(&infos[1]->stake, header);
+                return print_stake_info(&infos[1]->stake, print_config);
             } else if (is_stake_split_with_seed_v1_2(infos, infos_length)) {
                 return print_stake_split_with_seed(
-                    header,
+                    print_config,
                     infos,
                     infos_length,
                     false
                 );
             } else if (is_spl_token_create_mint(infos, infos_length)) {
-                return print_spl_token_create_mint(header, infos, infos_length);
+                return print_spl_token_create_mint(print_config, infos, infos_length);
             } else if (is_spl_token_create_account(infos, infos_length)
                 ||  is_spl_token_create_account2(infos, infos_length)
             ) {
                 return print_spl_token_create_account(
-                    header,
+                    print_config,
                     infos,
                     infos_length
                 );
             } else if (is_spl_token_create_multisig(infos, infos_length)) {
                 return print_spl_token_create_multisig(
-                    header,
-                    infos,
-                    infos_length
-                );
-            } else if (is_spl_token_create_mint_with_seed(infos, infos_length)) {
-                return print_spl_token_create_mint_with_seed(header, infos, infos_length);
-            } else if (is_spl_token_create_account_with_seed(infos, infos_length)
-                ||  is_spl_token_create_account2_with_seed(infos, infos_length)
-            ) {
-                return print_spl_token_create_account_with_seed(
-                    header,
-                    infos,
-                    infos_length
-                );
-            } else if (is_spl_token_create_multisig_with_seed(infos, infos_length)) {
-                return print_spl_token_create_multisig_with_seed(
-                    header,
+                    print_config,
                     infos,
                     infos_length
                 );
@@ -853,7 +764,7 @@ int print_transaction(
                   infos_length
             )) {
                 return print_spl_associated_token_account_create_with_transfer(
-                    header,
+                    print_config,
                     infos,
                     infos_length
                 );
@@ -861,10 +772,16 @@ int print_transaction(
             break;
         }
         case 3: {
-            if (is_stake_split_v1_1(infos, infos_length)) {
+            if (is_create_stake_account_and_delegate(infos, infos_length)) {
+                return print_create_stake_account_and_delegate(
+                    print_config,
+                    infos,
+                    infos_length
+                );
+            } else if (is_stake_split_v1_1(infos, infos_length)) {
                 // System allocate/assign have no interesting info, print
                 // stake split as if it were a single instruction
-                return print_stake_info(&infos[2]->stake, header);
+                return print_stake_info(&infos[2]->stake, print_config);
             }
             break;
         }

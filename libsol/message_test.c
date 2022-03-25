@@ -13,11 +13,12 @@ void test_process_message_body_ok() {
         {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
     };
     Blockhash blockhash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    MessageHeader header = {{1, 0, 1, 3}, accounts, &blockhash, 1};
+    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 1}, .expert_mode = true };
     uint8_t msg_body[] = {2, 2, 0, 1, 12, 2, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0};
 
     transaction_summary_reset();
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 0);
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &print_config) == 0);
+    transaction_summary_set_fee_payer_pubkey(&print_config.header.pubkeys[0]);
     enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_kinds;
     assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
@@ -31,13 +32,14 @@ void test_process_message_body_xfer_w_nonce_ok() {
         {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
     };
     Blockhash blockhash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    MessageHeader header = {{1, 0, 1, 3}, accounts, &blockhash, 2};
+    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 2}, .expert_mode = true };
     uint8_t msg_body[] = {
         2, 3, 0, 1, 0, 4, 4, 0, 0, 0, // Nonce
         2, 2, 0, 1, 12, 2, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0
     };
     transaction_summary_reset();
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 0);
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &print_config) == 0);
+    transaction_summary_set_fee_payer_pubkey(&print_config.header.pubkeys[0]);
     enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_kinds;
     assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
@@ -45,8 +47,8 @@ void test_process_message_body_xfer_w_nonce_ok() {
 }
 
 void test_process_message_body_too_few_ix_fail() {
-    MessageHeader header = {{0, 0, 0, 0}, NULL, NULL, 0};
-    assert(process_message_body(NULL, 0, &header) == 1);
+    PrintConfig print_config = { .header = {{0, 0, 0, 0}, NULL, NULL, 0}, .expert_mode = true };
+    assert(process_message_body(NULL, 0, &print_config) == 1);
 }
 
 void test_process_message_body_too_many_ix_fail() {
@@ -66,13 +68,13 @@ void test_process_message_body_too_many_ix_fail() {
         uint8_t* start = msg_body + (i * XFER_IX_LEN);
         memcpy(start, xfer_ix, XFER_IX_LEN);
     }
-    MessageHeader header = {{1, 0, 1, 3}, accounts, &blockhash, TOO_MANY_IX};
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 1);
+    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, TOO_MANY_IX}, .expert_mode = true };
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &print_config) == 1);
 }
 
 void test_process_message_body_data_too_short_fail() {
-    MessageHeader header = {{0, 0, 0, 0}, NULL, NULL, 1};
-    assert(process_message_body(NULL, 0, &header) == 1);
+    PrintConfig print_config = { .header = {{0, 0, 0, 0}, NULL, NULL, 1}, .expert_mode = true };
+    assert(process_message_body(NULL, 0, &print_config) == 1);
 }
 
 void test_process_message_body_data_too_long_fail() {
@@ -82,18 +84,18 @@ void test_process_message_body_data_too_long_fail() {
         {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
     };
     Blockhash blockhash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    MessageHeader header = {{1, 0, 1, 3}, accounts, &blockhash, 1};
+    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 1}, .expert_mode = true };
     uint8_t msg_body[] = {
         2, 2, 0, 1, 12, 2, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0,
         0
     };
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 1);
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &print_config) == 1);
 }
 
 void test_process_message_body_bad_ix_account_index_fail() {
-    MessageHeader header = {{0, 0, 0, 1}, NULL, NULL, 1};
+    PrintConfig print_config = { .header = {{0, 0, 0, 1}, NULL, NULL, 1}, .expert_mode = true };
     uint8_t msg_body[] = {1, 0, 0};
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 1);
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &print_config) == 1);
 }
 
 void test_process_message_body_unknown_ix_enum_fail() {
@@ -103,11 +105,11 @@ void test_process_message_body_unknown_ix_enum_fail() {
         {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
     };
     Blockhash blockhash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    MessageHeader header = {{1, 0, 1, 3}, accounts, &blockhash, 1};
+    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 1}, .expert_mode = true };
     uint8_t msg_body[] = {
         2, 2, 0, 1, 12, 255, 255, 255, 255, 42, 0, 0, 0, 0, 0, 0, 0,
     };
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 1);
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &print_config) == 1);
 }
 
 void test_process_message_body_ix_with_unknown_program_id_fail() {
@@ -117,20 +119,21 @@ void test_process_message_body_ix_with_unknown_program_id_fail() {
         {{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}},
     };
     Blockhash blockhash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    MessageHeader header = {{1, 0, 1, 3}, accounts, &blockhash, 1};
+    PrintConfig print_config = { .header = {{1, 0, 1, 3}, accounts, &blockhash, 1}, .expert_mode = true };
     uint8_t msg_body[] = {
         2, 2, 0, 1, 12, 2, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0,
     };
-    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &header) == 1);
+    assert(process_message_body(msg_body, ARRAY_LEN(msg_body), &print_config) == 1);
 }
 
 static void process_message_body_and_sanity_check(const uint8_t* message, size_t message_length, size_t expected_fields) {
-    MessageHeader header;
+    PrintConfig print_config;
+    print_config.expert_mode = true;
     Parser parser = { message, message_length };
-    assert(parse_message_header(&parser, &header) == 0);
+    assert(parse_message_header(&parser, &print_config.header) == 0);
     transaction_summary_reset();
-    assert(process_message_body(parser.buffer, parser.buffer_length, &header) == 0);
-    transaction_summary_set_fee_payer_pubkey(&header.pubkeys[0]);
+    assert(process_message_body(parser.buffer, parser.buffer_length, &print_config) == 0);
+    transaction_summary_set_fee_payer_pubkey(&print_config.header.pubkeys[0]);
 
     enum SummaryItemKind kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_kinds;
@@ -1013,6 +1016,108 @@ void test_process_message_body_vote_update_commission() {
     process_message_body_and_sanity_check(message, sizeof(message), 4);
 }
 
+void test_process_message_body_stake_delegate() {
+    uint8_t message[] = {
+        2, 1, 5,
+        7,
+            226, 227, 159, 49, 174, 54, 249, 204, 163, 243, 214, 226, 72, 231, 254, 47, 54, 154, 232, 93, 76, 4, 41, 84, 228, 188, 210, 93, 163, 211, 181, 118,
+            147, 11, 169, 119, 49, 240, 218, 2, 64, 0, 238, 67, 133, 163, 239, 139, 225, 13, 87, 18, 112, 254, 144, 118, 171, 151, 140, 122, 64, 17, 230, 66,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            6, 167, 213, 23, 24, 199, 116, 201, 40, 86, 99, 152, 105, 29, 94, 182, 139, 94, 184, 163, 155, 75, 109, 92, 115, 85, 91, 33, 0, 0, 0, 0,
+            6, 167, 213, 23, 25, 53, 132, 208, 254, 237, 155, 179, 67, 29, 19, 32, 107, 229, 68, 40, 27, 87, 184, 86, 108, 197, 55, 95, 244, 0, 0, 0,
+            6, 161, 216, 23, 165, 2, 5, 11, 104, 7, 145, 230, 206, 109, 184, 142, 30, 91, 113, 80, 246, 31, 198, 121, 10, 78, 180, 209, 0, 0, 0, 0,
+            6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        1,
+            6,
+            6,
+                0, 2, 3, 4, 5, 1,
+            4,
+                2, 0, 0, 0
+    };
+
+    process_message_body_and_sanity_check(message, sizeof(message), 4);
+}
+
+void test_process_message_body_stake_delegate_with_nonce() {
+    uint8_t message[] = {
+        1, 1, 7,
+        10,
+            147, 11, 169, 119, 49, 240, 218, 2, 64, 0, 238, 67, 133, 163, 239, 139, 225, 13, 87, 18, 112, 254, 144, 118, 171, 151, 140, 122, 64, 17, 230, 66,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            226, 227, 159, 49, 174, 54, 249, 204, 163, 243, 214, 226, 72, 231, 254, 47, 54, 154, 232, 93, 76, 4, 41, 84, 228, 188, 210, 93, 163, 211, 181, 118,
+            6, 167, 213, 23, 25, 44, 86, 142, 224, 138, 132, 95, 115, 210, 151, 136, 207, 3, 92, 49, 69, 178, 26, 179, 68, 216, 6, 46, 169, 64, 0, 0,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            6, 167, 213, 23, 24, 199, 116, 201, 40, 86, 99, 152, 105, 29, 94, 182, 139, 94, 184, 163, 155, 75, 109, 92, 115, 85, 91, 33, 0, 0, 0, 0,
+            6, 167, 213, 23, 25, 53, 132, 208, 254, 237, 155, 179, 67, 29, 19, 32, 107, 229, 68, 40, 27, 87, 184, 86, 108, 197, 55, 95, 244, 0, 0, 0,
+            6, 161, 216, 23, 165, 2, 5, 11, 104, 7, 145, 230, 206, 109, 184, 142, 30, 91, 113, 80, 246, 31, 198, 121, 10, 78, 180, 209, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        2,
+            8,
+            3,
+                1, 3, 0,
+            4,
+                4, 0, 0, 0,
+
+            9,
+            6,
+                2, 4, 5, 6, 7, 0,
+            4,
+                2, 0, 0, 0
+    };
+
+    process_message_body_and_sanity_check(message, sizeof(message), 6);
+}
+
+void test_process_message_body_create_stake_account_and_delegate() {
+    uint8_t message[] = {
+        3, 1, 7,
+        10,
+            226, 227, 159, 49, 174, 54, 249, 204, 163, 243, 214, 226, 72, 231, 254, 47, 54, 154, 232, 93, 76, 4, 41, 84, 228, 188, 210, 93, 163, 211, 181, 118,
+            147, 11, 169, 119, 49, 240, 218, 2, 64, 0, 238, 67, 133, 163, 239, 139, 225, 13, 87, 18, 112, 254, 144, 118, 171, 151, 140, 122, 64, 17, 230, 66,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            6, 167, 213, 23, 25, 44, 92, 81, 33, 140, 201, 76, 61, 74, 241, 127, 88, 218, 238, 8, 155, 161, 253, 68, 227, 219, 217, 138, 0, 0, 0, 0,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+            6, 167, 213, 23, 24, 199, 116, 201, 40, 86, 99, 152, 105, 29, 94, 182, 139, 94, 184, 163, 155, 75, 109, 92, 115, 85, 91, 33, 0, 0, 0, 0,
+            6, 167, 213, 23, 25, 53, 132, 208, 254, 237, 155, 179, 67, 29, 19, 32, 107, 229, 68, 40, 27, 87, 184, 86, 108, 197, 55, 95, 244, 0, 0, 0,
+            6, 161, 216, 23, 165, 2, 5, 11, 104, 7, 145, 230, 206, 109, 184, 142, 30, 91, 113, 80, 246, 31, 198, 121, 10, 78, 180, 209, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        3,
+            // system create account
+            8,
+            2,
+                1, 0,
+            52,
+                0, 0, 0, 0,
+                42, 0, 0, 0, 0, 0, 0, 0,
+                200, 0, 0, 0, 0, 0, 0, 0,
+                6, 161, 216, 23, 145, 55, 84, 42, 152, 52, 55, 189, 254, 42, 122, 178, 85, 127, 83, 92, 138, 120, 114, 43, 104, 164, 157, 192, 0, 0, 0, 0,
+            // stake initialize
+            9,
+            2,
+                0, 3,
+            116,
+                0, 0, 0, 0,
+                3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+                4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+                1, 0, 0, 0, 0, 0, 0, 0,
+                1, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            // stake delegate
+            9,
+            6,
+                0, 4, 5, 6, 7, 2,
+            4,
+                2, 0, 0, 0
+    };
+
+    process_message_body_and_sanity_check(message, sizeof(message), 11);
+}
+
 void test_process_message_body_stake_deactivate() {
     uint8_t message[] = {
         1, 1, 2,
@@ -1738,6 +1843,9 @@ int main() {
     test_process_message_body_vote_update_commission();
     test_process_message_body_vote_update_node_v1_0_7();
     test_process_message_body_vote_update_node_v1_0_8();
+    test_process_message_body_stake_delegate();
+    test_process_message_body_stake_delegate_with_nonce();
+    test_process_message_body_create_stake_account_and_delegate();
     test_process_message_body_stake_deactivate();
     test_process_message_body_stake_set_lockup();
     test_process_message_body_stake_set_lockup_checked();

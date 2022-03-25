@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sol/print_config.h"
 #include "sol/transaction_summary.h"
 #include "spl/token.h"
 
@@ -142,7 +143,7 @@ int parse_spl_token_instructions(
 );
 int print_spl_token_info(
     const SplTokenInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 );
 void summary_item_set_multisig_m_of_n(
     SummaryItem* item,
@@ -160,6 +161,6 @@ const Pubkey* spl_token_option_pubkey_get(
 
 int print_spl_token_transfer_info(
     const SplTokenTransferInfo* info,
-    const MessageHeader* header,
+    const PrintConfig* print_config,
     bool primary
 );
