@@ -10,14 +10,14 @@
 
 int print_token_amount(
     uint64_t amount,
-    const char *asset,
+    const char * const asset,
     uint8_t decimals,
     char *out,
-    size_t out_length
+    const size_t out_length
 ) {
     BAIL_IF(out_length > INT_MAX);
     uint64_t dVal = amount;
-    int outlen  = (int)out_length;
+    const int outlen  = (int)out_length;
     int i = 0;
     int min_chars = decimals + 1;
 
@@ -50,12 +50,12 @@ int print_token_amount(
     if (out[i-1] == '.') i -= 1;
 
     if (asset) {
-        int asset_length = strlen(asset);
+        const int asset_length = strlen(asset);
         // Check buffer has space
         BAIL_IF((i + 1 + asset_length + 1) > outlen);
         // Qualify amount
         out[i++] = ' ';
-        strcpy(out + i, asset);
+        strncpy(out + i, asset, asset_length + 1);
     } else {
         out[i] = '\0';
     }
