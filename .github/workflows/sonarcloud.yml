@@ -13,10 +13,10 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: SonarQube analyze
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest    
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
     env:
       SONAR_SCANNER_VERSION: 4.7.0.2747
       SONAR_SERVER_URL: "https://sonarcloud.io"
@@ -38,7 +38,7 @@ jobs:
           curl -sL https://deb.nodesource.com/setup_16.x | bash -
           apt-get install -y gcovr nodejs unzip
           mkdir -p $HOME/.sonar
-          curl -sSLo $HOME/.sonar/sonar-scanner.zip ${{ env.SONAR_SCANNER_DOWNLOAD_URL }} 
+          curl -sSLo $HOME/.sonar/sonar-scanner.zip ${{ env.SONAR_SCANNER_DOWNLOAD_URL }}
           unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
           echo "$HOME/.sonar/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}-linux/bin" >> $GITHUB_PATH
       - name: Download and set up build-wrapper
