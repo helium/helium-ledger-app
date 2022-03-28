@@ -42,6 +42,22 @@ jobs:
           name: app-nanox
           path: bin
 
+  nanosp-build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build app
+        run: |
+          make clean
+          make BOLOS_SDK=$NANOSP_SDK
+      - name: Upload app binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-nanosp
+          path: bin
+
   scan-build:
     name: Clang Static Analyzer
     runs-on: ubuntu-latest
