@@ -21,8 +21,8 @@ endif
 include $(BOLOS_SDK)/Makefile.defines
 
 APPVERSION_M=1
-APPVERSION_N=0
-APPVERSION_P=6
+APPVERSION_N=1
+APPVERSION_P=0
 APPVERSION=$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)
 APPNAME = "Solana"
 
@@ -152,6 +152,7 @@ include $(BOLOS_SDK)/Makefile.rules
 dep/%.d: %.c Makefile
 
 load: all
+load-only:
 	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
 load-offline: all

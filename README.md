@@ -12,83 +12,80 @@ Current Features:
 - Blind sign arbitrary transactions (Enabled via settings)
 
 ## Prerequisites
+### For building the app
+* [Install Docker](https://docs.docker.com/get-docker/)
+* For Linux hosts, install the Ledger Nano [udev rules](https://github.com/LedgerHQ/udev-rules)
+#### Build the [Ledger App Builder](https://developers.ledger.com/docs/nano-app/build/) Docker image
+1. Clone the git repository
+```
+git clone https://github.com/LedgerHQ/ledger-app-builder.git
+```
+1. Change directories
+```
+cd ledger-app-builder
+```
+1. Checkout the target commit
+```
+git checkout 0bdab1e
+```
+1. Build the image
+```
+docker build -t ledger-app-builder:0bdab1e .
+```
+  * If permissions errors are encountered, ensure that your user is in the `docker`
+group and that the session has been restarted
 
-Install Vagrant and VirtualBox.
-
-Clone this git repo recursively, such that it includes the BOLOS SDK in a submodule:
-
-```bash
-$ git clone --recursive git@github.com:solana-labs/ledger-app-solana.git
-cd ledger-app-solana
+### For working with the device
+* Install Python3 PIP
+Ubuntu Linux:
+```
+sudo apt install pip3
+```
+MacOS
+```
+brew install python3
+```
+* Install ledgerblue python module
+```
+pip3 install ledgerblue
 ```
 
-## Creating the development environment
+### For running the test suite
+* [Rust](https://rustup.rs/)
+* Solana [system dependencies](https://github.com/solana-labs/solana/#1-install-rustc-cargo-and-rustfmt)
 
-To start the Ubuntu 18.04 VM:
-
-```bash
-$ vagrant up
-```
-
-To enter the VM:
+## Build
+It is highly recommended that you read and understand the [Ledger App Builder](https://developers.ledger.com/docs/nano-app/build/)
+build process before proceeding.  A convenience wrapper script (`./docker-make`) has been provided for simplicity
 
 ```bash
-$ vagrant ssh
+./docker-make
 ```
-
-## Alternative Setup, For those not using Vagrant
-
-To build and install the app on your Ledger Nano S you must set up the Ledger Nano S build environments. Please follow the Getting Started instructions at [here](https://ledger.readthedocs.io/en/latest/userspace/getting_started.html).
-
-If you don't want to setup a global environnment, you can also setup one just for this app by sourcing `prepare-devenv.sh` with the right target (`s` or `x`).
-
-install prerequisite and switch to a Nano X dev-env:
-
+### Clean
 ```bash
-sudo apt install python3-venv python3-dev libudev-dev libusb-1.0-0-dev
-
-# (x or s, depending on your device)
-source prepare-devenv.sh x
+./docker-make clean
 ```
 
-## Building and installing
-
-Compile:
-
+## Working with the device
+Requires that the `BOLOS_SDK` envvar [be set](https://developers.ledger.com/docs/nano-app/load/)
+### Load
 ```bash
-make
+make load-only
 ```
 
-Refresh the repo (required after Makefile edits):
-```bash
-make clean
-```
-
-Run C tests:
-```bash
-make -C libsol
-```
-
-Load the app onto the device:
-
-```bash
-make load
-```
-
-Remove the app from the device:
-
+### Delete
 ```bash
 make delete
 ```
 
-
-## Example of Ledger wallet functionality
-
+## Test
+### Unit
+Run C tests:
 ```bash
-cd tests
-cargo run
+make -C libsol
 ```
-
-## Documentation
-
-This follows the specification available in the [`api.md`](doc/api.md).
+### Integration
+First enable `blind-signing` in the App settings
+```bash
+cargo run --manifest-path tests/Cargo.toml
+```

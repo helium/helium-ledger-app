@@ -121,21 +121,27 @@ int parse_stake_instructions(
 );
 int print_stake_info(
     const StakeInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 );
 
 int print_stake_initialize_info(
     const char* primary_title,
     const StakeInitializeInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 );
 
 int print_stake_split_info1(
     const StakeSplitInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 );
 
 int print_stake_split_info2(
     const StakeSplitInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
+);
+
+int print_delegate_stake_info(
+    const char* primary_title,
+    const StakeDelegateInfo* info,
+    const PrintConfig* print_config
 );

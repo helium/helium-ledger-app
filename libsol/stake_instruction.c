@@ -105,6 +105,8 @@ static int parse_stake_initialize_checked_instruction(
     const MessageHeader* header,
     StakeInitializeInfo* info
 ) {
+    UNUSED(parser);
+
     InstructionAccountsIterator it;
     instruction_accounts_iterator_init(&it, header, instruction);
 
@@ -192,6 +194,8 @@ static int parse_stake_deactivate_instruction(
     const MessageHeader* header,
     StakeDeactivateInfo* info
 ) {
+    UNUSED(parser);
+
     InstructionAccountsIterator it;
     instruction_accounts_iterator_init(&it, header, instruction);
 
@@ -218,7 +222,7 @@ static int parse_stake_lockupargs(
     }
     BAIL_IF(parse_option(parser, &option));
     if (option == OptionSome) {
-        BAIL_IF(parse_u64(parser, &lockup->epoch))
+        BAIL_IF(parse_u64(parser, &lockup->epoch));
         present |= StakeLockupHasEpoch;
     }
     if (parse_custodian) {
@@ -402,37 +406,32 @@ int parse_stake_instructions(
     return 1;
 }
 
-static int print_delegate_stake_info(
+int print_delegate_stake_info(
+    const char* primary_title,
     const StakeDelegateInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
-    item = transaction_summary_primary_item();
-    summary_item_set_pubkey(item, "Delegate from", info->stake_pubkey);
+    if (primary_title != NULL) {
+      item = transaction_summary_primary_item();
+      summary_item_set_pubkey(item, primary_title, info->stake_pubkey);
+    }
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authorized_pubkey);
+    if (print_config_show_authority(print_config, info->authorized_pubkey)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authorized_pubkey);
+    }
 
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Vote account", info->vote_pubkey);
-
-    item = transaction_summary_fee_payer_item();
-    if (memcmp(
-            &header->pubkeys[0],
-            info->authorized_pubkey,
-            PUBKEY_SIZE
-        ) == 0
-    ) {
-        transaction_summary_set_fee_payer_string("authorizer");
-    }
 
     return 0;
 }
 
 static int print_stake_withdraw_info(
     const StakeWithdrawInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
@@ -445,15 +444,17 @@ static int print_stake_withdraw_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "To", info->to);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }
 
 static int print_stake_authorize_info(
     const StakeAuthorizeInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     const char* new_authority_title = NULL;
     SummaryItem* item;
@@ -473,12 +474,16 @@ static int print_stake_authorize_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, new_authority_title, info->new_authority);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
-    if (info->custodian) {
-      item = transaction_summary_general_item();
-      summary_item_set_pubkey(item, "Custodian", info->custodian);
+    if (info->custodian
+        &&  print_config_show_authority(print_config, info->custodian)
+    ) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Custodian", info->custodian);
     }
 
     return 0;
@@ -486,22 +491,24 @@ static int print_stake_authorize_info(
 
 static int print_stake_deactivate_info(
     const StakeDeactivateInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
     summary_item_set_pubkey(item, "Deactivate stake", info->account);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }
 
 static int print_stake_set_lockup_info(
     const StakeSetLockupInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
@@ -532,23 +539,25 @@ static int print_stake_set_lockup_info(
         );
     }
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->custodian);
+    if (print_config_show_authority(print_config, info->custodian)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->custodian);
+    }
 
     return 0;
 }
 
 static int print_stake_split_info(
     const StakeSplitInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    BAIL_IF(print_stake_split_info1(info, header));
-    return print_stake_split_info2(info, header);
+    BAIL_IF(print_stake_split_info1(info, print_config));
+    return print_stake_split_info2(info, print_config);
 }
 
 static int print_stake_merge_info(
     const StakeMergeInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
 
@@ -558,40 +567,46 @@ static int print_stake_merge_info(
     item = transaction_summary_general_item();
     summary_item_set_pubkey(item, "Into", info->destination);
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+    if (print_config_show_authority(print_config, info->authority)) {
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }
 
 int print_stake_info(
     const StakeInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     switch (info->kind) {
         case StakeDelegate:
-            return print_delegate_stake_info(&info->delegate_stake, header);
+            return print_delegate_stake_info(
+                "Delegate from",
+                &info->delegate_stake,
+                print_config
+            );
         case StakeInitialize:
         case StakeInitializeChecked:
             return print_stake_initialize_info(
                 "Init stake acct",
                 &info->initialize,
-                header
+                print_config
             );
         case StakeWithdraw:
-            return print_stake_withdraw_info(&info->withdraw, header);
+            return print_stake_withdraw_info(&info->withdraw, print_config);
         case StakeAuthorize:
         case StakeAuthorizeChecked:
-            return print_stake_authorize_info(&info->authorize, header);
+            return print_stake_authorize_info(&info->authorize, print_config);
         case StakeDeactivate:
-            return print_stake_deactivate_info(&info->deactivate, header);
+            return print_stake_deactivate_info(&info->deactivate, print_config);
         case StakeSetLockup:
         case StakeSetLockupChecked:
-            return print_stake_set_lockup_info(&info->set_lockup, header);
+            return print_stake_set_lockup_info(&info->set_lockup, print_config);
         case StakeSplit:
-            return print_stake_split_info(&info->split, header);
+            return print_stake_split_info(&info->split, print_config);
         case StakeMerge:
-            return print_stake_merge_info(&info->merge, header);
+            return print_stake_merge_info(&info->merge, print_config);
         // Unsupported instructions
         case StakeAuthorizeWithSeed:
         case StakeAuthorizeCheckedWithSeed:
@@ -604,7 +619,7 @@ int print_stake_info(
 int print_stake_initialize_info(
     const char* primary_title,
     const StakeInitializeInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
     SummaryItem* item;
     bool one_authority = pubkeys_equal(
@@ -655,7 +670,7 @@ int print_stake_initialize_info(
             "Lockup authority",
             info->lockup.custodian
         );
-    } else {
+    } else if (print_config->expert_mode) {
         item = transaction_summary_general_item();
         summary_item_set_string(
             item,
@@ -669,8 +684,10 @@ int print_stake_initialize_info(
 
 int print_stake_split_info1(
     const StakeSplitInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
+    UNUSED(print_config);
+
     SummaryItem* item;
 
     item = transaction_summary_primary_item();
@@ -687,12 +704,14 @@ int print_stake_split_info1(
 
 int print_stake_split_info2(
     const StakeSplitInfo* info,
-    const MessageHeader* header
+    const PrintConfig* print_config
 ) {
-    SummaryItem* item;
+    if (print_config_show_authority(print_config, info->authority)) {
+        SummaryItem* item;
 
-    item = transaction_summary_general_item();
-    summary_item_set_pubkey(item, "Authorized by", info->authority);
+        item = transaction_summary_general_item();
+        summary_item_set_pubkey(item, "Authorized by", info->authority);
+    }
 
     return 0;
 }

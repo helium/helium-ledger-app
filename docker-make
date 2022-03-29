@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+docker_tag=0bdab1e
+here="$(readlink -f "$(dirname "$0")")"
+user=$(id -u)
+group=$(id -g)
+owner="$user:$group"
+docker run --rm -t -v "$here:/app" "ledger-app-builder:$docker_tag" /bin/bash -c "make ${*}; chown -fR $owner /app/{bin,debug,dep,libsol/target,obj,src/glyphs.{c,h}}"

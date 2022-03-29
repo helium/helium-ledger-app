@@ -302,13 +302,16 @@ void test_transaction_summary_finalize() {
     summary_item_set_u64(item, "item", 42);
     assert(transaction_summary_finalize(kinds, &num_kinds) == 1);
 
-    // No fee-payer set fails
+    // Minimum items set (primary) succeeds
     transaction_summary_reset();
     item = transaction_summary_primary_item();
     summary_item_set_u64(item, "item", 42);
-    assert(transaction_summary_finalize(kinds, &num_kinds) == 1);
+    num_kinds = 0;
+    zero_kinds_array(kinds);
+    assert(transaction_summary_finalize(kinds, &num_kinds) == 0);
+    assert(num_kinds == 1);
+    assert_kinds_array(kinds, num_kinds);
 
-    // Minimum items set (primary + fee_payer) succeeds
     item = transaction_summary_fee_payer_item();
     summary_item_set_u64(item, "item", 42);
     num_kinds = 0;

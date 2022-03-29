@@ -37,7 +37,7 @@ int read_derivation_path(
 static uint8_t set_result_get_pubkey() {
     uint8_t tx = 32;
 
-    os_memmove(G_io_apdu_buffer, publicKey, 32);
+    memcpy(G_io_apdu_buffer, publicKey, 32);
     return tx;
 }
 
