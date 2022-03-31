@@ -26,9 +26,7 @@ enum ProgramId instruction_program_id(
         PUBKEY_SIZE
     ) == 0) {
         return ProgramIdSplAssociatedTokenAccount;
-    } else if (
-        memcmp(program_id, &serum_assert_owner_program_id, PUBKEY_SIZE) == 0
-    ) {
+    } else if (is_serum_assert_owner_program_id(program_id)) {
         return ProgramIdSerumAssertOwner;
     } else if (memcmp(program_id, &spl_memo_program_id, PUBKEY_SIZE) == 0) {
         return ProgramIdSplMemo;
