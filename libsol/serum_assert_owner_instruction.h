@@ -1,5 +1,6 @@
 #pragma once
 
 #include "sol/parser.h"
+#include <stdbool.h>
 
-extern const Pubkey serum_assert_owner_program_id;
+bool is_serum_assert_owner_program_id(const Pubkey* program_id);
