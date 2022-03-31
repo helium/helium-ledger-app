@@ -61,6 +61,18 @@ const InstructionBrief create_stake_account_and_delegate_brief[] = {
         infos_length                                                \
     )
 
+const InstructionBrief create_stake_account_with_seed_and_delegate_brief[] = {
+    SYSTEM_IX_BRIEF(SystemCreateAccountWithSeed),
+    STAKE_IX_BRIEF(StakeInitialize),
+    STAKE_IX_BRIEF(StakeDelegate),
+};
+#define is_create_stake_account_with_seed_and_delegate(infos, infos_length) \
+    instruction_infos_match_briefs(                                         \
+        infos,                                                              \
+        create_stake_account_with_seed_and_delegate_brief,                  \
+        infos_length                                                        \
+    )
+
 const InstructionBrief stake_split_brief_v1_1[] = {
     SYSTEM_IX_BRIEF(SystemAllocate),
     SYSTEM_IX_BRIEF(SystemAssign),
@@ -307,6 +319,30 @@ static int print_create_stake_account_and_delegate(
     summary_item_set_pubkey(item, "Delegate from", ca_info->to);
 
     BAIL_IF(print_system_create_account_info(NULL, ca_info, print_config));
+    BAIL_IF(print_stake_initialize_info(NULL, si_info, print_config));
+    BAIL_IF(print_delegate_stake_info(NULL, sd_info, print_config));
+
+    return 0;
+}
+
+static int print_create_stake_account_with_seed_and_delegate(
+    const PrintConfig* print_config,
+    InstructionInfo* const * infos,
+    size_t infos_length
+) {
+    UNUSED(infos_length);
+
+    const SystemCreateAccountWithSeedInfo* cws_info =
+        &infos[0]->system.create_account_with_seed;
+    const StakeInitializeInfo* si_info = &infos[1]->stake.initialize;
+    const StakeDelegateInfo* sd_info = &infos[2]->stake.delegate_stake;
+
+    SummaryItem* item = transaction_summary_primary_item();
+    summary_item_set_pubkey(item, "Delegate from", cws_info->to);
+
+    BAIL_IF(
+        print_system_create_account_with_seed_info(NULL, cws_info, print_config)
+    );
     BAIL_IF(print_stake_initialize_info(NULL, si_info, print_config));
     BAIL_IF(print_delegate_stake_info(NULL, sd_info, print_config));
 
@@ -774,6 +810,14 @@ int print_transaction(
         case 3: {
             if (is_create_stake_account_and_delegate(infos, infos_length)) {
                 return print_create_stake_account_and_delegate(
+                    print_config,
+                    infos,
+                    infos_length
+                );
+            } else if (
+                is_create_stake_account_with_seed_and_delegate(infos, infos_length)
+            ) {
+                return print_create_stake_account_with_seed_and_delegate(
                     print_config,
                     infos,
                     infos_length
