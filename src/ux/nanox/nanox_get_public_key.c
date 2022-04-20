@@ -7,6 +7,7 @@
 #include <cx.h>
 #include "helium.h"
 #include "helium_ux.h"
+#include "nanox_error.h"
 
 #define CTX global.getPublicKeyContext
 
