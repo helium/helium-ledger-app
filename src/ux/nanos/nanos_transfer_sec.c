@@ -10,6 +10,7 @@
 #include "helium.h"
 #include "helium_ux.h"
 #include "save_context.h"
+#include "nanos_error.h"
 
 #define CTX global.transferSecContext
 
@@ -239,24 +240,26 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask,  __attribu
 }
 
 void handle_sign_transfer_sec_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags,  __attribute__((unused))  volatile unsigned int *tx) {
-    save_transfer_sec_context(p1, p2, dataBuffer, dataLength, &CTX);
+    if(save_transfer_sec_context(p1, p2, dataBuffer, dataLength, &CTX)) {
+        // display amount on screen
+        // hst and hnt share the same amount of decimals so
+        // the pretty_print_hnt function works here too
+        uint8_t len = pretty_print_hnt(CTX.fullStr, CTX.amount);
+        uint8_t i = 0;
+        while(CTX.fullStr[i] != '\0' && i<12){
+            CTX.partialStr[i] = CTX.fullStr[i];
+            i++;
+        }
+        CTX.partialStr[i] = '\0';
+        CTX.fullStr_len = len;
 
-	// display amount on screen
-    // hst and hnt share the same amount of decimals so
-    // the pretty_print_hnt function works here too
-	uint8_t len = pretty_print_hnt(CTX.fullStr, CTX.amount);
-	uint8_t i = 0;
-	while(CTX.fullStr[i] != '\0' && i<12){
-		CTX.partialStr[i] = CTX.fullStr[i];
-		i++;
-	}
-	CTX.partialStr[i] = '\0';
-	CTX.fullStr_len = len;
+        CTX.displayIndex = 0;
 
-	CTX.displayIndex = 0;
-
-	UX_DISPLAY(ui_displayAmount, ui_prepro_displayAmount);
-	*flags |= IO_ASYNCH_REPLY;
+        UX_DISPLAY(ui_displayAmount, ui_prepro_displayAmount);
+    } else {
+        display_error();
+    }
+    *flags |= IO_ASYNCH_REPLY;
 }
 
 #endif
