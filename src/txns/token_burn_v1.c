@@ -45,7 +45,9 @@ uint32_t create_helium_burn_txn(uint8_t account){
         pb_encode_varint(&ostream, ctx->memo);
     }
 
-    sign_tx(signature, account, G_io_apdu_buffer, ostream.bytes_written);
+    if (!sign_tx(signature, account, G_io_apdu_buffer, ostream.bytes_written)){
+        return 0;
+    }
 
     ostream = pb_ostream_from_buffer(G_io_apdu_buffer, sizeof(G_io_apdu_buffer));
 

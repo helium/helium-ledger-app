@@ -108,11 +108,13 @@ void derive_helium_public_key
 #include "../ux/helium_ux.h"
 
 
-void sign_tx(uint8_t *dst, uint32_t account, const uint8_t *tx, uint16_t length) {
+bool sign_tx(uint8_t *dst, uint32_t account, const uint8_t *tx, uint16_t length) {
 	cx_ecfp_private_key_t privateKey;
     derive_helium_public_key(account, &privateKey, NULL);
-    cx_eddsa_sign_no_throw(&privateKey, CX_SHA512, tx, length, dst, 64);
+    cx_err_t response = cx_eddsa_sign_no_throw(&privateKey, CX_SHA512, tx, length, dst, 64);
     explicit_bzero(&privateKey, sizeof(privateKey));
+    // return true if everything is OK
+    return response == CX_OK;
 }
 
 void extract_pubkey_bytes(unsigned char *dst, cx_ecfp_public_key_t *publicKey) {
