@@ -111,7 +111,7 @@ void derive_helium_public_key
 void sign_tx(uint8_t *dst, uint32_t account, const uint8_t *tx, uint16_t length) {
 	cx_ecfp_private_key_t privateKey;
     derive_helium_public_key(account, &privateKey, NULL);
-	cx_eddsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA512, tx, length, NULL, 0, dst, 64, NULL);
+    cx_eddsa_sign_no_throw(&privateKey, CX_SHA512, tx, length, dst, 64);
     explicit_bzero(&privateKey, sizeof(privateKey));
 }
 
