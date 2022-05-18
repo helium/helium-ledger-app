@@ -23,7 +23,7 @@ int u64_to_base64(uint8_t *dst, uint64_t n);
 
 uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n);
 
-void sign_tx(uint8_t *dst, uint32_t account, const uint8_t *tx, uint16_t length);
+bool sign_tx(uint8_t *dst, uint32_t account, const uint8_t *tx, uint16_t length);
 
 typedef struct transaction_arg_t {
     uint8_t * buf;

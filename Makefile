@@ -41,7 +41,7 @@ else
 	ICONNAME   = nanox_app_helium.gif
 endif
 
-APPVERSION = 2.2.3
+APPVERSION = 2.2.4
 
 # The --path argument here restricts which BIP32 paths the app is allowed to derive.
 ifeq ($(TESTNET),true)
