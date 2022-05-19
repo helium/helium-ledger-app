@@ -50,7 +50,9 @@ uint32_t create_helium_transfer_validator_txn(uint8_t account){
 
     unsigned char signature[SIZEOF_SIGNATURE];
     memset(signature, 0, SIZEOF_SIGNATURE);
-    sign_tx(signature, account, G_io_apdu_buffer, ostream.bytes_written);
+    if (!sign_tx(signature, account, G_io_apdu_buffer, ostream.bytes_written)){
+        return 0;
+    }
 
     ostream = pb_ostream_from_buffer(G_io_apdu_buffer, sizeof(G_io_apdu_buffer));
 

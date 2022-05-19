@@ -72,10 +72,27 @@ void derive_helium_public_key
     // bip32 path for 44'/904'/n'/0'/0' for Mainnet
     uint32_t bip32Path[] = {44 | 0x80000000, INDEX | 0x80000000, account | 0x80000000, 0x80000000, 0x80000000};
 
-	os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32Path, 5, keySeed, NULL, NULL, 0);
+    BEGIN_TRY {
+        TRY {
+            os_perso_derive_node_bip32_seed_key(
+                HDW_ED25519_SLIP10,
+                CX_CURVE_Ed25519,
+                bip32Path,
+                5,
+                keySeed,
+                NULL,
+                NULL,
+                0
+            );
+            cx_ecfp_init_private_key(CX_CURVE_Ed25519, keySeed, sizeof(keySeed), &pk);
+        }
+        FINALLY {
+            explicit_bzero(&keySeed, sizeof(keySeed));
+        }
+    }
+    END_TRY;
 
-	cx_ecfp_init_private_key(CX_CURVE_Ed25519, keySeed, sizeof(keySeed), &pk);
-	if (publicKey) {
+    if (publicKey) {
 		cx_ecfp_init_public_key(CX_CURVE_Ed25519, NULL, 0, publicKey);
 		cx_ecfp_generate_pair(CX_CURVE_Ed25519, publicKey, &pk, 1);
 	}
@@ -91,11 +108,13 @@ void derive_helium_public_key
 #include "../ux/helium_ux.h"
 
 
-void sign_tx(uint8_t *dst, uint32_t account, const uint8_t *tx, uint16_t length) {
+bool sign_tx(uint8_t *dst, uint32_t account, const uint8_t *tx, uint16_t length) {
 	cx_ecfp_private_key_t privateKey;
     derive_helium_public_key(account, &privateKey, NULL);
-	cx_eddsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA512, tx, length, NULL, 0, dst, 64, NULL);
-	memset(&privateKey, 0, sizeof(privateKey));
+    cx_err_t response = cx_eddsa_sign_no_throw(&privateKey, CX_SHA512, tx, length, dst, 64);
+    explicit_bzero(&privateKey, sizeof(privateKey));
+    // return true if everything is OK
+    return response == CX_OK;
 }
 
 void extract_pubkey_bytes(unsigned char *dst, cx_ecfp_public_key_t *publicKey) {

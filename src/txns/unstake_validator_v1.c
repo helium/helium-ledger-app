@@ -38,7 +38,9 @@ uint32_t create_helium_unstake_txn(uint8_t account){
     pb_encode_tag(&ostream, PB_WT_VARINT, helium_blockchain_txn_unstake_validator_v1_stake_release_height_tag);
     pb_encode_varint(&ostream, ctx->stake_release_height);
 
-    sign_tx(signature, account, G_io_apdu_buffer, ostream.bytes_written);
+    if (!sign_tx(signature, account, G_io_apdu_buffer, ostream.bytes_written)){
+        return 0;
+    }
 
     ostream = pb_ostream_from_buffer(G_io_apdu_buffer, sizeof(G_io_apdu_buffer));
 

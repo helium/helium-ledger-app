@@ -10,6 +10,7 @@
 #include "helium.h"
 #include "helium_ux.h"
 #include "save_context.h"
+#include "nanos_error.h"
 
 #define CTX global.burnContext
 
@@ -299,21 +300,24 @@ static unsigned int ui_displayAmount_button(unsigned int button_mask, __attribut
 }
 
 void handle_burn_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags,__attribute__((unused)) volatile unsigned int *tx) {
-    save_burn_context(p1, p2, dataBuffer, dataLength, &CTX);
 
-	// display amount on screen
-	uint8_t len = pretty_print_hnt(CTX.fullStr, CTX.amount);
-	uint8_t i = 0;
-	while(CTX.fullStr[i] != '\0' && i<12){
-		CTX.partialStr[i] = CTX.fullStr[i];
-		i++;
-	}
-	CTX.partialStr[i] = '\0';
-	CTX.fullStr_len = len;
+    if(save_burn_context(p1, p2, dataBuffer, dataLength, &CTX)) {
+        // display amount on screen
+        uint8_t len = pretty_print_hnt(CTX.fullStr, CTX.amount);
+        uint8_t i = 0;
+        while(CTX.fullStr[i] != '\0' && i<12){
+            CTX.partialStr[i] = CTX.fullStr[i];
+            i++;
+        }
+        CTX.partialStr[i] = '\0';
+        CTX.fullStr_len = len;
 
-	CTX.displayIndex = 0;
+        CTX.displayIndex = 0;
 
-	UX_DISPLAY(ui_displayAmount, ui_prepro_displayAmount);
+        UX_DISPLAY(ui_displayAmount, ui_prepro_displayAmount);
+    } else {
+        display_error();
+    }
 	*flags |= IO_ASYNCH_REPLY;
 }
 
