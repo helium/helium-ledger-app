@@ -18,6 +18,20 @@ static uint32_t G_derivationPath[MAX_BIP32_PATH_LENGTH];
 static uint32_t G_derivationPathLength;
 static bool G_non_confirm_requested;
 
+static void reset_global_context(void) {
+    MEMCLEAR(G_derivationPath);
+    MEMCLEAR(G_message);
+    G_messageLength = 0;
+    G_non_confirm_requested = false;
+    G_numDerivationPaths = 1;
+}
+
+#define CLEAR_AND_THROW(exception)  \
+    do {                            \
+        reset_global_context();     \
+        THROW(exception);           \
+    } while (0)
+
 static void derive_private_key(cx_ecfp_private_key_t *privateKey,
                                uint32_t *derivationPath,
                                uint8_t derivationPathLength) {
@@ -69,17 +83,21 @@ static uint8_t set_result_sign_message() {
 }
 
 //////////////////////////////////////////////////////////////////////
+void clearAndSendResponse(uint8_t tx, bool approve) {
+    reset_global_context();
+    sendResponse(tx, approve);
+}
 
 UX_STEP_VALID(ux_approve_step,
               pb,
-              sendResponse(set_result_sign_message(), true),
+              clearAndSendResponse(set_result_sign_message(), true),
               {
                   &C_icon_validate_14,
                   "Approve",
               });
 UX_STEP_VALID(ux_reject_step,
               pb,
-              sendResponse(0, false),
+              clearAndSendResponse(0, false),
               {
                   &C_icon_crossmark,
                   "Reject",
@@ -93,7 +111,7 @@ UX_STEP_NOCB_INIT(ux_summary_step,
                           flags |= DisplayFlagLongPubkeys;
                       }
                       if (transaction_summary_display_item(step_index, flags)) {
-                          THROW(ApduReplySolanaSummaryUpdateFailed);
+                          CLEAR_AND_THROW(ApduReplySolanaSummaryUpdateFailed);
                       }
                   },
                   {
@@ -110,20 +128,12 @@ ux_flow_step_t const *flow_steps[MAX_FLOW_STEPS];
 
 Hash UnrecognizedMessageHash;
 
-static void reset_global_context(void) {
-    MEMCLEAR(G_derivationPath);
-    MEMCLEAR(G_message);
-    G_messageLength = 0;
-    G_non_confirm_requested = false;
-    G_numDerivationPaths = 1;
-}
-
 void handle_sign_message_receive_apdus(uint8_t p1,
                                        uint8_t p2,
                                        const uint8_t *dataBuffer,
                                        size_t dataLength) {
     if (dataLength == 0) {
-        THROW(ApduReplySolanaInvalidMessage);
+        CLEAR_AND_THROW(ApduReplySolanaInvalidMessage);
     }
 
     // Detect old host and remove the obsolete flag if set
@@ -142,7 +152,7 @@ void handle_sign_message_receive_apdus(uint8_t p1,
             dataLength--;
             // We only support one derivation path ATM
             if (G_numDerivationPaths != 1) {
-                THROW(ApduReplySdkExceptionOverflow);
+                CLEAR_AND_THROW(ApduReplySdkExceptionOverflow);
             }
         } else {
             G_numDerivationPaths = 1;
@@ -157,7 +167,7 @@ void handle_sign_message_receive_apdus(uint8_t p1,
         // first APDU buffer is an error, since we haven't yet received a
         // derivation path.
         if (G_numDerivationPaths == 0) {
-            THROW(ApduReplySolanaInvalidMessage);
+            CLEAR_AND_THROW(ApduReplySolanaInvalidMessage);
         }
     }
 
@@ -167,7 +177,7 @@ void handle_sign_message_receive_apdus(uint8_t p1,
         messageLength = U2BE(dataBuffer, 0);
         dataBuffer += 2;
         if (messageLength != (dataLength - 2)) {
-            THROW(ApduReplySolanaInvalidMessage);
+            CLEAR_AND_THROW(ApduReplySolanaInvalidMessage);
         }
     } else {
         messageLength = dataLength;
@@ -175,13 +185,14 @@ void handle_sign_message_receive_apdus(uint8_t p1,
 
     // Append current message to global message reception buffer
     if (G_messageLength + messageLength > MAX_MESSAGE_LENGTH) {
-        THROW(ApduReplySdkExceptionOverflow);
+        CLEAR_AND_THROW(ApduReplySdkExceptionOverflow);
     }
     memcpy(G_message + G_messageLength, dataBuffer, messageLength);
     G_messageLength += messageLength;
 
     // Stop processing here if another APDU is expected
     if (p2 & P2_MORE) {
+        // Host wants to send us more data. Don't clear the message buffer
         THROW(ApduReplySuccess);
     }
 
@@ -218,17 +229,17 @@ void handle_sign_message_parse_message(volatile unsigned int *tx) {
 
     if (parse_message_header(&parser, header) != 0) {
         // This is not a valid Solana message
-        THROW(ApduReplySolanaInvalidMessage);
+        CLEAR_AND_THROW(ApduReplySolanaInvalidMessage);
     }
 
     // Ensure the requested signer is present in the header
     if (scan_header_for_signer(&signer_index, header) != 0) {
-        THROW(ApduReplySdkInvalidParameter);
+        CLEAR_AND_THROW(ApduReplySdkInvalidParameter);
     }
     print_config.signer_pubkey = &header->pubkeys[signer_index];
 
     if (G_non_confirm_requested) {
-        // Uncomment this to allow blind signing.
+        // Uncomment this to allow unattended signing.
         //*tx = set_result_sign_message();
         // THROW(ApduReplySuccess);
         UNUSED(tx);
@@ -252,7 +263,7 @@ void handle_sign_message_parse_message(volatile unsigned int *tx) {
             item = transaction_summary_general_item();
             summary_item_set_hash(item, "Message Hash", &UnrecognizedMessageHash);
         } else {
-            THROW(ApduReplySdkNotSupported);
+            CLEAR_AND_THROW(ApduReplySdkNotSupported);
         }
     }
 
@@ -280,7 +291,7 @@ void handle_sign_message_UI(volatile unsigned int *flags) {
 
         ux_flow_init(0, flow_steps, NULL);
     } else {
-        THROW(ApduReplySolanaSummaryFinalizeFailed);
+        CLEAR_AND_THROW(ApduReplySolanaSummaryFinalizeFailed);
     }
 
     *flags |= IO_ASYNCH_REPLY;
