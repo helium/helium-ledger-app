@@ -1,3 +1,4 @@
+#include "derivation_path.h"
 #include "getPubkey.h"
 #include "os.h"
 #include "ux.h"
@@ -13,7 +14,7 @@
 static uint8_t G_message[MAX_MESSAGE_LENGTH];
 static int G_messageLength;
 uint8_t G_numDerivationPaths;
-static uint32_t G_derivationPath[BIP32_PATH];
+static uint32_t G_derivationPath[MAX_BIP32_PATH_LENGTH];
 static uint32_t G_derivationPathLength;
 static bool G_non_confirm_requested;
 

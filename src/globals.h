@@ -20,7 +20,6 @@
 #define SIGNATURE_LENGTH   64
 #define HASH_LENGTH        32
 #define PUBKEY_LENGTH      HASH_LENGTH
-#define BIP32_PATH         5
 
 enum ApduReply {
     /* ApduReplySdk* come from nanos-secure-sdk/include/os.h.  Here we add the
