@@ -11,12 +11,21 @@
 #include "sol/message.h"
 #include "sol/transaction_summary.h"
 
+enum HostKind {
+    HostKindUnknown,
+    HostKindModern,
+    HostKindDeprecated,
+};
+
 static uint8_t G_message[MAX_MESSAGE_LENGTH];
 static int G_messageLength;
+static uint8_t* G_messageTxStart = NULL;
+static int G_messageTxLength = 0;
 uint8_t G_numDerivationPaths;
 static uint32_t G_derivationPath[MAX_BIP32_PATH_LENGTH];
 static uint32_t G_derivationPathLength;
 static bool G_non_confirm_requested;
+static enum HostKind G_host_kind = HostKindUnknown;
 
 static void reset_global_context(void) {
     MEMCLEAR(G_derivationPath);
@@ -24,6 +33,9 @@ static void reset_global_context(void) {
     G_messageLength = 0;
     G_non_confirm_requested = false;
     G_numDerivationPaths = 1;
+    G_messageTxStart = NULL;
+    G_messageTxLength = 0;
+    G_host_kind = HostKindUnknown;
 }
 
 #define CLEAR_AND_THROW(exception)  \
@@ -65,8 +77,8 @@ static uint8_t set_result_sign_message() {
             cx_eddsa_sign(&privateKey,
                           CX_LAST,
                           CX_SHA512,
-                          G_message,
-                          G_messageLength,
+                          G_messageTxStart,
+                          G_messageTxLength,
                           NULL,
                           0,
                           signature,
@@ -142,37 +154,33 @@ void handle_sign_message_receive_apdus(uint8_t p1,
         dataLength &= ~DATA_HAS_LENGTH_PREFIX;
     }
 
-    if ((p2 & P2_EXTEND) == 0) {
-        // First APDU received, reset global context
-        reset_global_context();
-
-        if (!deprecated_host) {
-            G_numDerivationPaths = dataBuffer[0];
-            dataBuffer++;
-            dataLength--;
-            // We only support one derivation path ATM
-            if (G_numDerivationPaths != 1) {
-                CLEAR_AND_THROW(ApduReplySdkExceptionOverflow);
-            }
-        } else {
-            G_numDerivationPaths = 1;
-        }
-
-        G_derivationPathLength = read_derivation_path(dataBuffer, dataLength, G_derivationPath);
-        dataBuffer += 1 + G_derivationPathLength * 4;
-        dataLength -= 1 + G_derivationPathLength * 4;
-    } else {
+    if ((p2 & P2_EXTEND) != 0) {
         // P2_EXTEND is set to signal that this APDU buffer extends, rather
         // than replaces, the current message buffer. Asserting it with the
-        // first APDU buffer is an error, since we haven't yet received a
-        // derivation path.
-        if (G_numDerivationPaths == 0) {
+        // first APDU buffer is an error, since we haven't yet received any
+        // data to be extended
+        if (G_messageLength == 0) {
+            CLEAR_AND_THROW(ApduReplySolanaInvalidMessage);
+        }
+    }
+
+    if (G_host_kind == HostKindUnknown) {
+        if (deprecated_host) {
+            G_host_kind = HostKindDeprecated;
+        } else {
+            G_host_kind = HostKindModern;
+        }
+    } else {
+        // host kind may not change mid-message
+        bool host_kind_changed = (deprecated_host && G_host_kind == HostKindModern)
+            || (!deprecated_host && G_host_kind == HostKindDeprecated);
+        if (host_kind_changed) {
             CLEAR_AND_THROW(ApduReplySolanaInvalidMessage);
         }
     }
 
     size_t messageLength;
-    if (deprecated_host) {
+    if (G_host_kind == HostKindDeprecated) {
         // Deprecated APDU format uses 2 bytes to write remaining length
         messageLength = U2BE(dataBuffer, 0);
         dataBuffer += 2;
@@ -220,7 +228,32 @@ static int scan_header_for_signer(size_t *signer_index, const MessageHeader *hea
 }
 
 void handle_sign_message_parse_message(volatile unsigned int *tx) {
-    Parser parser = {G_message, G_messageLength};
+    uint8_t* message = G_message;
+    size_t messageLength = G_messageLength;
+    // First consume the derivation path
+    MEMCLEAR(G_derivationPath);
+    G_numDerivationPaths = 1;
+    if (G_host_kind == HostKindModern) {
+        if (messageLength < 1) {
+            CLEAR_AND_THROW(ApduReplySdkExceptionOverflow);
+        }
+        G_numDerivationPaths = message[0];
+        message++;
+        messageLength--;
+        // We only support one derivation path ATM
+        if (G_numDerivationPaths != 1) {
+            CLEAR_AND_THROW(ApduReplySdkExceptionOverflow);
+        }
+    }
+    G_derivationPathLength = read_derivation_path(message, messageLength, G_derivationPath);
+    message += 1 + G_derivationPathLength * 4;
+    messageLength -= 1 + G_derivationPathLength * 4;
+
+    G_messageTxStart = message;
+    G_messageTxLength = messageLength;
+
+    // Next handle the transaction message signing
+    Parser parser = {message, messageLength};
     PrintConfig print_config;
     print_config.expert_mode = (N_storage.settings.display_mode == DisplayModeExpert);
     print_config.signer_pubkey = NULL;
@@ -255,8 +288,8 @@ void handle_sign_message_parse_message(volatile unsigned int *tx) {
             SummaryItem *item = transaction_summary_primary_item();
             summary_item_set_string(item, "Unrecognized", "format");
 
-            cx_hash_sha256(G_message,
-                           G_messageLength,
+            cx_hash_sha256(G_messageTxStart,
+                           G_messageTxLength,
                            (uint8_t *) &UnrecognizedMessageHash,
                            HASH_LENGTH);
 
