@@ -9,7 +9,7 @@
 #include "helium_ux.h"
 #include "nanox_error.h"
 
-#define CTX global.getPublicKeyContext
+#define CTX cmd.getPublicKeyContext
 
 UX_FLOW_DEF_VALID(
     ux_display_public_flow_1_step, 
@@ -71,8 +71,8 @@ void handle_get_public_key(uint8_t p1, uint8_t p2,
 	  adpu_tx += SIZE_OF_SHA_CHECKSUM;
 
 	  // Encoding key as a base58 string
-	  btchip_encode_base58(G_io_apdu_buffer, adpu_tx, CTX.fullStr, &output_len);
-	  CTX.fullStr[51] = '\0';
+	  btchip_encode_base58(G_io_apdu_buffer, adpu_tx, global.fullStr, &output_len);
+	  global.fullStr[51] = '\0';
 
 	  // Running the flow showing the pubkey in the screen
 	  ui_getPublicKey();

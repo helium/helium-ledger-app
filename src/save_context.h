@@ -2,41 +2,31 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "nanos_paging.h"
 
 #define SIZEOF_B58_KEY 34
 
-typedef struct {
-    uint8_t displayIndex;
-    uint8_t fullStr[55]; // variable length
-    // partialStr contains 12 characters of a longer string. This allows text
-    // to be scrolled.
-    uint8_t partialStr[13];
-    uint8_t fullStr_len;
-} getPublicKeyContext_t;
 
 typedef struct {
     uint8_t displayIndex;
-    uint8_t fullStr[55]; // variable length
-    // partialStr contains 12 characters of a longer string. This allows text
-    // to be scrolled.
-    uint8_t partialStr[13];
+    uint8_t fullStr[HELIUM_UX_MAX_CHARS+1];
+    uint8_t partialStr[CHARS_PER_PAGE+1];
     uint8_t fullStr_len;
     uint8_t account_index;
+    uint8_t title[HELIUM_UX_MAX_TITLE+1];
+    uint8_t title_len;
+    bool lock;
+} globalContext_t;
+
+typedef struct {
     uint64_t amount;
     uint64_t nonce;
     uint64_t fee;
-    unsigned char payee[34];
+    unsigned char payee[SIZEOF_B58_KEY];
     uint64_t memo;
 } paymentContext_t;
 
 typedef struct {
-    uint8_t displayIndex;
-    uint8_t fullStr[55]; // variable length
-    // partialStr contains 12 characters of a longer string. This allows text
-    // to be scrolled.
-    uint8_t partialStr[13];
-    uint8_t fullStr_len;
-    uint8_t account_index;
     uint64_t stake;
     uint64_t nonce;
     uint64_t fee;
@@ -44,13 +34,6 @@ typedef struct {
 } stakeValidatorContext_t;
 
 typedef struct {
-    uint8_t displayIndex;
-    uint8_t fullStr[55]; // variable length
-    // partialStr contains 12 characters of a longer string. This allows text
-    // to be scrolled.
-    uint8_t partialStr[13];
-    uint8_t fullStr_len;
-    uint8_t account_index;
     uint64_t stake_amount;
     uint64_t stake_release_height;
     uint64_t nonce;
@@ -59,13 +42,6 @@ typedef struct {
 } unstakeValidatorContext_t;
 
 typedef struct {
-    uint8_t displayIndex;
-    uint8_t fullStr[55]; // variable length
-    // partialStr contains 12 characters of a longer string. This allows text
-    // to be scrolled.
-    uint8_t partialStr[13];
-    uint8_t fullStr_len;
-    uint8_t account_index;
     uint64_t stake_amount;
     uint64_t payment_amount;
     uint64_t fee;
@@ -76,32 +52,18 @@ typedef struct {
 } transferValidatorContext_t;
 
 typedef struct {
-    uint8_t displayIndex;
-    uint8_t fullStr[55]; // variable length
-    // partialStr contains 12 characters of a longer string. This allows text
-    // to be scrolled.
-    uint8_t partialStr[13];
-    uint8_t fullStr_len;
-    uint8_t account_index;
     uint64_t amount;
     uint64_t nonce;
     uint64_t fee;
     uint64_t memo;
-    unsigned char payee[34];
+    unsigned char payee[SIZEOF_B58_KEY];
 } burnContext_t;
 
 typedef struct {
-    uint8_t displayIndex;
-    uint8_t fullStr[55]; // variable length
-    // partialStr contains 12 characters of a longer string. This allows text
-    // to be scrolled.
-    uint8_t partialStr[13];
-    uint8_t fullStr_len;
-    uint8_t account_index;
     uint64_t amount;
     uint64_t nonce;
     uint64_t fee;
-    unsigned char payee[34];
+    unsigned char payee[SIZEOF_B58_KEY];
 } transferSecContext_t;
 
 
@@ -116,13 +78,13 @@ bool save_transfer_sec_context(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint
 // life of the command. A separate context_t struct should be defined for each
 // command.
 typedef union {
-    getPublicKeyContext_t getPublicKeyContext;
     paymentContext_t paymentContext;
     stakeValidatorContext_t stakeValidatorContext;
     transferValidatorContext_t transferValidatorContext;
     unstakeValidatorContext_t unstakeValidatorContext;
     burnContext_t burnContext;
     transferSecContext_t transferSecContext;
-} commandContext;
+} commandContext_t;
 
-extern commandContext global;
+extern globalContext_t global;
+extern commandContext_t cmd;

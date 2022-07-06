@@ -25,7 +25,8 @@
 #include "txns/helium.h"
 #include "ux/helium_ux.h"
 
-commandContext global;
+globalContext_t global;
+commandContext_t cmd;
 
 // io_exchange_with_code is a helper function for sending response APDUs from
 // button handlers. Note that the IO_RETURN_AFTER_TX flag is set. 'tx' is the
@@ -67,7 +68,8 @@ handler_fn_t handle_sign_transfer_sec_txn;
 
 
 static handler_fn_t* lookupHandler(uint8_t ins) {
-	switch (ins) {
+    global.lock = false;
+    switch (ins) {
 	case INS_GET_VERSION:    return handle_get_version;
 	case INS_GET_PUBLIC_KEY: return handle_get_public_key;
 	case INS_SIGN_PAYMENT_TXN:   return handle_sign_payment_txn;

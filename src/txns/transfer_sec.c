@@ -5,7 +5,7 @@
 #include "save_context.h"
 
 uint32_t create_helium_transfer_sec(uint8_t account){
-    transferSecContext_t * ctx = &global.transferSecContext;
+    transferSecContext_t * ctx = &cmd.transferSecContext;
     pb_ostream_t ostream;
 
     unsigned char payer[SIZEOF_HELIUM_KEY];

@@ -5,7 +5,7 @@
 #include "save_context.h"
 
 uint32_t create_helium_stake_txn(uint8_t account){
-    stakeValidatorContext_t * ctx = &global.stakeValidatorContext;
+    stakeValidatorContext_t * ctx = &cmd.stakeValidatorContext;
     pb_ostream_t ostream;
 
     unsigned char owner[SIZEOF_HELIUM_KEY];

@@ -12,22 +12,22 @@
 #include "save_context.h"
 #include "nanox_error.h"
 
-#define CTX global.transferValidatorContext
+#define CTX cmd.transferValidatorContext
 
 static void init_stake_amount(void)
 {
   uint8_t len;
 
-  len = pretty_print_hnt(CTX.fullStr, CTX.stake_amount);
-  CTX.fullStr_len = len;
+  len = pretty_print_hnt(global.fullStr, CTX.stake_amount);
+  global.fullStr_len = len;
 }
 
 static void init_payment_amount(void)
 {
   uint8_t len;
 
-  len = pretty_print_hnt(CTX.fullStr, CTX.payment_amount);
-  CTX.fullStr_len = len;
+  len = pretty_print_hnt(global.fullStr, CTX.payment_amount);
+  global.fullStr_len = len;
 }
 
 static void init_old_owner(void)
@@ -46,9 +46,9 @@ static void init_old_owner(void)
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
     memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
-    btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
-    CTX.fullStr[output_len] = '\0';
-    CTX.fullStr_len = output_len;
+    btchip_encode_base58(address_with_check, 38, global.fullStr, &output_len);
+    global.fullStr[output_len] = '\0';
+    global.fullStr_len = output_len;
   }
 }
 
@@ -68,9 +68,9 @@ static void init_new_owner(void)
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
     memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
-    btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
-    CTX.fullStr[output_len] = '\0';
-    CTX.fullStr_len = output_len;
+    btchip_encode_base58(address_with_check, 38, global.fullStr, &output_len);
+    global.fullStr[output_len] = '\0';
+    global.fullStr_len = output_len;
   }
 }
 
@@ -90,9 +90,9 @@ static void init_old_address(void)
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
     memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
-    btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
-    CTX.fullStr[output_len] = '\0';
-    CTX.fullStr_len = output_len;
+    btchip_encode_base58(address_with_check, 38, global.fullStr, &output_len);
+    global.fullStr[output_len] = '\0';
+    global.fullStr_len = output_len;
   }
 }
 
@@ -112,18 +112,18 @@ static void init_new_address(void)
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
     memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
-    btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
-    CTX.fullStr[output_len] = '\0';
-    CTX.fullStr_len = output_len;
+    btchip_encode_base58(address_with_check, 38, global.fullStr, &output_len);
+    global.fullStr[output_len] = '\0';
+    global.fullStr_len = output_len;
   }
 }
 
 static void init_fee(void)
 {
   uint8_t len;
-  len = bin2dec(CTX.fullStr, CTX.fee);
-  CTX.fullStr_len = len;
-  CTX.fullStr[len] = '\0';
+  len = bin2dec(global.fullStr, CTX.fee);
+  global.fullStr_len = len;
+  global.fullStr[len] = '\0';
 }
 
 static void validate_transaction(bool isApproved)
@@ -131,7 +131,7 @@ static void validate_transaction(bool isApproved)
   int adpu_tx;
 
   if (isApproved) {
-    adpu_tx = create_helium_transfer_validator_txn(CTX.account_index);
+    adpu_tx = create_helium_transfer_validator_txn(global.account_index);
     io_exchange_with_code(SW_OK, adpu_tx);
   }
   else {
@@ -155,7 +155,7 @@ UX_STEP_NOCB_INIT(
 #else
       .title = "Transfer HNT Stake",
 #endif
-	.text = (char *)CTX.fullStr
+	.text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(
@@ -168,7 +168,7 @@ UX_STEP_NOCB_INIT(
 #else
       .title = "HNT Paid to Old Owner",
 #endif
-	.text = (char *)CTX.fullStr
+	.text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(
@@ -177,7 +177,7 @@ UX_STEP_NOCB_INIT(
     init_old_owner(),
     {
       .title = "Old Owner",
-      .text = (char *)CTX.fullStr
+      .text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(
@@ -186,7 +186,7 @@ UX_STEP_NOCB_INIT(
     init_new_owner(),
     {
       .title = "New Owner",
-      .text = (char *)CTX.fullStr
+      .text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(
@@ -195,7 +195,7 @@ UX_STEP_NOCB_INIT(
     init_old_address(),
     {
       .title = "Old Address",
-      .text = (char *)CTX.fullStr
+      .text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(
@@ -204,7 +204,7 @@ UX_STEP_NOCB_INIT(
     init_new_address(),
     {
       .title = "New Address",
-      .text = (char *)CTX.fullStr
+      .text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(
@@ -213,7 +213,7 @@ UX_STEP_NOCB_INIT(
     init_fee(),
     {
       .title = "Data Credit Fee",
-      .text = (char *)CTX.fullStr
+      .text = (char *)global.fullStr
     });
 
 UX_STEP_CB(

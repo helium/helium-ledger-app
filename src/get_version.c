@@ -12,5 +12,10 @@ void handle_get_version(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t da
     G_io_apdu_buffer[0] = APPVERSION[0] - '0';
 	G_io_apdu_buffer[1] = APPVERSION[2] - '0';
 	G_io_apdu_buffer[2] = APPVERSION[4] - '0';
-	io_exchange_with_code(SW_OK, 3);
+#ifdef HELIUM_TESTNET
+    G_io_apdu_buffer[3] = 'T';
+#else
+    G_io_apdu_buffer[3] = 'M';
+#endif
+    io_exchange_with_code(SW_OK, 4);
 }

@@ -88,7 +88,7 @@ fn test_save_payment_context(
         "\
     assert(ctx.amount == {amount});\r\n\
     assert(ctx.fee == {fee});\r\n\
-    assert(ctx.account_index == {account_index});\r\n\
+    assert(global.account_index == {account_index});\r\n\
     assert(ctx.memo == {memo});\r\n\
     for(uint8_t i=0; i<34; i++) {{\r\n\
     \tassert(ctx.payee[i] == payee[i]);\r\n\
@@ -123,7 +123,7 @@ fn test_save_burn_context(
         "\
     assert(ctx.amount == {amount});\r\n\
     assert(ctx.fee == {fee});\r\n\
-    assert(ctx.account_index == {account_index});\r\n\
+    assert(global.account_index == {account_index});\r\n\
     assert(ctx.memo == {memo});\r\n\
     for(uint8_t i=0; i<34; i++) {{\r\n\
     \tassert(ctx.payee[i] == payee[i]);\r\n\
@@ -156,7 +156,7 @@ fn test_save_transfer_sec_context(
         "\
     assert(ctx.amount == {amount});\r\n\
     assert(ctx.fee == {fee});\r\n\
-    assert(ctx.account_index == {account_index});\r\n\
+    assert(global.account_index == {account_index});\r\n\
     for(uint8_t i=0; i<34; i++) {{\r\n\
     \tassert(ctx.payee[i] == payee[i]);\r\n\
     }}\r\n\
@@ -186,7 +186,7 @@ fn test_save_validator_stake_context(
         "\
     assert(ctx.stake == {stake});\r\n\
     assert(ctx.fee == {fee});\r\n\
-    assert(ctx.account_index == {account_index});\r\n\
+    assert(global.account_index == {account_index});\r\n\
     for(uint8_t i=0; i<34; i++) {{\r\n\
     \tassert(ctx.address[i] == address[i]);\r\n\
     }}\r\n\
@@ -228,7 +228,7 @@ fn test_save_validator_transfer_context(
     assert(ctx.stake_amount == {stake_amount});\r\n\
     assert(ctx.payment_amount == {payment_amount});\r\n\
     assert(ctx.fee == {fee});\r\n\
-    assert(ctx.account_index == {account_index});\r\n\
+    assert(global.account_index == {account_index});\r\n\
     for(uint8_t i=0; i<34; i++) {{\r\n\
     \tassert(ctx.new_owner[i] == new_owner[i]);\r\n\
     }}\r\n\
@@ -270,7 +270,7 @@ fn test_save_validator_unstake_context(
     assert(ctx.stake_amount == {stake_amount});\r\n\
     assert(ctx.stake_release_height == {stake_release_height});\r\n\
     assert(ctx.fee == {fee});\r\n\
-    assert(ctx.account_index == {account_index});\r\n\
+    assert(global.account_index == {account_index});\r\n\
     for(uint8_t i=0; i<34; i++) {{\r\n\
     \tassert(ctx.address[i] == address[i]);\r\n\
     }}\r\n\

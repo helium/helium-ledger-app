@@ -12,14 +12,14 @@
 #include "save_context.h"
 #include "nanox_error.h"
 
-#define CTX global.stakeValidatorContext
+#define CTX cmd.stakeValidatorContext
 
 static void init_stake_amount(void)
 {
   uint8_t len;
 
-  len = pretty_print_hnt(CTX.fullStr, CTX.stake);
-  CTX.fullStr_len = len;
+  len = pretty_print_hnt(global.fullStr, CTX.stake);
+  global.fullStr_len = len;
 }
 
 static void init_stake_address(void)
@@ -39,9 +39,9 @@ static void init_stake_address(void)
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
     memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
-    btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
-    CTX.fullStr[output_len] = '\0';
-    CTX.fullStr_len = output_len;
+    btchip_encode_base58(address_with_check, 38, global.fullStr, &output_len);
+    global.fullStr[output_len] = '\0';
+    global.fullStr_len = output_len;
     /* UX_DISPLAY(ui_displayRecipient, ui_prepro_displayRecipient); */
   }
 }
@@ -51,9 +51,9 @@ static void init_fee(void)
   uint8_t len;
 
   // display data credit transaction fee
-  len = bin2dec(CTX.fullStr, CTX.fee);
-  CTX.fullStr_len = len;
-  CTX.fullStr[len] = '\0';
+  len = bin2dec(global.fullStr, CTX.fee);
+  global.fullStr_len = len;
+  global.fullStr[len] = '\0';
 		
   /* UX_DISPLAY(ui_displayFee, ui_prepro_displayFee); */
   /* break; */
@@ -64,7 +64,7 @@ static void validate_transaction(bool isApproved)
   int adpu_tx;
 
   if (isApproved) {
-    adpu_tx = create_helium_stake_txn(CTX.account_index);
+    adpu_tx = create_helium_stake_txn(global.account_index);
     io_exchange_with_code(SW_OK, adpu_tx);
   }
   else {
@@ -88,7 +88,7 @@ UX_STEP_NOCB_INIT(
 #else
       .title = "Stake HNT",
 #endif
-	.text = (char *)CTX.fullStr
+	.text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(
@@ -97,7 +97,7 @@ UX_STEP_NOCB_INIT(
     init_stake_address(),
     {
       .title = "Stake Address",
-      .text = (char *)CTX.fullStr
+      .text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(
@@ -106,7 +106,7 @@ UX_STEP_NOCB_INIT(
     init_fee(),
     {
       .title = "Data Credit Fee",
-      .text = (char *)CTX.fullStr
+      .text = (char *)global.fullStr
     });
 
 UX_STEP_CB(

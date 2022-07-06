@@ -13,14 +13,14 @@
 #include "save_context.h"
 #include "nanox_error.h"
 
-#define CTX global.burnContext
+#define CTX cmd.burnContext
 
 static void init_amount(void)
 {
   uint8_t len;
 
-  len = pretty_print_hnt(CTX.fullStr, CTX.amount);
-  CTX.fullStr_len = len;
+  len = pretty_print_hnt(global.fullStr, CTX.amount);
+  global.fullStr_len = len;
 }
 
 static void init_recipient(void)
@@ -40,9 +40,9 @@ static void init_recipient(void)
     cx_sha256_init(&hash);
     cx_hash(&hash.header, CX_LAST, hash_buffer, 32, hash_buffer, 32);
     memmove(&address_with_check[34], hash_buffer, SIZE_OF_SHA_CHECKSUM);
-    btchip_encode_base58(address_with_check, 38, CTX.fullStr, &output_len);
-    CTX.fullStr[output_len] = '\0';
-    CTX.fullStr_len = output_len;
+    btchip_encode_base58(address_with_check, 38, global.fullStr, &output_len);
+    global.fullStr[output_len] = '\0';
+    global.fullStr_len = output_len;
     /* UX_DISPLAY(ui_displayRecipient, ui_prepro_displayRecipient); */
   }
 }
@@ -52,9 +52,9 @@ static void init_memo(void)
   uint8_t len;
 
   // display memo
-  len = u64_to_base64(CTX.fullStr, CTX.memo);
-  CTX.fullStr_len = len;
-  CTX.fullStr[len] = '\0';
+  len = u64_to_base64(global.fullStr, CTX.memo);
+  global.fullStr_len = len;
+  global.fullStr[len] = '\0';
 }
 
 static void init_fee(void)
@@ -62,9 +62,9 @@ static void init_fee(void)
   uint8_t len;
 
   // display data credit transaction fee
-  len = bin2dec(CTX.fullStr, CTX.fee);
-  CTX.fullStr_len = len;
-  CTX.fullStr[len] = '\0';
+  len = bin2dec(global.fullStr, CTX.fee);
+  global.fullStr_len = len;
+  global.fullStr[len] = '\0';
 
 }
 
@@ -73,7 +73,7 @@ static void validate_transaction(bool isApproved)
   int adpu_tx;
 
   if (isApproved) {
-    adpu_tx = create_helium_burn_txn(CTX.account_index);
+    adpu_tx = create_helium_burn_txn(global.account_index);
     io_exchange_with_code(SW_OK, adpu_tx);
   }
   else {
