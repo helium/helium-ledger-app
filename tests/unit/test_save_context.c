@@ -8,7 +8,9 @@
 
 #include <cmocka.h>
 
-#include "../../src/save_context.h"
+#include "save_context.h"
+
+globalContext_t global;
 
 static void test_save_payment_context(void **state) {
     uint8_t payee[] = {0, 1, 149, 222, 195, 16, 5, 249, 3, 234, 179, 175, 194, 131, 71, 143, 176, 224, 107, 71, 55, 65,

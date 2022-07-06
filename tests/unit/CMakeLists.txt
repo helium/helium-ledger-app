@@ -35,7 +35,7 @@ endif()
 
 add_compile_definitions(TEST)
 
-include_directories(../../src)
+include_directories(../../src ../../src/ux/nanos)
 
 add_executable(test_save_context test_save_context.c)
 
