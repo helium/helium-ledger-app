@@ -17,7 +17,7 @@ UX_FLOW_DEF_VALID(
     ui_idle(),
     {
       .title = "Confirm Address",
-      .text = (char *)global.getPublicKeyContext.fullStr
+      .text = (char *)global.fullStr
     });
 
 

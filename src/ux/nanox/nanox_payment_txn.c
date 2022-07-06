@@ -97,7 +97,7 @@ UX_STEP_NOCB_INIT(
 #else
       .title = "Amount HNT",
 #endif
-	.text = (char *)global.paymentContext.fullStr
+	.text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(
@@ -106,7 +106,7 @@ UX_STEP_NOCB_INIT(
     init_recipient(),
     {
       .title = "Recipient Address",
-      .text = (char *)global.paymentContext.fullStr
+      .text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(
@@ -115,7 +115,7 @@ UX_STEP_NOCB_INIT(
     init_memo(),
     {
       .title = "Payment Memo",
-      .text = (char *)global.burnContext.fullStr
+      .text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(
@@ -124,7 +124,7 @@ UX_STEP_NOCB_INIT(
     init_fee(),
     {
       .title = "Data Credit Fee",
-      .text = (char *)global.paymentContext.fullStr
+      .text = (char *)global.fullStr
     });
 
 UX_STEP_CB(
