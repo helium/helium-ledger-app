@@ -12,6 +12,7 @@
 #include "helium_ux.h"
 #include "save_context.h"
 #include "nanox_error.h"
+#include "nanox_wallet.h"
 
 #define CTX cmd.burnContext
 
@@ -88,6 +89,15 @@ static void validate_transaction(bool isApproved)
 }
 
 UX_STEP_NOCB_INIT(
+    ux_burn_display_wallet,
+    bnnn_paging,
+    init_wallet(),
+    {
+      .title = (char *)global.title,
+      .text = (char *)global.fullStr
+    });
+
+UX_STEP_NOCB_INIT(
     ux_burn_display_amount,
     bnnn_paging,
     init_amount(),
@@ -147,7 +157,7 @@ UX_STEP_CB(
 
 
 UX_DEF(ux_burn_sign_transaction_flow,
-       &ux_burn_display_amount,
+       &ux_burn_display_wallet,
        &ux_burn_display_recipient_address,
        &ux_burn_display_memo,
        &ux_burn_display_fee,

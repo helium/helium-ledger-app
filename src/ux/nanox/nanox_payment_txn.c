@@ -12,6 +12,7 @@
 #include "helium_ux.h"
 #include "save_context.h"
 #include "nanox_error.h"
+#include "nanox_wallet.h"
 
 #define CTX cmd.paymentContext
 
@@ -67,7 +68,6 @@ static void init_memo(void)
   global.fullStr[len] = '\0';
 }
 
-
 static void validate_transaction(bool isApproved)
 {
   int adpu_tx;
@@ -82,10 +82,18 @@ static void validate_transaction(bool isApproved)
     // send a single 0 byte to differentiate from app not running
     io_exchange_with_code(SW_OK, 1);
   }
-
   // Go back to main menu
   ui_idle();
 }
+
+UX_STEP_NOCB_INIT(
+    ux_payment_display_wallet,
+    bnnn_paging,
+    init_wallet(),
+    {
+      .title = (char *)global.title,
+      .text = (char *)global.fullStr
+    });
 
 UX_STEP_NOCB_INIT(
     ux_payment_display_amount,
@@ -147,6 +155,7 @@ UX_STEP_CB(
 
 
 UX_DEF(ux_payment_sign_transaction_flow,
+       &ux_payment_display_wallet,
        &ux_payment_display_amount,
        &ux_payment_display_recipient_address,
        &ux_payment_display_burn,

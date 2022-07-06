@@ -132,7 +132,7 @@ void load_wallet(page_cmd_t page_cmd,
         global.title[7] = global.account_index + 48;
     } else if (global.account_index < 100) {
         global.title_len = sizeof("Wallet NN (1/m)");
-        memcpy(global.title, &"Wallet N (1/m)", global.title_len);
+        memcpy(global.title, &"Wallet NN (1/m)", global.title_len);
         global.title[7] = global.account_index/10 + 48;
         global.title[8] = global.account_index%10 + 48;
     } else {

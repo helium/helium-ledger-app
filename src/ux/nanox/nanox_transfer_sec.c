@@ -12,6 +12,7 @@
 #include "helium_ux.h"
 #include "save_context.h"
 #include "nanox_error.h"
+#include "nanox_wallet.h"
 
 #define CTX cmd.transferSecContext
 
@@ -75,6 +76,15 @@ static void validate_transaction(bool isApproved)
 }
 
 UX_STEP_NOCB_INIT(
+    ux_txfer_sec_display_wallet,
+    bnnn_paging,
+    init_wallet(),
+    {
+      .title = (char *)global.title,
+      .text = (char *)global.fullStr
+    });
+
+UX_STEP_NOCB_INIT(
     ux_txfer_sec_display_amount,
     bnnn_paging,
     init_amount(),
@@ -125,6 +135,7 @@ UX_STEP_CB(
 
 
 UX_DEF(ux_txfer_sec_sign_transaction_flow,
+       &ux_txfer_sec_display_wallet,
        &ux_txfer_sec_display_amount,
        &ux_txfer_sec_display_recipient_address,
        &ux_txfer_sec_display_fee,

@@ -11,6 +11,7 @@
 #include "helium_ux.h"
 #include "save_context.h"
 #include "nanox_error.h"
+#include "nanox_wallet.h"
 
 #define CTX cmd.unstakeValidatorContext
 
@@ -84,6 +85,15 @@ static void validate_transaction(bool isApproved)
 }
 
 UX_STEP_NOCB_INIT(
+    ux_display_unstake_wallet,
+    bnnn_paging,
+    init_wallet(),
+    {
+      .title = (char *)global.title,
+      .text = (char *)global.fullStr
+    });
+
+UX_STEP_NOCB_INIT(
     ux_display_unstake_amount,
     bnnn_paging,
     init_stake_amount(),
@@ -143,6 +153,7 @@ UX_STEP_CB(
 
 
 UX_DEF(ux_sign_stake_transaction_flow,
+       &ux_display_unstake_wallet,
        &ux_display_unstake_amount,
        &ux_display_stake_release_height,
        &ux_display_unstake_address,
