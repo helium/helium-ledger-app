@@ -2,59 +2,58 @@
 #include "helium.h"
 
 uint32_t pretty_print_hnt(uint8_t *dst, uint64_t n){
-	if(n==0) {
-		dst[0] ='0';
-		dst[1] ='\0';
-		return 2;
-	}
+    if(n==0) {
+        dst[0] ='0';
+        dst[1] ='\0';
+        return 2;
+    }
 
-	uint32_t len = bin2dec(dst, n);
-	// this will be used to drop useless 0s
-	bool nonzero = false;
-	uint32_t written = 0;
+    uint32_t len = bin2dec(dst, n);
+    // this will be used to drop useless 0s
+    bool nonzero = false;
+    uint32_t written = 0;
 
-	// insert decimal if we are dealing with >1 HNT
-	if(len > 8){
-		uint32_t i = len - 1;
-		// shift out all the values larger than 10^8
-		while( i >= (len-8) ) {
-			if(dst[i]!='0' || nonzero){
-				dst[i+1] = dst[i];
-				nonzero = true;
-				written++;
-			}
-			i--;
-		}
-		// add the decimal if there are non-zeros smaller than 10^8
-		if(nonzero){
-			dst[ i+1 ] = '.';
-			written++;
-		}
+    // insert decimal if we are dealing with <1 HNT
+    if(len > 8){
+        uint32_t i = len - 1;
+        // shift out all the values larger than 10^8
+        while( i >= (len-8) ) {
+            if(dst[i]!='0' || nonzero){
+                dst[i+1] = dst[i];
+                nonzero = true;
+                written++;
+            }
+            i--;
+        }
+        // add the decimal if there are non-zeros smaller than 10^8
+        if(nonzero){
+            dst[ i+1 ] = '.';
+            written++;
+        }
 
-		written += (len-9);
-	} 
-	// prepend zeros and add decimal to <1 HNT
-	else {
-		uint32_t i = 0;
-		while( i < len ){
-			if(dst[len-i-1]!='0' || nonzero){
-				dst[8-i] = dst[len-i-1];
-				nonzero = true;
-				written++;
-			}
-			i++;
-		}
-		while(i <= 8) {
-			dst[8-i] = '0';
-			i++;
-			written++;
-		}
-		dst[0] = '.';
-		written--;
-
-	}
-	dst[written+1] ='\0';
-	return written;
+        written += (len-9);
+    }
+        // prepend zeros and add decimal to >1 HNT
+    else {
+        uint32_t i = 0;
+        while( i < len ){
+            if(dst[len-i-1]!='0' || nonzero){
+                dst[8-i] = dst[len-i-1];
+                nonzero = true;
+                written++;
+            }
+            i++;
+        }
+        while(i <= 8) {
+            dst[8-i] = '0';
+            i++;
+            written++;
+        }
+        dst[0] = '.';
+        written--;
+    }
+    dst[++written] ='\0';
+    return written;
 }
 
 

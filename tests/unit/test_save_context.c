@@ -20,7 +20,7 @@ static void test_save_payment_context(void **state) {
     save_payment_context(3, 0, payment_buffer, 66, &ctx);
     assert(ctx.amount == 8765432);
     assert(ctx.fee == 35000);
-    assert(ctx.account_index == 3);
+    assert(global.account_index == 3);
     assert(ctx.memo == 1234);
     for (uint8_t i = 0; i < 34; i++) {
         assert(ctx.payee[i] == payee[i]);
@@ -37,7 +37,7 @@ static void test_save_burn_context(void **state) {
     save_burn_context(8, 0, burn_buffer, 66, &ctx);
     assert(ctx.amount == 9993121);
     assert(ctx.fee == 342443);
-    assert(ctx.account_index == 8);
+    assert(global.account_index == 8);
     assert(ctx.memo == 13234);
     for (uint8_t i = 0; i < 34; i++) {
         assert(ctx.payee[i] == payee[i]);
@@ -54,7 +54,7 @@ static void test_save_sec_transfer_context(void **state) {
     save_transfer_sec_context(8, 0, transfer_sec_buffer, 58, &ctx);
     assert(ctx.amount == 9219);
     assert(ctx.fee == 3424343);
-    assert(ctx.account_index == 8);
+    assert(global.account_index == 8);
     for (uint8_t i = 0; i < 34; i++) {
         assert(ctx.payee[i] == payee[i]);
     }
@@ -70,7 +70,7 @@ static void test_save_validator_stake_context(void **state) {
     save_stake_validator_context(8, 0, stake_validator_buffer, 50, &ctx);
     assert(ctx.stake == 9122219);
     assert(ctx.fee == 11234);
-    assert(ctx.account_index == 8);
+    assert(global.account_index == 8);
     for (uint8_t i = 0; i < 34; i++) {
         assert(ctx.address[i] == address[i]);
     }
@@ -86,7 +86,7 @@ static void test_save_validator_transfer_context(void **state) {
     assert(ctx.stake_amount == 9122219);
     assert(ctx.payment_amount == 11234);
     assert(ctx.fee == 9123219);
-    assert(ctx.account_index == 8);
+    assert(global.account_index == 8);
     for(uint8_t i=0; i<34; i++) {
         assert(ctx.new_owner[i] == new_owner[i]);
     }
@@ -113,7 +113,7 @@ static void test_save_validator_unstake_context(void **state) {
     assert(ctx.stake_amount == 912114299);
     assert(ctx.stake_release_height == 9103312219);
     assert(ctx.fee == 771234);
-    assert(ctx.account_index == 8);
+    assert(global.account_index == 8);
     for (uint8_t i = 0; i < 34; i++) {
         assert(ctx.address[i] == address[i]);
     }

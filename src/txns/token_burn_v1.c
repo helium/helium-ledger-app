@@ -5,7 +5,7 @@
 #include "save_context.h"
 
 uint32_t create_helium_burn_txn(uint8_t account){
-    burnContext_t * ctx = &global.burnContext;
+    burnContext_t * ctx = &cmd.burnContext;
     pb_ostream_t ostream;
 
     unsigned char payer[SIZEOF_HELIUM_KEY];
