@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
-docker_tag=0bdab1e
+docker_tag=73c9e07
+docker_image_base=ledger-app-builder
+docker_image="${docker_image_base}:${docker_tag}"
+
+if ! docker image inspect "$docker_image" &>/dev/null; then
+  echo "docker image \`$docker_image\` not found. please see README.md" 1>&2
+  exit 1
+fi
+
 here="$(readlink -f "$(dirname "$0")")"
 user=$(id -u)
 group=$(id -g)

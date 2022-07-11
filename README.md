@@ -26,11 +26,11 @@ cd ledger-app-builder
 ```
 1. Checkout the target commit
 ```
-git checkout 0bdab1e
+git checkout 73c9e07
 ```
 1. Build the image
 ```
-docker build -t ledger-app-builder:0bdab1e .
+docker build -t ledger-app-builder:73c9e07 .
 ```
   * If permissions errors are encountered, ensure that your user is in the `docker`
 group and that the session has been restarted
