@@ -24,6 +24,18 @@ PB_BIND(helium_blockchain_state_channel_offer_v1, helium_blockchain_state_channe
 PB_BIND(helium_blockchain_state_channel_purchase_v1, helium_blockchain_state_channel_purchase_v1, AUTO)
 
 
+PB_BIND(helium_blockchain_state_channel_diff_v1, helium_blockchain_state_channel_diff_v1, AUTO)
+
+
+PB_BIND(helium_blockchain_state_channel_diff_entry_v1, helium_blockchain_state_channel_diff_entry_v1, AUTO)
+
+
+PB_BIND(helium_blockchain_state_channel_diff_append_summary_v1, helium_blockchain_state_channel_diff_append_summary_v1, AUTO)
+
+
+PB_BIND(helium_blockchain_state_channel_diff_update_summary_v1, helium_blockchain_state_channel_diff_update_summary_v1, AUTO)
+
+
 PB_BIND(helium_blockchain_state_channel_banner_v1, helium_blockchain_state_channel_banner_v1, AUTO)
 
 
@@ -31,7 +43,6 @@ PB_BIND(helium_blockchain_state_channel_rejection_v1, helium_blockchain_state_ch
 
 
 PB_BIND(helium_blockchain_state_channel_message_v1, helium_blockchain_state_channel_message_v1, AUTO)
-
 
 
 

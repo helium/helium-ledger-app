@@ -4,6 +4,7 @@
 #ifndef PB_HELIUM_BLOCKCHAIN_TXN_COINBASE_V1_PB_H_INCLUDED
 #define PB_HELIUM_BLOCKCHAIN_TXN_COINBASE_V1_PB_H_INCLUDED
 #include <pb.h>
+#include "blockchain_token_type_v1.pb.h"
 
 #if PB_PROTO_HEADER_VERSION != 40
 #error Regenerate this file with the current version of nanopb generator.
@@ -13,6 +14,7 @@
 typedef struct _helium_blockchain_txn_coinbase_v1 { 
     pb_callback_t payee; 
     uint64_t amount; 
+    helium_blockchain_token_type_v1 token_type; 
 } helium_blockchain_txn_coinbase_v1;
 
 
@@ -21,17 +23,19 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define helium_blockchain_txn_coinbase_v1_init_default {{{NULL}, NULL}, 0}
-#define helium_blockchain_txn_coinbase_v1_init_zero {{{NULL}, NULL}, 0}
+#define helium_blockchain_txn_coinbase_v1_init_default {{{NULL}, NULL}, 0, _helium_blockchain_token_type_v1_MIN}
+#define helium_blockchain_txn_coinbase_v1_init_zero {{{NULL}, NULL}, 0, _helium_blockchain_token_type_v1_MIN}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define helium_blockchain_txn_coinbase_v1_payee_tag 1
 #define helium_blockchain_txn_coinbase_v1_amount_tag 2
+#define helium_blockchain_txn_coinbase_v1_token_type_tag 3
 
 /* Struct field encoding specification for nanopb */
 #define helium_blockchain_txn_coinbase_v1_FIELDLIST(X, a) \
 X(a, CALLBACK, SINGULAR, BYTES,    payee,             1) \
-X(a, STATIC,   SINGULAR, UINT64,   amount,            2)
+X(a, STATIC,   SINGULAR, UINT64,   amount,            2) \
+X(a, STATIC,   SINGULAR, UENUM,    token_type,        3)
 #define helium_blockchain_txn_coinbase_v1_CALLBACK pb_default_field_callback
 #define helium_blockchain_txn_coinbase_v1_DEFAULT NULL
 

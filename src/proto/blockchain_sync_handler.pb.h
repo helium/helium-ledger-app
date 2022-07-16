@@ -10,13 +10,15 @@
 #endif
 
 /* Struct definitions */
-typedef struct _blockchain_sync_blocks { 
-    pb_callback_t blocks; 
-} blockchain_sync_blocks;
-
 typedef struct _blockchain_sync_hash { 
     pb_callback_t hash; 
+    pb_callback_t heights; 
 } blockchain_sync_hash;
+
+typedef struct _blockchain_sync_blocks { 
+    pb_callback_t blocks; 
+    bool final; 
+} blockchain_sync_blocks;
 
 typedef struct _blockchain_sync_req { 
     pb_size_t which_msg;
@@ -32,27 +34,31 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define blockchain_sync_hash_init_default        {{{NULL}, NULL}}
-#define blockchain_sync_blocks_init_default      {{{NULL}, NULL}}
+#define blockchain_sync_hash_init_default        {{{NULL}, NULL}, {{NULL}, NULL}}
+#define blockchain_sync_blocks_init_default      {{{NULL}, NULL}, 0}
 #define blockchain_sync_req_init_default         {0, {blockchain_sync_hash_init_default}}
-#define blockchain_sync_hash_init_zero           {{{NULL}, NULL}}
-#define blockchain_sync_blocks_init_zero         {{{NULL}, NULL}}
+#define blockchain_sync_hash_init_zero           {{{NULL}, NULL}, {{NULL}, NULL}}
+#define blockchain_sync_blocks_init_zero         {{{NULL}, NULL}, 0}
 #define blockchain_sync_req_init_zero            {0, {blockchain_sync_hash_init_zero}}
 
 /* Field tags (for use in manual encoding/decoding) */
-#define blockchain_sync_blocks_blocks_tag        1
 #define blockchain_sync_hash_hash_tag            1
+#define blockchain_sync_hash_heights_tag         2
+#define blockchain_sync_blocks_blocks_tag        1
+#define blockchain_sync_blocks_final_tag         2
 #define blockchain_sync_req_hash_tag             1
 #define blockchain_sync_req_response_tag         2
 
 /* Struct field encoding specification for nanopb */
 #define blockchain_sync_hash_FIELDLIST(X, a) \
-X(a, CALLBACK, SINGULAR, BYTES,    hash,              1)
+X(a, CALLBACK, SINGULAR, BYTES,    hash,              1) \
+X(a, CALLBACK, REPEATED, UINT64,   heights,           2)
 #define blockchain_sync_hash_CALLBACK pb_default_field_callback
 #define blockchain_sync_hash_DEFAULT NULL
 
 #define blockchain_sync_blocks_FIELDLIST(X, a) \
-X(a, CALLBACK, REPEATED, BYTES,    blocks,            1)
+X(a, CALLBACK, REPEATED, BYTES,    blocks,            1) \
+X(a, STATIC,   SINGULAR, BOOL,     final,             2)
 #define blockchain_sync_blocks_CALLBACK pb_default_field_callback
 #define blockchain_sync_blocks_DEFAULT NULL
 
