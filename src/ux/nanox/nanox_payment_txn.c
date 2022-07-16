@@ -16,6 +16,8 @@
 
 #define CTX cmd.paymentContext
 
+char token_title[] = "Amount TNT\0\0\0\0";
+
 static void init_amount(void)
 {
   uint8_t len;
@@ -100,12 +102,8 @@ UX_STEP_NOCB_INIT(
     bnnn_paging,
     init_amount(),
     {
-#ifdef HELIUM_TESTNET
-      .title = "Amount TNT",
-#else
-      .title = "Amount HNT",
-#endif
-	.text = (char *)global.fullStr
+      .title = token_title,
+	  .text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(
@@ -176,7 +174,44 @@ static void ui_sign_transaction(void)
 void handle_sign_payment_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, volatile unsigned int *flags,
                              __attribute__((unused)) volatile unsigned int *tx) {
     if (save_payment_context(p1, p2, dataBuffer, dataLength, &CTX)) {
-        ui_sign_transaction();
+        switch(cmd.paymentContext.token) {
+            case TOKEN_TYPE_HNT:
+                #ifdef HELIUM_TESTNET
+                memcpy(global.title, &"Amount TNT\0", sizeof("Amount TNT\0"));
+                #else
+                memcpy(global.title, &"Amount HNT\0", sizeof("Amount HNT\0"));
+                #endif
+                ui_sign_transaction();
+                break;
+            case TOKEN_TYPE_HST:
+                #ifdef HELIUM_TESTNET
+                memcpy(global.title, &"Amount TST\0", sizeof("Amount TST\0"));
+                #else
+                memcpy(global.title, &"Amount HST\0", sizeof("Amount HST\0"));
+                #endif
+                ui_sign_transaction();
+                break;
+            case TOKEN_TYPE_MOB:
+                #ifdef HELIUM_TESTNET
+                memcpy(global.title, &"Amount TOB\0", sizeof("Amount TOB\0"));
+                #else
+                memcpy(global.title, &"Amount MOB\0", sizeof("Amount MOB\0"));
+                #endif
+                ui_sign_transaction();
+                break;
+            case TOKEN_TYPE_IOT:
+                #ifdef HELIUM_TESTNET
+                memcpy(global.title, &"Amount TOT\0", sizeof("Amount TOT\0"));
+                #else
+                memcpy(global.title, &"Amount IOT\0", sizeof("Amount IOT\0"));
+                #endif
+                ui_sign_transaction();
+                break;
+            default:
+                // invalid token_type is handled in save_payment_context
+                // therefore, we should never get here
+            break;
+        }
     } else {
         ui_displayError();
     }
