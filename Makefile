@@ -50,6 +50,9 @@ APPVERSION = 2.3.0
 # The --path argument here restricts which BIP32 paths the app is allowed to derive.
 ifeq ($(COIN),helium_tn)
 APP_LOAD_PARAMS = --appFlags 0x240 --path "44'/905'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
+# Ledger: add the "Pending security review" disclaimer
+APP_LOAD_PARAMS += --tlvraw 9F:01
+DEFINES += HAVE_PENDING_REVIEW_SCREEN
 else ifeq ($(COIN),helium)
 APP_LOAD_PARAMS = --appFlags 0x240 --path "44'/904'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
 endif
