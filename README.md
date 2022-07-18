@@ -35,7 +35,7 @@ From this helium-ledger repo, you can now build and load the app for the testnet
 way:
 
 ```
-BOLOS_SDK=~/nanos-secure-sdk make TESTNET=true load
+BOLOS_SDK=~/nanos-secure-sdk make COIN=helium_tn load
 ```
 
 The load will fail unless you are on the app selection screen.
@@ -54,7 +54,7 @@ You make command could look something like this:
 GCCPATH=~/ledger-build-tools/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/ \
 CLANGPATH=~/ledger-build-tools/clang/bin/ \
 BOLOS_SDK=~/nanox-secure-sdk \
-make TESTNET=true
+make COIN=helium_tn
 ```
 
 ## Emulator: speculos

@@ -20,7 +20,11 @@ $(error Environment variable BOLOS_SDK is not set)
 endif
 include $(BOLOS_SDK)/Makefile.defines
 
-ifeq ($(TESTNET),true)
+ifndef COIN
+COIN=helium
+endif
+
+ifeq ($(COIN),helium_tn)
 DEFINES += HELIUM_TESTNET
 endif
 
@@ -28,9 +32,9 @@ endif
 #  App  #
 #########
 # The --path argument here restricts which BIP32 paths the app is allowed to derive.
-ifeq ($(TESTNET),true)
-APPNAME    = TNT
-else
+ifeq ($(COIN),helium_tn)
+APPNAME    = helium_tn
+else ifeq ($(COIN),helium)
 APPNAME    = Helium
 endif
 
@@ -44,9 +48,9 @@ endif
 APPVERSION = 2.3.0
 
 # The --path argument here restricts which BIP32 paths the app is allowed to derive.
-ifeq ($(TESTNET),true)
+ifeq ($(COIN),helium_tn)
 APP_LOAD_PARAMS = --appFlags 0x240 --path "44'/905'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
-else
+else ifeq ($(COIN),helium)
 APP_LOAD_PARAMS = --appFlags 0x240 --path "44'/904'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
 endif
 
@@ -135,4 +139,4 @@ dep/tx.d:
 dep/%.d: %.c Makefile
 
 listvariants:
-	@echo VARIANTS COIN hnt
+	@echo VARIANTS COIN helium helium_tn
