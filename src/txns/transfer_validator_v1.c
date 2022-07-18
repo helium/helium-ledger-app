@@ -5,7 +5,7 @@
 #include "save_context.h"
 
 uint32_t create_helium_transfer_validator_txn(uint8_t account){
-    transferValidatorContext_t * ctx = &global.transferValidatorContext;
+    transferValidatorContext_t * ctx = &cmd.transferValidatorContext;
     pb_ostream_t ostream;
 
     unsigned char owner[SIZEOF_HELIUM_KEY];

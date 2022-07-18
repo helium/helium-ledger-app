@@ -9,7 +9,7 @@
 #define MAX_PAYMENT_SIZE (SIZEOF_HELIUM_KEY+2*4+23)
 
 uint32_t create_helium_pay_txn(uint8_t account){
-    paymentContext_t * ctx = &global.paymentContext;
+    paymentContext_t * ctx = &cmd.paymentContext;
     pb_ostream_t ostream;
 
     unsigned char payer[SIZEOF_HELIUM_KEY];
