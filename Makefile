@@ -33,7 +33,7 @@ endif
 #########
 # The --path argument here restricts which BIP32 paths the app is allowed to derive.
 ifeq ($(COIN),helium_tn)
-APPNAME    = helium_tn
+APPNAME    = TNT
 else ifeq ($(COIN),helium)
 APPNAME    = Helium
 endif
