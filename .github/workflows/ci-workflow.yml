@@ -12,38 +12,31 @@ on:
       - develop
 
 jobs:
-  job_nanoS_build_debug:
-    name: Build debug app for NanoS
+  nano_build_debug:
+    name: Build Solana debug application for Nano S, X and S+
+    strategy:
+      matrix:
+        include:
+          - SDK: "$NANOS_SDK"
+            artifact: solana-app-debug-nanos
+          - SDK: "$NANOX_SDK"
+            artifact: solana-app-debug-nanox
+          - SDK: "$NANOSP_SDK"
+            artifact: solana-app-debug-nanosp
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
-    steps:
-      - name: Clone
-        uses: actions/checkout@v2
-      - name: Build
-        run: |
-          make DEBUG=1
-      - name: Upload app binary
-        uses: actions/upload-artifact@v2
-        with:
-          name: app-nanoS-debug
-          path: bin
 
-  job_nanoX_build_debug:
-    name: Build debug app for NanoX
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
     steps:
       - name: Clone
         uses: actions/checkout@v2
       - name: Build
         run: |
-          make DEBUG=1 BOLOS_SDK=$NANOX_SDK
+          make DEBUG=1 BOLOS_SDK=${{ matrix.SDK }}
       - name: Upload app binary
         uses: actions/upload-artifact@v2
         with:
-          name: app-nanoX-debug
+          name: ${{ matrix.artifact }}
           path: bin
 
   job_scan_build:
