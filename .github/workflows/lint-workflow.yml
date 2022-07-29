@@ -38,5 +38,7 @@ jobs:
     - name: Check misspellings
       uses: codespell-project/actions-codespell@2391250ab05295bddd51e36a8c6295edb6343b0e
       with:
+        # Use Config file when the github action supports it
         builtin: clear,rare
         check_filenames: true
+        skip: ./libsol
