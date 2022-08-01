@@ -193,9 +193,9 @@ void handle_sign_payment_txn(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16
                 break;
             case TOKEN_TYPE_MOB:
                 #ifdef HELIUM_TESTNET
-                memcpy(global.title, &"Amount TOB\0", sizeof("Amount TOB\0"));
+                memcpy(global.title, &"Amount TOBILE\0", sizeof("Amount TOBILE\0"));
                 #else
-                memcpy(global.title, &"Amount MOB\0", sizeof("Amount MOB\0"));
+                memcpy(global.title, &"Amount MOBILE\0", sizeof("Amount MOBILE\0"));
                 #endif
                 ui_sign_transaction();
                 break;

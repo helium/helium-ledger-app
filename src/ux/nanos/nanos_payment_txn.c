@@ -350,11 +350,11 @@ static void load_amount(page_cmd_t page_cmd){
                 break;
             case TOKEN_TYPE_MOB:
                 #ifdef HELIUM_TESTNET
-                global.title_len = sizeof("Amount TOB (1/n)");
-                memcpy(global.title, &"Amount TOB (1/n)", global.title_len);
+                global.title_len = sizeof("Amount TOBILE (1/n)");
+                memcpy(global.title, &"Amount TOBILE (1/n)", global.title_len);
                 #else
-                global.title_len = sizeof("Amount MOB (1/n)");
-                memcpy(global.title, &"Amount MOB (1/n)", global.title_len);
+                global.title_len = sizeof("Amount MOBILE (1/n)");
+                memcpy(global.title, &"Amount MOBILE (1/n)", global.title_len);
                 #endif
                 break;
             case TOKEN_TYPE_IOT:
