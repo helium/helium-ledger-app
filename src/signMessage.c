@@ -14,11 +14,12 @@ static uint8_t G_message[MAX_MESSAGE_LENGTH];
 static int G_messageLength;
 uint8_t G_numDerivationPaths;
 static uint32_t G_derivationPath[BIP32_PATH];
-static int G_derivationPathLength;
+static uint32_t G_derivationPathLength;
+static bool G_non_confirm_requested;
 
-void derive_private_key(cx_ecfp_private_key_t *privateKey,
-                        uint32_t *derivationPath,
-                        uint8_t derivationPathLength) {
+static void derive_private_key(cx_ecfp_private_key_t *privateKey,
+                               uint32_t *derivationPath,
+                               uint8_t derivationPathLength) {
     uint8_t privateKeyData[32];
     BEGIN_TRY {
         TRY {
@@ -108,29 +109,26 @@ ux_flow_step_t const *flow_steps[MAX_FLOW_STEPS];
 
 Hash UnrecognizedMessageHash;
 
-void handleSignMessage(uint8_t p1,
-                       uint8_t p2,
-                       uint8_t *dataBuffer,
-                       uint16_t dataLength,
-                       volatile unsigned int *flags,
-                       volatile unsigned int *tx) {
-    UNUSED(tx);
-
+void handle_sign_message_receive_apdus(uint8_t p1,
+                                       uint8_t p2,
+                                       const uint8_t *dataBuffer,
+                                       uint16_t dataLength) {
     if (dataLength == 0) {
         THROW(ApduReplySolanaInvalidMessage);
     }
 
-    int deprecated_host = ((dataLength & DATA_HAS_LENGTH_PREFIX) != 0);
-
+    // Detect hold host and remove the obsolete flag if set
+    bool deprecated_host = ((dataLength & DATA_HAS_LENGTH_PREFIX) != 0);
     if (deprecated_host) {
         dataLength &= ~DATA_HAS_LENGTH_PREFIX;
     }
 
     if ((p2 & P2_EXTEND) == 0) {
+        // First APDU received, reset context
         MEMCLEAR(G_derivationPath);
         MEMCLEAR(G_message);
         G_messageLength = 0;
-        G_numDerivationPaths = 1;
+        G_non_confirm_requested = false;
 
         if (!deprecated_host) {
             G_numDerivationPaths = dataBuffer[0];
@@ -140,6 +138,8 @@ void handleSignMessage(uint8_t p1,
             if (G_numDerivationPaths != 1) {
                 THROW(ApduReplySdkExceptionOverflow);
             }
+        } else {
+            G_numDerivationPaths = 1;
         }
 
         G_derivationPathLength = read_derivation_path(dataBuffer, dataLength, G_derivationPath);
@@ -157,6 +157,7 @@ void handleSignMessage(uint8_t p1,
 
     int messageLength;
     if (deprecated_host) {
+        // Deprecated APDU format uses 2 bytes to write remaining length
         messageLength = U2BE(dataBuffer, 0);
         dataBuffer += 2;
         if (messageLength != (dataLength - 2)) {
@@ -166,56 +167,67 @@ void handleSignMessage(uint8_t p1,
         messageLength = dataLength;
     }
 
+    // Append current message to global message reception buffer
     if (G_messageLength + messageLength > MAX_MESSAGE_LENGTH) {
         THROW(ApduReplySdkExceptionOverflow);
     }
     memcpy(G_message + G_messageLength, dataBuffer, messageLength);
     G_messageLength += messageLength;
 
+    // Stop processing here if another APDU is expected
     if (p2 & P2_MORE) {
         THROW(ApduReplySuccess);
+    }
+
+    if (p1 == P1_NON_CONFIRM) {
+        G_non_confirm_requested = true;
     }
 
     // Host has signaled that the message is complete. We won't be receiving
     // any more extending APDU buffers. Clear the derivation path count so we
     // can detect P2_EXTEND misuse at the start of the next exchange
     G_numDerivationPaths = 0;
+}
 
+void handle_sign_message_parse_message(volatile unsigned int *tx) {
     Parser parser = {G_message, G_messageLength};
     PrintConfig print_config;
     print_config.expert_mode = (N_storage.settings.display_mode == DisplayModeExpert);
     print_config.signer_pubkey = NULL;
     MessageHeader *header = &print_config.header;
-    if (parse_message_header(&parser, header)) {
+
+    if (parse_message_header(&parser, header) != 0) {
         // This is not a valid Solana message
         THROW(ApduReplySolanaInvalidMessage);
-    } else {
-        uint8_t signer_pubkey[32];
-        getPublicKey(G_derivationPath, signer_pubkey, G_derivationPathLength);
-        size_t signer_count = header->pubkeys_header.num_required_signatures;
-        size_t i;
-        for (i = 0; i < signer_count; i++) {
-            const Pubkey *pubkey = &header->pubkeys[i];
-            if (memcmp(pubkey, signer_pubkey, PUBKEY_SIZE) == 0) {
-                break;
-            }
-        }
-        if (i >= signer_count) {
-            THROW(ApduReplySdkInvalidParameter);
-        }
-        print_config.signer_pubkey = &header->pubkeys[i];
     }
 
-    if (p1 == P1_NON_CONFIRM) {
+    // Ensure the signer signature is present in the header
+    uint8_t signer_pubkey[32];
+    get_public_key(signer_pubkey, G_derivationPath, G_derivationPathLength);
+    size_t i;
+    for (i = 0; i < header->pubkeys_header.num_required_signatures; ++i) {
+        if (memcmp(&(header->pubkeys[i]), signer_pubkey, PUBKEY_SIZE) == 0) {
+            break;
+        }
+    }
+    if (i >= header->pubkeys_header.num_required_signatures) {
+        THROW(ApduReplySdkInvalidParameter);
+    }
+    print_config.signer_pubkey = &header->pubkeys[i];
+
+    if (G_non_confirm_requested) {
         // Uncomment this to allow blind signing.
         //*tx = set_result_sign_message();
         // THROW(ApduReplySuccess);
+        UNUSED(tx);
 
         sendResponse(0, false);
     }
 
+    // Set the transaction summary
     transaction_summary_reset();
-    if (process_message_body(parser.buffer, parser.buffer_length, &print_config)) {
+    if (process_message_body(parser.buffer, parser.buffer_length, &print_config) != 0) {
+        // Message not processed, throw if blind signing is not enabled
         if (N_storage.settings.allow_blind_sign == BlindSignEnabled) {
             SummaryItem *item = transaction_summary_primary_item();
             summary_item_set_string(item, "Unrecognized", "format");
@@ -232,11 +244,15 @@ void handleSignMessage(uint8_t p1,
         }
     }
 
+    // Add fee payer to summary if needed
     const Pubkey *fee_payer = &header->pubkeys[0];
     if (print_config_show_authority(&print_config, fee_payer)) {
         transaction_summary_set_fee_payer_pubkey(fee_payer);
     }
+}
 
+void handle_sign_message_UI(volatile unsigned int *flags) {
+    // Display the transaction summary
     enum SummaryItemKind summary_step_kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_summary_steps = 0;
     if (transaction_summary_finalize(summary_step_kinds, &num_summary_steps) == 0) {

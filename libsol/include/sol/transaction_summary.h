@@ -56,7 +56,7 @@ void transaction_summary_reset();
 enum DisplayFlags {
     DisplayFlagNone = 0,
     DisplayFlagLongPubkeys = 1 << 0,
-    DisplayFlagAll = (DisplayFlagLongPubkeys),
+    DisplayFlagAll = DisplayFlagLongPubkeys,
 };
 int transaction_summary_display_item(size_t item_index, enum DisplayFlags flags);
 int transaction_summary_finalize(enum SummaryItemKind* item_kinds, size_t* item_kinds_len);

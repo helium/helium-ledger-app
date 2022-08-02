@@ -7,7 +7,7 @@
 static uint8_t publicKey[PUBKEY_LENGTH];
 static char publicKeyStr[BASE58_PUBKEY_LENGTH];
 
-int read_derivation_path(const uint8_t *dataBuffer, size_t size, uint32_t *derivationPath) {
+uint32_t read_derivation_path(const uint8_t *dataBuffer, size_t size, uint32_t *derivationPath) {
     if (size == 0) {
         THROW(ApduReplySolanaInvalidMessage);
     }
@@ -72,9 +72,9 @@ void handleGetPubkey(uint8_t p1,
     UNUSED(p2);
 
     uint32_t derivationPath[BIP32_PATH];
-    int pathLength = read_derivation_path(dataBuffer, dataLength, derivationPath);
+    uint32_t pathLength = read_derivation_path(dataBuffer, dataLength, derivationPath);
 
-    getPublicKey(derivationPath, publicKey, pathLength);
+    get_public_key(publicKey, derivationPath, pathLength);
     encode_base58(publicKey, PUBKEY_LENGTH, publicKeyStr, BASE58_PUBKEY_LENGTH);
 
     if (p1 == P1_NON_CONFIRM) {

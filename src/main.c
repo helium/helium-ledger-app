@@ -54,7 +54,7 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx, int rx)
                 THROW(ApduReplyInvalidCla);
             }
 
-            int dataLength;
+            uint16_t dataLength;
             uint8_t *dataBuffer;
             switch (G_io_apdu_buffer[OFFSET_INS]) {
                 // Handle deprecated instructions expecting a 16bit dataLength
@@ -104,12 +104,12 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx, int rx)
                     dataLength |= DATA_HAS_LENGTH_PREFIX;
                     // Fall through
                 case INS_SIGN_MESSAGE:
-                    handleSignMessage(G_io_apdu_buffer[OFFSET_P1],
-                                      G_io_apdu_buffer[OFFSET_P2],
-                                      dataBuffer,
-                                      dataLength,
-                                      flags,
-                                      tx);
+                    handle_sign_message_receive_apdus(G_io_apdu_buffer[OFFSET_P1],
+                                                      G_io_apdu_buffer[OFFSET_P2],
+                                                      dataBuffer,
+                                                      dataLength);
+                    handle_sign_message_parse_message(tx);
+                    handle_sign_message_UI(flags);
                     break;
 
                 default:
@@ -321,7 +321,7 @@ void nv_app_state_init() {
 #endif
         storage.settings.display_mode = DisplayModeUser;
         storage.initialized = 0x01;
-        nvm_write((internalStorage_t *) &N_storage, (void *) &storage, sizeof(internalStorage_t));
+        nvm_write((void *) &N_storage, (void *) &storage, sizeof(internalStorage_t));
     }
 }
 

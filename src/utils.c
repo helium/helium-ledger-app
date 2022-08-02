@@ -5,11 +5,11 @@
 #include "utils.h"
 #include "menu.h"
 
-void getPublicKey(uint32_t *derivationPath, uint8_t *publicKeyArray, uint8_t pathLength) {
+void get_public_key(uint8_t *publicKeyArray, const uint32_t *derivationPath, uint32_t pathLength) {
     cx_ecfp_private_key_t privateKey;
     cx_ecfp_public_key_t publicKey;
 
-    getPrivateKey(derivationPath, &privateKey, pathLength);
+    get_private_key(&privateKey, derivationPath, pathLength);
     cx_ecfp_generate_pair(CX_CURVE_Ed25519, &publicKey, &privateKey, 1);
     explicit_bzero(&privateKey, sizeof(privateKey));
 
@@ -25,9 +25,9 @@ uint32_t readUint32BE(uint8_t *buffer) {
     return ((buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | (buffer[3]));
 }
 
-void getPrivateKey(uint32_t *derivationPath,
-                   cx_ecfp_private_key_t *privateKey,
-                   uint8_t pathLength) {
+void get_private_key(cx_ecfp_private_key_t *privateKey,
+                     const uint32_t *derivationPath,
+                     uint32_t pathLength) {
     uint8_t privateKeyData[32];
 
     os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10,

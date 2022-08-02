@@ -98,8 +98,12 @@ void transaction_summary_reset() {
     explicit_bzero(&G_transaction_summary_text, TEXT_BUFFER_LENGTH);
 }
 
+static bool is_summary_item_used(const SummaryItem* item) {
+    return (item->kind != SummaryItemNone);
+}
+
 static SummaryItem* summary_item_as_unused(SummaryItem* item) {
-    if (item->kind == SummaryItemNone) {
+    if (!is_summary_item_used(item)) {
         return item;
     }
     return NULL;
@@ -128,7 +132,7 @@ SummaryItem* transaction_summary_nonce_authority_item() {
 SummaryItem* transaction_summary_general_item() {
     for (size_t i = 0; i < NUM_GENERAL_ITEMS; i++) {
         SummaryItem* item = &G_transaction_summary.general[i];
-        if (summary_item_as_unused(item) != NULL) {
+        if (!is_summary_item_used(item)) {
             return item;
         }
     }
@@ -198,44 +202,56 @@ static int transaction_summary_update_display_for_item(const SummaryItem* item,
     return 0;
 }
 
-int transaction_summary_display_item(size_t item_index, enum DisplayFlags flags) {
+// find item_index in G_transaction_summary in the following order:
+//     summary->primary
+//     used items of summary->general[]
+//     used summary->nonce_account
+//     used summary->nonce_authority
+//     summary->fee_payer
+
+static SummaryItem* transaction_summary_find_item(size_t item_index) {
     struct TransactionSummary* summary = &G_transaction_summary;
-    SummaryItem* item = NULL;
-    SummaryItem* maybe_item = &summary->primary;
+    size_t current_index = 0;
 
-    do {
-        if (item_index-- == 0) {
-            item = maybe_item;
-            break;
-        }
-        for (size_t i = 0; i < NUM_GENERAL_ITEMS; i++) {
-            maybe_item = &summary->general[i];
-            if (summary_item_as_unused(maybe_item) == NULL) {
-                if (item_index-- == 0) {
-                    item = maybe_item;
-                    break;
-                }
+    if (current_index == item_index) {
+        return &summary->primary;
+    }
+    ++current_index;
+
+    for (size_t i = 0; i < NUM_GENERAL_ITEMS; i++) {
+        if (is_summary_item_used(&summary->general[i])) {
+            if (current_index == item_index) {
+                return &summary->general[i];
             }
+            ++current_index;
         }
-        if (item != NULL) {
-            break;
-        }
-        maybe_item = &summary->nonce_account;
-        if ((summary_item_as_unused(maybe_item) == NULL) && (item_index-- == 0)) {
-            item = maybe_item;
-            break;
-        }
-        maybe_item = &summary->nonce_authority;
-        if ((summary_item_as_unused(maybe_item) == NULL) && (item_index-- == 0)) {
-            item = maybe_item;
-            break;
-        }
-        if (item_index-- == 0) {
-            item = &summary->fee_payer;
-            break;
-        }
-    } while (0);
+    }
 
+    if (is_summary_item_used(&summary->nonce_account)) {
+        if (current_index == item_index) {
+            return &summary->nonce_account;
+        }
+        ++current_index;
+    }
+
+    if (is_summary_item_used(&summary->nonce_authority)) {
+        if (current_index == item_index) {
+            return &summary->nonce_authority;
+        }
+        ++current_index;
+    }
+
+    if (current_index == item_index) {
+        return &summary->fee_payer;
+    }
+
+    return NULL;
+}
+
+int transaction_summary_display_item(size_t item_index, enum DisplayFlags flags) {
+    const SummaryItem* item;
+
+    item = transaction_summary_find_item(item_index);
     if (item == NULL) {
         return 1;
     }

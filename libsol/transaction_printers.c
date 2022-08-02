@@ -5,6 +5,11 @@
 #include "transaction_printers.h"
 #include "util.h"
 
+const InstructionBrief nonce_brief[] = {
+    SYSTEM_IX_BRIEF(SystemAdvanceNonceAccount),
+};
+#define is_advance_nonce_account(infos) instruction_info_matches_brief(infos, nonce_brief)
+
 const InstructionBrief create_stake_account_brief[] = {
     SYSTEM_IX_BRIEF(SystemCreateAccount),
     STAKE_IX_BRIEF(StakeInitialize),
@@ -527,34 +532,23 @@ static int print_spl_associated_token_account_create_with_transfer(const PrintCo
     return 0;
 }
 
-int print_transaction(const PrintConfig* print_config,
-                      InstructionInfo* const* infos,
-                      size_t infos_length) {
-    if (infos_length > 1) {
-        InstructionInfo* display_info = infos[0];
-        InstructionBrief nonce_brief = SYSTEM_IX_BRIEF(SystemAdvanceNonceAccount);
-        if (instruction_info_matches_brief(display_info, &nonce_brief)) {
-            print_system_nonced_transaction_sentinel(&display_info->system, print_config);
-            infos++;
-            infos_length--;
-        }
-    }
-
+static int print_transaction_nonce_processed(const PrintConfig* print_config,
+                                             InstructionInfo* const* infos,
+                                             size_t infos_length) {
     switch (infos_length) {
-        case 1: {
-            InstructionInfo* display_info = infos[0];
-            switch (display_info->kind) {
+        case 1:
+            switch (infos[0]->kind) {
                 case ProgramIdSystem:
-                    return print_system_info(&display_info->system, print_config);
+                    return print_system_info(&(infos[0]->system), print_config);
                 case ProgramIdStake:
-                    return print_stake_info(&display_info->stake, print_config);
+                    return print_stake_info(&(infos[0]->stake), print_config);
                 case ProgramIdVote:
-                    return print_vote_info(&display_info->vote, print_config);
+                    return print_vote_info(&(infos[0]->vote), print_config);
                 case ProgramIdSplToken:
-                    return print_spl_token_info(&display_info->spl_token, print_config);
+                    return print_spl_token_info(&(infos[0]->spl_token), print_config);
                 case ProgramIdSplAssociatedTokenAccount:
                     return print_spl_associated_token_account_info(
-                        &display_info->spl_associated_token_account,
+                        &(infos[0]->spl_associated_token_account),
                         print_config);
                 case ProgramIdSerumAssertOwner:
                 case ProgramIdSplMemo:
@@ -562,8 +556,8 @@ int print_transaction(const PrintConfig* print_config,
                     break;
             }
             break;
-        }
-        case 2: {
+
+        case 2:
             if (is_create_stake_account(infos, infos_length) ||
                 is_create_stake_account_checked(infos, infos_length)) {
                 return print_create_stake_account(print_config, infos, infos_length);
@@ -606,8 +600,8 @@ int print_transaction(const PrintConfig* print_config,
                                                                                infos_length);
             }
             break;
-        }
-        case 3: {
+
+        case 3:
             if (is_create_stake_account_and_delegate(infos, infos_length)) {
                 return print_create_stake_account_and_delegate(print_config, infos, infos_length);
             } else if (is_create_stake_account_with_seed_and_delegate(infos, infos_length)) {
@@ -620,10 +614,24 @@ int print_transaction(const PrintConfig* print_config,
                 return print_stake_info(&infos[2]->stake, print_config);
             }
             break;
-        }
+
         default:
             break;
     }
 
     return 1;
+}
+
+int print_transaction(const PrintConfig* print_config,
+                      InstructionInfo* const* infos,
+                      size_t infos_length) {
+    // Additional nonce info might be present at first position of in info list
+    if ((infos_length > 1) && is_advance_nonce_account(infos[0])) {
+        print_system_nonced_transaction_sentinel(&(infos[0]->system), print_config);
+        // offset parameters given to print_transaction_nonce_processed()
+        infos++;
+        infos_length--;
+    }
+
+    return print_transaction_nonce_processed(print_config, infos, infos_length);
 }
