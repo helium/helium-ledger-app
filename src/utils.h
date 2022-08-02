@@ -7,7 +7,7 @@
 #define _UTILS_H_
 
 // Marker flag for DEPRECATED ADPU exchange format
-#define DATA_HAS_LENGTH_PREFIX  (1 << 15)
+#define DATA_HAS_LENGTH_PREFIX (1 << 15)
 
 typedef enum rlpTxType {
     TX_LENGTH = 0,
@@ -28,43 +28,68 @@ void getPrivateKey(uint32_t *derivationPath, cx_ecfp_private_key_t *privateKey, 
 
 void sendResponse(uint8_t tx, bool approve);
 
-    // type            userid    x    y   w    h  str rad fill      fg        bg      fid iid  txt   touchparams...       ]
-#define UI_BUTTONS \
-    {{BAGL_RECTANGLE   , 0x00,   0,   0, 128,  32, 0, 0, BAGL_FILL, 0x000000, 0xFFFFFF, 0, 0}, NULL, 0, 0, 0, NULL, NULL, NULL},\
-    {{BAGL_ICON        , 0x00,   3,  12,   7,   7, 0, 0, 0        , 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_ICON_CROSS  }, NULL, 0, 0, 0, NULL, NULL, NULL },\
-    {{BAGL_ICON        , 0x00, 117,  13,   8,   6, 0, 0, 0        , 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_ICON_CHECK  }, NULL, 0, 0, 0, NULL, NULL, NULL }
+// type            userid    x    y   w    h  str rad fill      fg        bg      fid iid  txt
+// touchparams...       ]
+#define UI_BUTTONS                                                                               \
+    {{BAGL_RECTANGLE, 0x00, 0, 0, 128, 32, 0, 0, BAGL_FILL, 0x000000, 0xFFFFFF, 0, 0},           \
+     NULL,                                                                                       \
+     0,                                                                                          \
+     0,                                                                                          \
+     0,                                                                                          \
+     NULL,                                                                                       \
+     NULL,                                                                                       \
+     NULL},                                                                                      \
+        {{BAGL_ICON, 0x00, 3, 12, 7, 7, 0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_ICON_CROSS},  \
+         NULL,                                                                                   \
+         0,                                                                                      \
+         0,                                                                                      \
+         0,                                                                                      \
+         NULL,                                                                                   \
+         NULL,                                                                                   \
+         NULL},                                                                                  \
+    {                                                                                            \
+        {BAGL_ICON, 0x00, 117, 13, 8, 6, 0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_ICON_CHECK}, \
+            NULL, 0, 0, 0, NULL, NULL, NULL                                                      \
+    }
 
-#define UI_FIRST 1
+#define UI_FIRST  1
 #define UI_SECOND 0
 
-#define UI_LABELINE(userId, text, isFirst, font, horizontalScrollSpeed)    \
-    {                                                                      \
-        {                                                                  \
-            BAGL_LABELINE,                                                 \
-            (userId),                                                      \
-            23,                                                            \
-            (isFirst) ? 12 : 26,                                           \
-            82,                                                            \
-            12,                                                            \
-            (horizontalScrollSpeed) ? BAGL_STROKE_FLAG_ONESHOT | 10 : 0,   \
-            0, 0, 0xFFFFFF, 0x000000,                                      \
-            (font)|BAGL_FONT_ALIGNMENT_CENTER,                             \
-            horizontalScrollSpeed                                          \
-        },                                                                 \
-        (text), 0, 0, 0, NULL, NULL, NULL                                  \
+#define UI_LABELINE(userId, text, isFirst, font, horizontalScrollSpeed) \
+    {                                                                   \
+        {BAGL_LABELINE,                                                 \
+         (userId),                                                      \
+         23,                                                            \
+         (isFirst) ? 12 : 26,                                           \
+         82,                                                            \
+         12,                                                            \
+         (horizontalScrollSpeed) ? BAGL_STROKE_FLAG_ONESHOT | 10 : 0,   \
+         0,                                                             \
+         0,                                                             \
+         0xFFFFFF,                                                      \
+         0x000000,                                                      \
+         (font) | BAGL_FONT_ALIGNMENT_CENTER,                           \
+         horizontalScrollSpeed},                                        \
+            (text), 0, 0, 0, NULL, NULL, NULL                           \
     }
 
 #endif
 
 #ifdef TEST
 #include <stdio.h>
-#define THROW(code) do { printf("error: %d", code); } while (0)
+#define THROW(code)                \
+    do {                           \
+        printf("error: %d", code); \
+    } while (0)
 #define PRINTF(msg, arg) printf(msg, arg)
-#define PIC(code) code
+#define PIC(code)        code
 //#define TARGET_NANOS 1
-#define TARGET_BLUE 1
+#define TARGET_BLUE    1
 #define MEMCLEAR(dest) explicit_bzero(&dest, sizeof(dest));
 #else
-#define MEMCLEAR(dest) do { explicit_bzero(&dest, sizeof(dest)); } while (0)
+#define MEMCLEAR(dest)                       \
+    do {                                     \
+        explicit_bzero(&dest, sizeof(dest)); \
+    } while (0)
 #include "bolos_target.h"
-#endif // TEST
+#endif  // TEST
