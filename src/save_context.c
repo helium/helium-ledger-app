@@ -92,20 +92,3 @@ bool save_burn_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *
         return false;
     }
 }
-
-bool save_transfer_sec_context(uint8_t p1, __attribute__((unused)) uint8_t p2, uint8_t *dataBuffer, uint16_t dataLength, transferSecContext_t *ctx) {
-    global.lock = false;
-    if (dataLength >= 24 + sizeof(ctx->payee)) {
-        ctx->amount = U8LE(dataBuffer, 0);
-        ctx->fee = U8LE(dataBuffer, 8);
-        ctx->nonce = U8LE(dataBuffer, 16);
-        global.account_index = p1;
-        memmove(ctx->payee, &dataBuffer[24], sizeof(ctx->payee));
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
-
