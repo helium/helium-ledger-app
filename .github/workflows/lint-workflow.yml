@@ -41,4 +41,4 @@ jobs:
         # Use Config file when the github action supports it
         builtin: clear,rare
         check_filenames: true
-        skip: ./libsol
+        skip: ./libsol,./tests
