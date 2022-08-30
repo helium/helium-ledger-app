@@ -5,7 +5,7 @@
 #include "utils.h"
 #include "menu.h"
 
-void get_public_key(uint8_t *publicKeyArray, const uint32_t *derivationPath, uint32_t pathLength) {
+void get_public_key(uint8_t *publicKeyArray, const uint32_t *derivationPath, size_t pathLength) {
     cx_ecfp_private_key_t privateKey;
     cx_ecfp_public_key_t publicKey;
 
@@ -27,7 +27,7 @@ uint32_t readUint32BE(uint8_t *buffer) {
 
 void get_private_key(cx_ecfp_private_key_t *privateKey,
                      const uint32_t *derivationPath,
-                     uint32_t pathLength) {
+                     size_t pathLength) {
     uint8_t privateKeyData[32];
 
     os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10,

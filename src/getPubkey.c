@@ -7,7 +7,7 @@
 static uint8_t publicKey[PUBKEY_LENGTH];
 static char publicKeyStr[BASE58_PUBKEY_LENGTH];
 
-uint32_t read_derivation_path(const uint8_t *dataBuffer, size_t size, uint32_t *derivationPath) {
+size_t read_derivation_path(const uint8_t *dataBuffer, size_t size, uint32_t *derivationPath) {
     if (size == 0) {
         THROW(ApduReplySolanaInvalidMessage);
     }

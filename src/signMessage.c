@@ -112,7 +112,7 @@ Hash UnrecognizedMessageHash;
 void handle_sign_message_receive_apdus(uint8_t p1,
                                        uint8_t p2,
                                        const uint8_t *dataBuffer,
-                                       uint16_t dataLength) {
+                                       size_t dataLength) {
     if (dataLength == 0) {
         THROW(ApduReplySolanaInvalidMessage);
     }
@@ -155,7 +155,7 @@ void handle_sign_message_receive_apdus(uint8_t p1,
         }
     }
 
-    int messageLength;
+    size_t messageLength;
     if (deprecated_host) {
         // Deprecated APDU format uses 2 bytes to write remaining length
         messageLength = U2BE(dataBuffer, 0);

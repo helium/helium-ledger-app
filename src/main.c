@@ -54,7 +54,7 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx, int rx)
                 THROW(ApduReplyInvalidCla);
             }
 
-            uint16_t dataLength;
+            size_t dataLength;
             uint8_t *dataBuffer;
             switch (G_io_apdu_buffer[OFFSET_INS]) {
                 // Handle deprecated instructions expecting a 16bit dataLength
