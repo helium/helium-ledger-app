@@ -1,5 +1,5 @@
 # ****************************************************************************
-#    Ledger App Boilerplate
+#    Ledger App Solana
 #    (c) 2020 Ledger SAS.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,9 +30,9 @@ include $(BOLOS_SDK)/Makefile.defines
 
 APP_LOAD_PARAMS  = --curve ed25519
 ifeq ($(TARGET_NAME), TARGET_NANOX)
-APP_LOAD_PARAMS=--appFlags 0x200  # APPLICATION_FLAG_BOLOS_SETTINGS
+    APP_LOAD_PARAMS += --appFlags 0x200  # APPLICATION_FLAG_BOLOS_SETTINGS
 else
-APP_LOAD_PARAMS=--appFlags 0x000
+    APP_LOAD_PARAMS += --appFlags 0x000
 endif
 APP_LOAD_PARAMS += --path "44'/501'"
 APP_LOAD_PARAMS += $(COMMON_LOAD_PARAMS)
@@ -139,7 +139,7 @@ ifneq ($(WITH_LIBSOL),0)
     DEFINES      += NDEBUG
 endif
 
-load: all
+load: all load-only
 load-only:
 	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
