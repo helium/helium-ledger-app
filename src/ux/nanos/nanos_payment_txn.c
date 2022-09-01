@@ -328,13 +328,50 @@ static void load_payment_memo(page_cmd_t page_cmd){
 }
 
 static void load_amount(page_cmd_t page_cmd){
-    #ifdef HELIUM_TESTNET
-    global.title_len = sizeof("Amount TNT (1/n)");
-    memcpy(global.title, &"Amount TNT (1/n)", global.title_len);
-    #else
-    global.title_len = sizeof("Amount HNT (1/n)");
-    memcpy(global.title, &"Amount HNT (1/n)", global.title_len);
-    #endif
+
+    switch(cmd.paymentContext.token) {
+            case TOKEN_TYPE_HNT:
+                #ifdef HELIUM_TESTNET
+                global.title_len = sizeof("Amount TNT (1/n)");
+                memcpy(global.title, &"Amount TNT (1/n)", global.title_len);
+                #else
+                global.title_len = sizeof("Amount HNT (1/n)");
+                memcpy(global.title, &"Amount HNT (1/n)", global.title_len);
+                #endif
+                break;
+            case TOKEN_TYPE_HST:
+                #ifdef HELIUM_TESTNET
+                global.title_len = sizeof("Amount TST (1/n)");
+                memcpy(global.title, &"Amount TST (1/n)", global.title_len);
+                #else
+                global.title_len = sizeof("Amount HST (1/n)");
+                memcpy(global.title, &"Amount HST (1/n)", global.title_len);
+                #endif
+                break;
+            case TOKEN_TYPE_MOB:
+                #ifdef HELIUM_TESTNET
+                global.title_len = sizeof("Amount TOBILE (1/n)");
+                memcpy(global.title, &"Amount TOBILE (1/n)", global.title_len);
+                #else
+                global.title_len = sizeof("Amount MOBILE (1/n)");
+                memcpy(global.title, &"Amount MOBILE (1/n)", global.title_len);
+                #endif
+                break;
+            case TOKEN_TYPE_IOT:
+                #ifdef HELIUM_TESTNET
+                global.title_len = sizeof("Amount TOT (1/n)");
+                memcpy(global.title, &"Amount TOT (1/n)", global.title_len);
+                #else
+                global.title_len = sizeof("Amount IOT (1/n)");
+                memcpy(global.title, &"Amount IOT (1/n)", global.title_len);
+                #endif
+                break;
+            default:
+                // invalid token_type is handled in save_payment_context
+                // therefore, we should never get here
+                break;
+        }
+
     // display amount on screen
     uint8_t len = pretty_print_hnt(global.fullStr, CTX.amount);
     global.fullStr_len = len;

@@ -19,6 +19,7 @@
 #include "blockchain_txn_redeem_htlc_v1.pb.h"
 #include "blockchain_txn_poc_request_v1.pb.h"
 #include "blockchain_txn_poc_receipts_v1.pb.h"
+#include "blockchain_txn_poc_receipts_v2.pb.h"
 #include "blockchain_txn_vars_v1.pb.h"
 #include "blockchain_txn_rewards_v1.pb.h"
 #include "blockchain_txn_token_burn_v1.pb.h"
@@ -38,6 +39,11 @@
 #include "blockchain_txn_unstake_validator_v1.pb.h"
 #include "blockchain_txn_validator_heartbeat_v1.pb.h"
 #include "blockchain_txn_assert_location_v2.pb.h"
+#include "blockchain_txn_transfer_hotspot_v2.pb.h"
+#include "blockchain_txn_add_subnetwork_v1.pb.h"
+#include "blockchain_txn_update_subnetwork_v1.pb.h"
+#include "blockchain_txn_subnetwork_rewards_v1.pb.h"
+#include "blockchain_txn_token_redeem_v1.pb.h"
 
 #if PB_PROTO_HEADER_VERSION != 40
 #error Regenerate this file with the current version of nanopb generator.
@@ -86,6 +92,12 @@ typedef struct _helium_blockchain_txn {
         helium_blockchain_txn_consensus_group_failure_v1 consensus_group_failure;
         helium_blockchain_txn_rewards_v2 rewards_v2;
         helium_blockchain_txn_assert_location_v2 assert_location_v2;
+        helium_blockchain_txn_transfer_hotspot_v2 transfer_hotspot_v2;
+        helium_blockchain_txn_poc_receipts_v2 poc_receipts_v2;
+        helium_blockchain_txn_add_subnetwork_v1 add_subnetwork;
+        helium_blockchain_txn_update_subnetwork_v1 update_subnetwork;
+        helium_blockchain_txn_subnetwork_rewards_v1 subnetwork_rewards;
+        helium_blockchain_txn_token_redeem_v1 token_redeem;
     } txn; 
 } helium_blockchain_txn;
 
@@ -137,6 +149,12 @@ extern "C" {
 #define helium_blockchain_txn_consensus_group_failure_tag 33
 #define helium_blockchain_txn_rewards_v2_tag     34
 #define helium_blockchain_txn_assert_location_v2_tag 35
+#define helium_blockchain_txn_transfer_hotspot_v2_tag 36
+#define helium_blockchain_txn_poc_receipts_v2_tag 37
+#define helium_blockchain_txn_add_subnetwork_tag 38
+#define helium_blockchain_txn_update_subnetwork_tag 39
+#define helium_blockchain_txn_subnetwork_rewards_tag 40
+#define helium_blockchain_txn_token_redeem_tag   41
 
 /* Struct field encoding specification for nanopb */
 #define helium_blockchain_txn_FIELDLIST(X, a) \
@@ -174,7 +192,13 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (txn,unstake_validator,txn.unstake_validator)
 X(a, STATIC,   ONEOF,    MESSAGE,  (txn,val_heartbeat,txn.val_heartbeat),  32) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (txn,consensus_group_failure,txn.consensus_group_failure),  33) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (txn,rewards_v2,txn.rewards_v2),  34) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (txn,assert_location_v2,txn.assert_location_v2),  35)
+X(a, STATIC,   ONEOF,    MESSAGE,  (txn,assert_location_v2,txn.assert_location_v2),  35) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (txn,transfer_hotspot_v2,txn.transfer_hotspot_v2),  36) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (txn,poc_receipts_v2,txn.poc_receipts_v2),  37) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (txn,add_subnetwork,txn.add_subnetwork),  38) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (txn,update_subnetwork,txn.update_subnetwork),  39) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (txn,subnetwork_rewards,txn.subnetwork_rewards),  40) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (txn,token_redeem,txn.token_redeem),  41)
 #define helium_blockchain_txn_CALLBACK NULL
 #define helium_blockchain_txn_DEFAULT NULL
 #define helium_blockchain_txn_txn_add_gateway_MSGTYPE helium_blockchain_txn_add_gateway_v1
@@ -212,6 +236,12 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (txn,assert_location_v2,txn.assert_location_v
 #define helium_blockchain_txn_txn_consensus_group_failure_MSGTYPE helium_blockchain_txn_consensus_group_failure_v1
 #define helium_blockchain_txn_txn_rewards_v2_MSGTYPE helium_blockchain_txn_rewards_v2
 #define helium_blockchain_txn_txn_assert_location_v2_MSGTYPE helium_blockchain_txn_assert_location_v2
+#define helium_blockchain_txn_txn_transfer_hotspot_v2_MSGTYPE helium_blockchain_txn_transfer_hotspot_v2
+#define helium_blockchain_txn_txn_poc_receipts_v2_MSGTYPE helium_blockchain_txn_poc_receipts_v2
+#define helium_blockchain_txn_txn_add_subnetwork_MSGTYPE helium_blockchain_txn_add_subnetwork_v1
+#define helium_blockchain_txn_txn_update_subnetwork_MSGTYPE helium_blockchain_txn_update_subnetwork_v1
+#define helium_blockchain_txn_txn_subnetwork_rewards_MSGTYPE helium_blockchain_txn_subnetwork_rewards_v1
+#define helium_blockchain_txn_txn_token_redeem_MSGTYPE helium_blockchain_txn_token_redeem_v1
 
 #define helium_blockchain_txn_bundle_v1_FIELDLIST(X, a) \
 X(a, CALLBACK, REPEATED, MESSAGE,  transactions,      1)

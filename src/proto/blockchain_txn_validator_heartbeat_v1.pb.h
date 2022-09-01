@@ -15,6 +15,8 @@ typedef struct _helium_blockchain_txn_validator_heartbeat_v1 {
     uint64_t height; 
     uint32_t version; 
     pb_callback_t signature; 
+    pb_callback_t poc_key_proposals; 
+    pb_callback_t reactivated_gws; 
 } helium_blockchain_txn_validator_heartbeat_v1;
 
 
@@ -23,21 +25,25 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define helium_blockchain_txn_validator_heartbeat_v1_init_default {{{NULL}, NULL}, 0, 0, {{NULL}, NULL}}
-#define helium_blockchain_txn_validator_heartbeat_v1_init_zero {{{NULL}, NULL}, 0, 0, {{NULL}, NULL}}
+#define helium_blockchain_txn_validator_heartbeat_v1_init_default {{{NULL}, NULL}, 0, 0, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
+#define helium_blockchain_txn_validator_heartbeat_v1_init_zero {{{NULL}, NULL}, 0, 0, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define helium_blockchain_txn_validator_heartbeat_v1_address_tag 1
 #define helium_blockchain_txn_validator_heartbeat_v1_height_tag 2
 #define helium_blockchain_txn_validator_heartbeat_v1_version_tag 3
 #define helium_blockchain_txn_validator_heartbeat_v1_signature_tag 4
+#define helium_blockchain_txn_validator_heartbeat_v1_poc_key_proposals_tag 5
+#define helium_blockchain_txn_validator_heartbeat_v1_reactivated_gws_tag 6
 
 /* Struct field encoding specification for nanopb */
 #define helium_blockchain_txn_validator_heartbeat_v1_FIELDLIST(X, a) \
 X(a, CALLBACK, SINGULAR, BYTES,    address,           1) \
 X(a, STATIC,   SINGULAR, UINT64,   height,            2) \
 X(a, STATIC,   SINGULAR, UINT32,   version,           3) \
-X(a, CALLBACK, SINGULAR, BYTES,    signature,         4)
+X(a, CALLBACK, SINGULAR, BYTES,    signature,         4) \
+X(a, CALLBACK, REPEATED, BYTES,    poc_key_proposals,   5) \
+X(a, CALLBACK, REPEATED, BYTES,    reactivated_gws,   6)
 #define helium_blockchain_txn_validator_heartbeat_v1_CALLBACK pb_default_field_callback
 #define helium_blockchain_txn_validator_heartbeat_v1_DEFAULT NULL
 

@@ -6,7 +6,11 @@
 
 #define SIZEOF_B58_KEY 34
 
-
+#define TOKEN_TYPE_HNT 0
+#define TOKEN_TYPE_HST 1
+#define TOKEN_TYPE_MOB 2
+#define TOKEN_TYPE_IOT 3
+#define TOKEN_TYPE_MAX 3
 typedef struct {
     uint8_t displayIndex;
     uint8_t fullStr[HELIUM_UX_MAX_CHARS+1];
@@ -24,6 +28,7 @@ typedef struct {
     uint64_t fee;
     unsigned char payee[SIZEOF_B58_KEY];
     uint64_t memo;
+    uint8_t token;
 } paymentContext_t;
 
 typedef struct {

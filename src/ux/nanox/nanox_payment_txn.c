@@ -19,7 +19,40 @@
 static void init_amount(void)
 {
   uint8_t len;
-
+  switch(cmd.paymentContext.token) {
+      case TOKEN_TYPE_HNT:
+        #ifdef HELIUM_TESTNET
+        memcpy(global.title, &"Amount TNT\0", sizeof("Amount TNT\0"));
+        #else
+        memcpy(global.title, &"Amount HNT\0", sizeof("Amount HNT\0"));
+        #endif
+        break;
+      case TOKEN_TYPE_HST:
+        #ifdef HELIUM_TESTNET
+        memcpy(global.title, &"Amount TST\0", sizeof("Amount TST\0"));
+        #else
+        memcpy(global.title, &"Amount HST\0", sizeof("Amount HST\0"));
+        #endif
+        break;
+      case TOKEN_TYPE_MOB:
+        #ifdef HELIUM_TESTNET
+        memcpy(global.title, &"Amount TOBILE\0", sizeof("Amount TOBILE\0"));
+        #else
+        memcpy(global.title, &"Amount MOBILE\0", sizeof("Amount MOBILE\0"));
+        #endif
+        break;
+      case TOKEN_TYPE_IOT:
+        #ifdef HELIUM_TESTNET
+        memcpy(global.title, &"Amount TOT\0", sizeof("Amount TOT\0"));
+        #else
+        memcpy(global.title, &"Amount IOT\0", sizeof("Amount IOT\0"));
+        #endif
+        break;
+      default:
+        // invalid token_type is handled in save_payment_context
+        // therefore, we should never get here
+        break;
+  }
   len = pretty_print_hnt(global.fullStr, CTX.amount);
   global.fullStr_len = len;
 }
@@ -100,12 +133,8 @@ UX_STEP_NOCB_INIT(
     bnnn_paging,
     init_amount(),
     {
-#ifdef HELIUM_TESTNET
-      .title = "Amount TNT",
-#else
-      .title = "Amount HNT",
-#endif
-	.text = (char *)global.fullStr
+      .title = (char *)global.title,
+	  .text = (char *)global.fullStr
     });
 
 UX_STEP_NOCB_INIT(

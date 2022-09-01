@@ -42,7 +42,6 @@ uint32_t create_helium_stake_txn(uint8_t account);
 uint32_t create_helium_transfer_validator_txn(uint8_t account);
 uint32_t create_helium_unstake_txn(uint8_t account);
 uint32_t create_helium_burn_txn(uint8_t account);
-uint32_t create_helium_transfer_sec(uint8_t account);
 
 #define SIZE_OF_PUB_KEY_BIN 	32
 #define SIZE_OF_SHA_CHECKSUM 	4

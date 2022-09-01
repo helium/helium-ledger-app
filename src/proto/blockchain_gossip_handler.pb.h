@@ -13,6 +13,8 @@
 typedef struct _blockchain_gossip_block { 
     pb_callback_t from; 
     pb_callback_t block; 
+    pb_callback_t hash; 
+    uint64_t height; 
 } blockchain_gossip_block;
 
 
@@ -21,17 +23,21 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define blockchain_gossip_block_init_default     {{{NULL}, NULL}, {{NULL}, NULL}}
-#define blockchain_gossip_block_init_zero        {{{NULL}, NULL}, {{NULL}, NULL}}
+#define blockchain_gossip_block_init_default     {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, 0}
+#define blockchain_gossip_block_init_zero        {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define blockchain_gossip_block_from_tag         1
 #define blockchain_gossip_block_block_tag        2
+#define blockchain_gossip_block_hash_tag         3
+#define blockchain_gossip_block_height_tag       4
 
 /* Struct field encoding specification for nanopb */
 #define blockchain_gossip_block_FIELDLIST(X, a) \
 X(a, CALLBACK, SINGULAR, BYTES,    from,              1) \
-X(a, CALLBACK, SINGULAR, BYTES,    block,             2)
+X(a, CALLBACK, SINGULAR, BYTES,    block,             2) \
+X(a, CALLBACK, SINGULAR, BYTES,    hash,              3) \
+X(a, STATIC,   SINGULAR, UINT64,   height,            4)
 #define blockchain_gossip_block_CALLBACK pb_default_field_callback
 #define blockchain_gossip_block_DEFAULT NULL
 

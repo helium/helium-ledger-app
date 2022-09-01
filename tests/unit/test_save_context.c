@@ -46,22 +46,6 @@ static void test_save_burn_context(void **state) {
     }
 }
 
-static void test_save_sec_transfer_context(void **state) {
-    uint8_t payee[] = {0, 1, 149, 222, 195, 16, 5, 249, 3, 234, 179, 175, 194, 131, 71, 143, 176, 224, 107, 71, 55, 65,
-                       95, 63, 131, 224, 66, 211, 117, 253, 250, 87, 190, 42,};
-    transferSecContext_t ctx;
-    uint8_t transfer_sec_buffer[] = {3, 36, 0, 0, 0, 0, 0, 0, 87, 64, 52, 0, 0, 0, 0, 0, 34, 80, 20, 0, 0, 0, 0, 0, 0,
-                                     1, 149, 222, 195, 16, 5, 249, 3, 234, 179, 175, 194, 131, 71, 143, 176, 224, 107,
-                                     71, 55, 65, 95, 63, 131, 224, 66, 211, 117, 253, 250, 87, 190, 42,};
-    save_transfer_sec_context(8, 0, transfer_sec_buffer, 58, &ctx);
-    assert(ctx.amount == 9219);
-    assert(ctx.fee == 3424343);
-    assert(global.account_index == 8);
-    for (uint8_t i = 0; i < 34; i++) {
-        assert(ctx.payee[i] == payee[i]);
-    }
-}
-
 static void test_save_validator_stake_context(void **state) {
     uint8_t address[] = {0, 1, 149, 222, 195, 16, 5, 249, 3, 234, 179, 175, 194, 131, 71, 143, 176, 224, 107, 71, 55,
                          65, 95, 63, 131, 224, 66, 211, 117, 253, 250, 87, 190, 42,};
@@ -127,8 +111,7 @@ int main() {
             cmocka_unit_test(test_save_burn_context),
             cmocka_unit_test(test_save_validator_stake_context),
             cmocka_unit_test(test_save_validator_transfer_context),
-            cmocka_unit_test(test_save_validator_unstake_context),
-            cmocka_unit_test(test_save_sec_transfer_context)
+            cmocka_unit_test(test_save_validator_unstake_context)
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }

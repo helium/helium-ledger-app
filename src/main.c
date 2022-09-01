@@ -48,8 +48,6 @@ void io_exchange_with_code(uint16_t code, uint16_t tx) {
 #define INS_SIGN_TRANSFER_VALIDATOR_TXN   0x0A
 #define INS_SIGN_UNSTAKE_VALIDATOR_TXN   0x0B
 #define INS_SIGN_BURN_TXN   0x0C
-#define INS_SIGN_TRANSFER_SEC_TXN   0x0D
-
 
 // This is the function signature for a command handler. 'flags' and 'tx' are
 // out-parameters that will control the behavior of the next io_exchange call
@@ -64,8 +62,6 @@ handler_fn_t handle_stake_validator_txn;
 handler_fn_t handle_transfer_validator_txn;
 handler_fn_t handle_unstake_validator_txn;
 handler_fn_t handle_burn_txn;
-handler_fn_t handle_sign_transfer_sec_txn;
-
 
 static handler_fn_t* lookupHandler(uint8_t ins) {
     global.lock = false;
@@ -77,7 +73,6 @@ static handler_fn_t* lookupHandler(uint8_t ins) {
 	case INS_SIGN_TRANSFER_VALIDATOR_TXN: return  handle_transfer_validator_txn;
 	case INS_SIGN_UNSTAKE_VALIDATOR_TXN: return  handle_unstake_validator_txn;
     case INS_SIGN_BURN_TXN: return  handle_burn_txn;
-    case INS_SIGN_TRANSFER_SEC_TXN: return  handle_sign_transfer_sec_txn;
         default:                 return NULL;
 	}
 }

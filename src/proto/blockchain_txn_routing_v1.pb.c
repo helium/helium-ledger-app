@@ -6,13 +6,13 @@
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
-//PB_BIND(helium_update_routers, helium_update_routers, AUTO)
-//
-//
-//PB_BIND(helium_update_xor, helium_update_xor, AUTO)
-//
-//
-//PB_BIND(helium_blockchain_txn_routing_v1, helium_blockchain_txn_routing_v1, AUTO)
+PB_BIND(helium_update_routers, helium_update_routers, AUTO)
+
+
+PB_BIND(helium_update_xor, helium_update_xor, AUTO)
+
+
+PB_BIND(helium_blockchain_txn_routing_v1, helium_blockchain_txn_routing_v1, AUTO)
 
 
 
