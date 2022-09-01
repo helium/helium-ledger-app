@@ -38,6 +38,10 @@ else ifeq ($(COIN),helium)
 APPNAME    = Helium
 endif
 
+APPVERSION_M = 2
+APPVERSION_N = 3
+APPVERSION_P = 1
+APPVERSION   = "$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)"
 
 ifeq ($(TARGET_NAME),TARGET_NANOS)
 	ICONNAME   = nanos_app_helium.gif
@@ -45,16 +49,20 @@ else
 	ICONNAME   = nanox_app_helium.gif
 endif
 
-APPVERSION = 2.3.0
-
-# The --path argument here restricts which BIP32 paths the app is allowed to derive.
+APP_LOAD_PARAMS += --curve secp256k1
+APP_LOAD_PARAMS += --curve ed25519
+APP_LOAD_PARAMS += --appFlags 0x240
 ifeq ($(COIN),helium_tn)
-APP_LOAD_PARAMS = --appFlags 0x240 --path "44'/905'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
+	APP_LOAD_PARAMS += --path "44'/905'"
+else ifeq ($(COIN),helium)
+	APP_LOAD_PARAMS += --path "44'/904'"
+endif
+APP_LOAD_PARAMS += $(COMMON_LOAD_PARAMS)
+
 # Ledger: add the "Pending security review" disclaimer
+ifeq ($(COIN),helium_tn)
 APP_LOAD_PARAMS += --tlvraw 9F:01
 DEFINES += HAVE_PENDING_REVIEW_SCREEN
-else ifeq ($(COIN),helium)
-APP_LOAD_PARAMS = --appFlags 0x240 --path "44'/904'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
 endif
 
 APP_SOURCE_PATH = src
@@ -70,6 +78,9 @@ all: default
 load: all
 	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
+load-offline: all
+	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS) --offline
+
 delete:
 	python3 -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 
@@ -82,7 +93,7 @@ DEFINES += OS_IO_SEPROXYHAL
 DEFINES += HAVE_BAGL HAVE_SPRINTF
 DEFINES += HAVE_IO_USB HAVE_L4_USBLIB IO_USB_MAX_ENDPOINTS=7 IO_HID_EP_LENGTH=64 HAVE_USB_APDU
 DEFINES += APPVERSION=\"$(APPVERSION)\"
-DEFINES   +=  LEDGER_MAJOR_VERSION=$(APPVERSION_M) LEDGER_MINOR_VERSION=$(APPVERSION_N) LEDGER_PATCH_VERSION=$(APPVERSION_P)
+DEFINES += LEDGER_MAJOR_VERSION=$(APPVERSION_M) LEDGER_MINOR_VERSION=$(APPVERSION_N) LEDGER_PATCH_VERSION=$(APPVERSION_P)
 
 
 ifeq ($(TARGET_NAME),TARGET_NANOX)
