@@ -627,7 +627,8 @@ int print_transaction(const PrintConfig* print_config,
                       size_t infos_length) {
     // Additional nonce info might be present at first position of in info list
     if ((infos_length > 1) && is_advance_nonce_account(infos[0])) {
-        print_system_nonced_transaction_sentinel(&(infos[0]->system), print_config);
+        InstructionInfo* nonce_info = infos[0];
+        print_system_nonced_transaction_sentinel(&(nonce_info->system), print_config);
         // offset parameters given to print_transaction_nonce_processed()
         infos++;
         infos_length--;

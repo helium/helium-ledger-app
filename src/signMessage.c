@@ -109,6 +109,14 @@ ux_flow_step_t const *flow_steps[MAX_FLOW_STEPS];
 
 Hash UnrecognizedMessageHash;
 
+static void reset_global_context(void) {
+    MEMCLEAR(G_derivationPath);
+    MEMCLEAR(G_message);
+    G_messageLength = 0;
+    G_non_confirm_requested = false;
+    G_numDerivationPaths = 1;
+}
+
 void handle_sign_message_receive_apdus(uint8_t p1,
                                        uint8_t p2,
                                        const uint8_t *dataBuffer,
@@ -117,18 +125,15 @@ void handle_sign_message_receive_apdus(uint8_t p1,
         THROW(ApduReplySolanaInvalidMessage);
     }
 
-    // Detect hold host and remove the obsolete flag if set
+    // Detect old host and remove the obsolete flag if set
     bool deprecated_host = ((dataLength & DATA_HAS_LENGTH_PREFIX) != 0);
     if (deprecated_host) {
         dataLength &= ~DATA_HAS_LENGTH_PREFIX;
     }
 
     if ((p2 & P2_EXTEND) == 0) {
-        // First APDU received, reset context
-        MEMCLEAR(G_derivationPath);
-        MEMCLEAR(G_message);
-        G_messageLength = 0;
-        G_non_confirm_requested = false;
+        // First APDU received, reset global context
+        reset_global_context();
 
         if (!deprecated_host) {
             G_numDerivationPaths = dataBuffer[0];
@@ -189,31 +194,37 @@ void handle_sign_message_receive_apdus(uint8_t p1,
     G_numDerivationPaths = 0;
 }
 
+static int scan_header_for_signer(size_t *signer_index, MessageHeader *header) {
+    uint8_t signer_pubkey[32];
+    get_public_key(signer_pubkey, G_derivationPath, G_derivationPathLength);
+    for (size_t i = 0; i < header->pubkeys_header.num_required_signatures; ++i) {
+        const Pubkey *current_pubkey = &(header->pubkeys[i]);
+        if (memcmp(current_pubkey, signer_pubkey, PUBKEY_SIZE) == 0) {
+            *signer_index = i;
+            return 0;
+        }
+    }
+    return -1;
+}
+
 void handle_sign_message_parse_message(volatile unsigned int *tx) {
     Parser parser = {G_message, G_messageLength};
     PrintConfig print_config;
     print_config.expert_mode = (N_storage.settings.display_mode == DisplayModeExpert);
     print_config.signer_pubkey = NULL;
     MessageHeader *header = &print_config.header;
+    size_t signer_index;
 
     if (parse_message_header(&parser, header) != 0) {
         // This is not a valid Solana message
         THROW(ApduReplySolanaInvalidMessage);
     }
 
-    // Ensure the signer signature is present in the header
-    uint8_t signer_pubkey[32];
-    get_public_key(signer_pubkey, G_derivationPath, G_derivationPathLength);
-    size_t i;
-    for (i = 0; i < header->pubkeys_header.num_required_signatures; ++i) {
-        if (memcmp(&(header->pubkeys[i]), signer_pubkey, PUBKEY_SIZE) == 0) {
-            break;
-        }
-    }
-    if (i >= header->pubkeys_header.num_required_signatures) {
+    // Ensure the requested signer is present in the header
+    if (scan_header_for_signer(&signer_index, header) != 0) {
         THROW(ApduReplySdkInvalidParameter);
     }
-    print_config.signer_pubkey = &header->pubkeys[i];
+    print_config.signer_pubkey = &header->pubkeys[signer_index];
 
     if (G_non_confirm_requested) {
         // Uncomment this to allow blind signing.
