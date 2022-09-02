@@ -84,9 +84,9 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx, int rx)
                 case INS_GET_APP_CONFIGURATION16:
                     G_io_apdu_buffer[0] = N_storage.settings.allow_blind_sign;
                     G_io_apdu_buffer[1] = N_storage.settings.pubkey_display;
-                    G_io_apdu_buffer[2] = LEDGER_MAJOR_VERSION;
-                    G_io_apdu_buffer[3] = LEDGER_MINOR_VERSION;
-                    G_io_apdu_buffer[4] = LEDGER_PATCH_VERSION;
+                    G_io_apdu_buffer[2] = MAJOR_VERSION;
+                    G_io_apdu_buffer[3] = MINOR_VERSION;
+                    G_io_apdu_buffer[4] = PATCH_VERSION;
                     *tx = 5;
                     THROW(ApduReplySuccess);
 

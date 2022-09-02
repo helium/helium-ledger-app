@@ -10,11 +10,15 @@ use solana_sdk::{
     instruction::{AccountMeta, Instruction},
     message::Message,
     pubkey::Pubkey,
+    stake::{
+        instruction as stake_instruction, program as solana_stake_program, state as stake_state,
+    },
     system_instruction, system_program,
 };
-use solana_stake_program::{stake_instruction, stake_state};
 use solana_vote_program::{vote_instruction, vote_state};
-use spl_associated_token_account::*;
+use spl_associated_token_account::{
+    get_associated_token_address, instruction::create_associated_token_account,
+};
 use std::{collections::HashSet, sync::Arc};
 
 fn get_ledger() -> (Arc<LedgerWallet>, Pubkey) {
@@ -1483,7 +1487,8 @@ fn test_spl_associated_token_account_create() -> Result<(), RemoteWalletError> {
     let derivation_path = DerivationPath::new_bip44(Some(12345), None);
     let owner = ledger.get_pubkey(&derivation_path, false)?;
     let mint = Pubkey::new_unique();
-    let instruction = create_associated_token_account(&owner, &owner, &mint);
+    let instruction =
+        create_associated_token_account(&owner, &owner, &mint, &spl_associated_token_account::id());
     let message = Message::new(&[instruction], Some(&owner)).serialize();
     let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(owner.as_ref(), &message));
@@ -1501,7 +1506,12 @@ fn test_spl_associated_token_account_create_with_transfer_checked() -> Result<()
     let recipient = Pubkey::new_unique();
     let recipient_holder = get_associated_token_address(&recipient, &mint);
     let instructions = vec![
-        create_associated_token_account(&sender, &recipient, &mint),
+        create_associated_token_account(
+            &sender,
+            &recipient,
+            &mint,
+            &spl_associated_token_account::id(),
+        ),
         spl_token::instruction::transfer_checked(
             &spl_token::id(),
             &sender_holder,
@@ -1550,7 +1560,12 @@ fn test_spl_associated_token_account_create_with_transfer_checked_and_serum_asse
     let recipient_holder = get_associated_token_address(&recipient, &mint);
     let instructions = vec![
         serum_assert_owner_program::instruction::check(&recipient, &system_program::id()),
-        create_associated_token_account(&sender, &recipient, &mint),
+        create_associated_token_account(
+            &sender,
+            &recipient,
+            &mint,
+            &spl_associated_token_account::id(),
+        ),
         spl_token::instruction::transfer_checked(
             &spl_token::id(),
             &sender_holder,
