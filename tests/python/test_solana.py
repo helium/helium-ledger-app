@@ -1,12 +1,13 @@
 from time import sleep
 from ragger.backend.interface import BackendInterface, RAPDU, RaisePolicy
 
-from .apps.solana import SolanaDerivationPath, SolanaClient, SystemInstructionTransfer, Message, verify_signature, ErrorType
+from .apps.solana import SolanaClient, ErrorType
+from .apps.solana_cmd_builder import calculate_solana_derivation_path, SystemInstructionTransfer, Message, verify_signature
 
 
 def test_solana_simple_transfer(client, firmware):
-    from_derivation_path = SolanaDerivationPath(12345)
-    to_derivation_path = SolanaDerivationPath()
+    from_derivation_path = calculate_solana_derivation_path(12345)
+    to_derivation_path = calculate_solana_derivation_path()
 
     sol = SolanaClient(client)
     from_public_key = sol.get_public_key(from_derivation_path)
@@ -28,8 +29,8 @@ def test_solana_simple_transfer(client, firmware):
     sleep(0.1)
 
 def test_solana_simple_transfer_refused(client, firmware):
-    from_derivation_path = SolanaDerivationPath(12345)
-    to_derivation_path = SolanaDerivationPath()
+    from_derivation_path = calculate_solana_derivation_path(12345)
+    to_derivation_path = calculate_solana_derivation_path()
 
     sol = SolanaClient(client)
     from_public_key = sol.get_public_key(from_derivation_path)
