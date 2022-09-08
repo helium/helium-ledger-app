@@ -12,35 +12,41 @@ on:
       - develop
 
 jobs:
-  nano_build_debug:
-    name: Build Solana debug application for Nano S, X and S+
+  build_application:
     strategy:
       matrix:
-        include:
-          - SDK: "$NANOS_SDK"
-            artifact: solana-app-debug-nanos
-          - SDK: "$NANOX_SDK"
-            artifact: solana-app-debug-nanox
-          - SDK: "$NANOSP_SDK"
-            artifact: solana-app-debug-nanosp
+        sdk:
+        - path: $NANOS_SDK
+          name: nanos
+        - path: $NANOX_SDK
+          name: nanox
+        - path: $NANOSP_SDK
+          name: nanosp
+
     runs-on: ubuntu-latest
+
     container:
       image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
 
     steps:
       - name: Clone
         uses: actions/checkout@v2
-      - name: Build
+
+      - name: Build application
         run: |
-          make DEBUG=1 BOLOS_SDK=${{ matrix.SDK }}
-      - name: Upload app binary
+          make BOLOS_SDK=${{ matrix.sdk.path }} DEBUG=1
+          cp bin/app.elf bin/solana_${{ matrix.sdk.name }}.elf
+
+      - name: Upload application binaries
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.artifact }}
-          path: bin
+          name: solana_binaries
+          path: ./bin/solana_${{ matrix.sdk.name }}.elf
+          if-no-files-found: error
 
   job_scan_build:
     name: Clang Static Analyzer
+    needs: build_application
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
@@ -55,6 +61,27 @@ jobs:
         with:
           name: scan-build
           path: scan-build
+
+  python_tests_nano:
+    name: NanoS Ragger tests
+    needs: build_application
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone
+        uses: actions/checkout@v2
+      - name: Download all binaries
+        uses: actions/download-artifact@v2
+      - name: Gather artifacts
+        run: |
+          mkdir tests/elfs
+          mv *_binaries/*.elf tests/elfs
+      - name: Install APT dependencies
+        run: sudo apt-get update && sudo apt-get install -y qemu-user-static
+      - name: Install Ragger
+        run: |
+          pip install --extra-index-url https://test.pypi.org/simple/ -r tests/python/requirements.txt
+      - name: Run tests
+        run: pytest tests/python/ -v
 
   job_C_test:
     name: C tests
