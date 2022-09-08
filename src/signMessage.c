@@ -194,7 +194,7 @@ void handle_sign_message_receive_apdus(uint8_t p1,
     G_numDerivationPaths = 0;
 }
 
-static int scan_header_for_signer(size_t *signer_index, MessageHeader *header) {
+static int scan_header_for_signer(size_t *signer_index, const MessageHeader *header) {
     uint8_t signer_pubkey[32];
     get_public_key(signer_pubkey, G_derivationPath, G_derivationPathLength);
     for (size_t i = 0; i < header->pubkeys_header.num_required_signatures; ++i) {
