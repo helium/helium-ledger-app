@@ -1,0 +1,108 @@
+from typing import List
+from enum import IntEnum
+
+from ragger.backend.interface import BackendInterface, RAPDU
+
+class INS(IntEnum):
+    # DEPRECATED - Use non "16" suffixed variants below
+    INS_GET_APP_CONFIGURATION16 = 0x01
+    INS_GET_PUBKEY16            = 0x02
+    INS_SIGN_MESSAGE16          = 0x03
+    # END DEPRECATED
+    INS_GET_APP_CONFIGURATION   = 0x04
+    INS_GET_PUBKEY              = 0x05
+    INS_SIGN_MESSAGE            = 0x06
+
+CLA = 0xE0
+
+P1_NON_CONFIRM = 0x00
+P1_CONFIRM = 0x01
+
+P2_EXTEND = 0x01
+P2_MORE = 0x02
+
+
+PUBLIC_KEY_LENGTH = 32
+
+MAX_CHUNK_SIZE = 255
+
+
+STATUS_OK = 0x9000
+
+class ErrorType:
+    NO_APP_RESPONSE                 = 0x6700
+    SDK_EXCEPTION                   = 0x6801
+    SDK_INVALID_PARAMETER           = 0x6802
+    SDK_EXCEPTION_OVERFLOW          = 0x6803
+    SDK_EXCEPTION_SECURITY          = 0x6804
+    SDK_INVALID_CRC                 = 0x6805
+    SDK_INVALID_CHECKSUM            = 0x6806
+    SDK_INVALID_COUNTER             = 0x6807
+    SDK_NOT_SUPPORTED               = 0x6808
+    SDK_INVALID_STATE               = 0x6809
+    SDK_TIMEOUT                     = 0x6810
+    SDK_EXCEPTION_PIC               = 0x6811
+    SDK_EXCEPTION_APP_EXIT          = 0x6812
+    SDK_EXCEPTION_IO_OVERFLOW       = 0x6813
+    SDK_EXCEPTION_IO_HEADER         = 0x6814
+    SDK_EXCEPTION_IO_STATE          = 0x6815
+    SDK_EXCEPTION_IO_RESET          = 0x6816
+    SDK_EXCEPTION_CX_PORT           = 0x6817
+    SDK_EXCEPTION_SYSTEM            = 0x6818
+    SDK_NOT_ENOUGH_SPACE            = 0x6819
+    NO_APDU_RECEIVED                = 0x6982
+    USER_CANCEL                     = 0x6985
+    SOLANA_INVALID_MESSAGE          = 0x6a80
+    SOLANA_SUMMARY_FINALIZE_FAILED  = 0x6f00
+    SOLANA_SUMMARY_UPDATE_FAILED    = 0x6f01
+    UNIMPLEMENTED_INSTRUCTION       = 0x6d00
+    INVALID_CLA                     = 0x6e00
+
+
+def _extend_and_serialize_multiple_derivations_paths(derivations_paths: List[bytes]):
+    serialized: bytes = len(derivations_paths).to_bytes(1, byteorder='little')
+    for derivations_path in derivations_paths:
+        serialized += derivations_path
+    return serialized
+
+
+class SolanaClient:
+    client: BackendInterface
+
+    def __init__(self, client):
+        self._client = client
+
+    def get_public_key(self, derivation_path : bytes) -> bytes:
+        public_key:RAPDU = self._client.exchange(CLA, INS.INS_GET_PUBKEY, P1_NON_CONFIRM, P2_MORE, derivation_path)
+        assert len(public_key.data) == PUBLIC_KEY_LENGTH, "'from' public key size incorrect"
+        return public_key.data
+
+    def sign_message(self, derivation_path : bytes, message: bytes, accept: bool) -> RAPDU:
+        assert len(message) <= 65535, "Message to sign is too long"
+
+        header: bytes = _extend_and_serialize_multiple_derivations_paths([derivation_path])
+
+        # Check to see if this data needs to be split up and sent in chunks.
+        max_size = MAX_CHUNK_SIZE - len(header)
+        message_splited = [message[x:x+max_size] for x in range(0, len(message), max_size)]
+        # Add the header to every chunk
+        message_splited_prefixed = [header + s for s in message_splited]
+
+        # Send all chunks with P2_MORE except for the last chunk, and P2_EXTEND if we send more than one chunk
+        if len(message_splited_prefixed) > 1:
+            final_p2 = P2_EXTEND
+            for m in message_splited_prefixed[:-1]:
+                self._client.exchange(CLA, INS.INS_SIGN_MESSAGE, P1_CONFIRM, P2_MORE | P2_EXTEND, m)
+        else:
+            final_p2 = 0
+
+        # response = self._exchange(INS_SIGN_MESSAGE, P1_CONFIRM, final_p2, message_splited_prefixed[-1])
+        with self._client.exchange_async(CLA, INS.INS_SIGN_MESSAGE, P1_CONFIRM, final_p2, message_splited_prefixed[-1]):
+            for _ in range(3):
+                self._client.right_click()
+            if not accept:
+                self._client.right_click()
+            self._client.both_click()
+
+        return self._client.last_async_response
+
