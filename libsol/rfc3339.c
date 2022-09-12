@@ -42,7 +42,10 @@ static int rdn_to_ymd(uint32_t rdn, uint16_t *yp, uint16_t *mp, uint16_t *dp) {
     y = (100 * B + H) / 36525;
     d = B + Z - (1461 * y >> 2);
     m = (535 * d + 48950) >> 14;
-    if (m > 12) y++, m -= 12;
+    if (m > 12) {
+        y++;
+        m -= 12;
+    }
 
     BAIL_IF(y > 9999 || m > 12 || d > (31U + DayOffset[m]));
 
