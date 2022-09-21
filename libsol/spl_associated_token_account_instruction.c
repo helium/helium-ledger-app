@@ -22,8 +22,8 @@ static int parse_create_spl_associated_token_account_instruction(
     BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
     // Skip spl token program_id
     BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
-    // Skip rent sysvar
-    BAIL_IF(instruction_accounts_iterator_next(&it, NULL));
+    // Skip (optional) rent sysvar
+    instruction_accounts_iterator_next(&it, NULL);
 
     return 0;
 }
