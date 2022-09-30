@@ -1,6 +1,10 @@
 #include "sol/parser.h"
 #include "util.h"
 
+#define OFFCHAIN_MESSAGE_SIGNING_DOMAIN \
+    "\xff"                              \
+    "solana offchain"
+
 static int check_buffer_length(Parser* parser, size_t num) {
     return parser->buffer_length < num ? 1 : 0;
 }
@@ -122,6 +126,21 @@ int parse_message_header(Parser* parser, MessageHeader* header) {
     BAIL_IF(parse_pubkeys(parser, &header->pubkeys_header, &header->pubkeys));
     BAIL_IF(parse_blockhash(parser, &header->blockhash));
     BAIL_IF(parse_length(parser, &header->instructions_length));
+    return 0;
+}
+
+int parse_offchain_message_header(Parser* parser, OffchainMessageHeader* header) {
+    const size_t domain_len = strlen(OFFCHAIN_MESSAGE_SIGNING_DOMAIN);
+    BAIL_IF(check_buffer_length(parser, domain_len));
+    int res;
+    if ((res = memcmp(OFFCHAIN_MESSAGE_SIGNING_DOMAIN, parser->buffer, domain_len)) != 0) {
+        return res;
+    }
+    advance(parser, domain_len);
+
+    BAIL_IF(parse_u8(parser, &header->version));
+    BAIL_IF(parse_u8(parser, &header->format));
+    BAIL_IF(parse_u16(parser, &header->length));
     return 0;
 }
 

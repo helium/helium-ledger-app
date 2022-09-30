@@ -103,6 +103,40 @@ fn test_ledger_sign_transaction_too_big() -> Result<(), RemoteWalletError> {
     Ok(())
 }
 
+// This test requires interactive approval of message signing on the ledger.
+fn test_ledger_sign_offchain_message_ascii() -> Result<(), RemoteWalletError> {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
+
+    let from = ledger.get_pubkey(&derivation_path, false)?;
+
+    let message = solana_sdk::offchain_message::OffchainMessage::new(0, b"Test message")
+        .ok_or(RemoteWalletError::InvalidInput("Bad message".to_string()))?;
+    assert!(message)
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(from.as_ref(), &message));
+
+    Ok(())
+}
+
+// This test requires interactive approval of message signing on the ledger.
+fn test_ledger_sign_offchain_message_utf8() -> Result<(), RemoteWalletError> {
+    let (ledger, _ledger_base_pubkey) = get_ledger();
+
+    let derivation_path = DerivationPath::new_bip44(Some(12345), None);
+
+    let from = ledger.get_pubkey(&derivation_path, false)?;
+
+    let message = solana_sdk::offchain_message::OffchainMessage::new(0, b"Тестовое сообщение")
+        .ok_or(RemoteWalletError::InvalidInput("Bad message".to_string()))?
+        .serialize();
+    let signature = ledger.sign_message(&derivation_path, &message)?;
+    assert!(signature.verify(from.as_ref(), &message));
+
+    Ok(())
+}
+
 /// This test requires interactive approval of message signing on the ledger.
 fn test_ledger_delegate_stake() -> Result<(), RemoteWalletError> {
     let (ledger, ledger_base_pubkey) = get_ledger();
@@ -1616,6 +1650,7 @@ fn ensure_blind_signing() -> Result<(), RemoteWalletError> {
     }
     Ok(())
 }
+
 fn main() {
     solana_logger::setup();
     match do_run_tests() {
@@ -1636,6 +1671,8 @@ macro_rules! run {
 fn do_run_tests() -> Result<(), RemoteWalletError> {
     ensure_blind_signing()?;
 
+    run!(test_ledger_sign_offchain_message_ascii);
+    run!(test_ledger_sign_offchain_message_utf8);
     run!(test_ledger_transfer_with_memos);
     run!(test_spl_associated_token_account_create_with_transfer_checked_and_serum_assert_owner);
     run!(test_spl_associated_token_account_create_with_transfer_checked);
@@ -1701,5 +1738,6 @@ fn do_run_tests() -> Result<(), RemoteWalletError> {
     run!(test_create_stake_account_with_seed_and_nonce);
     run!(test_create_stake_account_checked_with_seed_and_nonce);
     run!(test_sign_full_shred_of_garbage_tx);
+
     Ok(())
 }

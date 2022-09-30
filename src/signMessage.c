@@ -17,9 +17,9 @@ enum HostKind {
     HostKindDeprecated,
 };
 
-static uint8_t G_message[MAX_MESSAGE_LENGTH];
+uint8_t G_message[MAX_MESSAGE_LENGTH];
 static int G_messageLength;
-static uint8_t* G_messageTxStart = NULL;
+static uint8_t *G_messageTxStart = NULL;
 static int G_messageTxLength = 0;
 uint8_t G_numDerivationPaths;
 static uint32_t G_derivationPath[MAX_BIP32_PATH_LENGTH];
@@ -38,10 +38,10 @@ static void reset_global_context(void) {
     G_host_kind = HostKindUnknown;
 }
 
-#define CLEAR_AND_THROW(exception)  \
-    do {                            \
-        reset_global_context();     \
-        THROW(exception);           \
+#define CLEAR_AND_THROW(exception) \
+    do {                           \
+        reset_global_context();    \
+        THROW(exception);          \
     } while (0)
 
 static void derive_private_key(cx_ecfp_private_key_t *privateKey,
@@ -172,8 +172,8 @@ void handle_sign_message_receive_apdus(uint8_t p1,
         }
     } else {
         // host kind may not change mid-message
-        bool host_kind_changed = (deprecated_host && G_host_kind == HostKindModern)
-            || (!deprecated_host && G_host_kind == HostKindDeprecated);
+        bool host_kind_changed = (deprecated_host && G_host_kind == HostKindModern) ||
+                                 (!deprecated_host && G_host_kind == HostKindDeprecated);
         if (host_kind_changed) {
             CLEAR_AND_THROW(ApduReplySolanaInvalidMessage);
         }
@@ -228,7 +228,7 @@ static int scan_header_for_signer(size_t *signer_index, const MessageHeader *hea
 }
 
 void handle_sign_message_parse_message(volatile unsigned int *tx) {
-    uint8_t* message = G_message;
+    uint8_t *message = G_message;
     size_t messageLength = G_messageLength;
     // First consume the derivation path
     MEMCLEAR(G_derivationPath);

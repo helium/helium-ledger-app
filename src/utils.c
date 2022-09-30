@@ -9,9 +9,16 @@ void get_public_key(uint8_t *publicKeyArray, const uint32_t *derivationPath, siz
     cx_ecfp_private_key_t privateKey;
     cx_ecfp_public_key_t publicKey;
 
-    get_private_key(&privateKey, derivationPath, pathLength);
-    cx_ecfp_generate_pair(CX_CURVE_Ed25519, &publicKey, &privateKey, 1);
-    explicit_bzero(&privateKey, sizeof(privateKey));
+    get_private_key(derivationPath, &privateKey, pathLength);
+    BEGIN_TRY {
+        TRY {
+            cx_ecfp_generate_pair(CX_CURVE_Ed25519, &publicKey, &privateKey, 1);
+        }
+        FINALLY {
+            MEMCLEAR(privateKey);
+        }
+    }
+    END_TRY;
 
     for (int i = 0; i < 32; i++) {
         publicKeyArray[i] = publicKey.W[64 - i];
@@ -29,17 +36,23 @@ void get_private_key(cx_ecfp_private_key_t *privateKey,
                      const uint32_t *derivationPath,
                      size_t pathLength) {
     uint8_t privateKeyData[32];
-
-    os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10,
-                                        CX_CURVE_Ed25519,
-                                        derivationPath,
-                                        pathLength,
-                                        privateKeyData,
-                                        NULL,
-                                        NULL,
-                                        0);
-    cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, privateKey);
-    explicit_bzero(privateKeyData, sizeof(privateKeyData));
+    BEGIN_TRY {
+        TRY {
+            os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10,
+                                                CX_CURVE_Ed25519,
+                                                derivationPath,
+                                                pathLength,
+                                                privateKeyData,
+                                                NULL,
+                                                NULL,
+                                                0);
+            cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, privateKey);
+        }
+        FINALLY {
+            MEMCLEAR(privateKeyData);
+        }
+    }
+    END_TRY;
 }
 
 void sendResponse(uint8_t tx, bool approve) {

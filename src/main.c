@@ -18,6 +18,7 @@
 #include "utils.h"
 #include "getPubkey.h"
 #include "signMessage.h"
+#include "signOffchainMessage.h"
 #include "menu.h"
 #include <assert.h>
 
@@ -35,6 +36,7 @@ unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 #define INS_GET_APP_CONFIGURATION 0x04
 #define INS_GET_PUBKEY            0x05
 #define INS_SIGN_MESSAGE          0x06
+#define INS_SIGN_OFFCHAIN_MESSAGE 0x07
 
 #define OFFSET_CLA   0
 #define OFFSET_INS   1
@@ -44,104 +46,81 @@ unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 #define OFFSET_CDATA 5
 
 void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx, int rx) {
-    unsigned short sw = 0;
-
     assert(rx >= 0 && rx <= UINT16_MAX);
 
-    BEGIN_TRY {
-        TRY {
-            if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
-                THROW(ApduReplyInvalidCla);
-            }
-
-            size_t dataLength;
-            uint8_t *dataBuffer;
-            switch (G_io_apdu_buffer[OFFSET_INS]) {
-                // Handle deprecated instructions expecting a 16bit dataLength
-                case INS_GET_APP_CONFIGURATION16:
-                case INS_GET_PUBKEY16:
-                case INS_SIGN_MESSAGE16:
-                    if (rx < OFFSET_CDATA16 ||
-                        ((uint16_t) rx != U2BE(G_io_apdu_buffer, OFFSET_LC) + OFFSET_CDATA16)) {
-                        THROW(ApduReplySdkExceptionOverflow);
-                    }
-                    dataLength = U2BE(G_io_apdu_buffer, OFFSET_LC);
-                    dataBuffer = &G_io_apdu_buffer[OFFSET_CDATA16];
-                    break;
-                // Modern instructions use 8bit dataLength
-                // as per Ledger convention
-                default:
-                    if (rx < OFFSET_CDATA || (rx != G_io_apdu_buffer[OFFSET_LC] + OFFSET_CDATA)) {
-                        THROW(ApduReplySdkExceptionOverflow);
-                    }
-                    dataLength = G_io_apdu_buffer[OFFSET_LC];
-                    dataBuffer = &G_io_apdu_buffer[OFFSET_CDATA];
-                    break;
-            }
-
-            switch (G_io_apdu_buffer[OFFSET_INS]) {
-                case INS_GET_APP_CONFIGURATION:
-                case INS_GET_APP_CONFIGURATION16:
-                    G_io_apdu_buffer[0] = N_storage.settings.allow_blind_sign;
-                    G_io_apdu_buffer[1] = N_storage.settings.pubkey_display;
-                    G_io_apdu_buffer[2] = MAJOR_VERSION;
-                    G_io_apdu_buffer[3] = MINOR_VERSION;
-                    G_io_apdu_buffer[4] = PATCH_VERSION;
-                    *tx = 5;
-                    THROW(ApduReplySuccess);
-
-                case INS_GET_PUBKEY:
-                case INS_GET_PUBKEY16:
-                    handleGetPubkey(G_io_apdu_buffer[OFFSET_P1],
-                                    G_io_apdu_buffer[OFFSET_P2],
-                                    dataBuffer,
-                                    dataLength,
-                                    flags,
-                                    tx);
-                    break;
-
-                case INS_SIGN_MESSAGE16:
-                    dataLength |= DATA_HAS_LENGTH_PREFIX;
-                    // Fall through
-                case INS_SIGN_MESSAGE:
-                    handle_sign_message_receive_apdus(G_io_apdu_buffer[OFFSET_P1],
-                                                      G_io_apdu_buffer[OFFSET_P2],
-                                                      dataBuffer,
-                                                      dataLength);
-                    handle_sign_message_parse_message(tx);
-                    handle_sign_message_UI(flags);
-                    break;
-
-                default:
-                    THROW(ApduReplyUnimplementedInstruction);
-            }
-        }
-        CATCH(ApduReplySdkExceptionIoReset) {
-            THROW(ApduReplySdkExceptionIoReset);
-        }
-        CATCH_OTHER(e) {
-            switch (e & 0xF000) {
-                case 0x6000:
-                    sw = e;
-                    break;
-                case 0x9000:
-                    // All is well
-                    sw = e;
-                    break;
-                default:
-                    // Internal error
-                    sw = 0x6800 | (e & 0x7FF);
-                    break;
-            }
-            // Unexpected exception => report
-            G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx + 1] = sw;
-            *tx += 2;
-        }
-        FINALLY {
-        }
+    if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
+        THROW(ApduReplyInvalidCla);
     }
-    END_TRY;
+
+    int dataLength;
+    uint8_t *dataBuffer;
+    switch (G_io_apdu_buffer[OFFSET_INS]) {
+        // Handle deprecated instructions expecting a 16bit dataLength
+        case INS_GET_APP_CONFIGURATION16:
+        case INS_GET_PUBKEY16:
+        case INS_SIGN_MESSAGE16:
+            if (rx < OFFSET_CDATA16 ||
+                ((uint16_t) rx != U2BE(G_io_apdu_buffer, OFFSET_LC) + OFFSET_CDATA16)) {
+                THROW(ApduReplySdkExceptionOverflow);
+            }
+            dataLength = U2BE(G_io_apdu_buffer, OFFSET_LC);
+            dataBuffer = &G_io_apdu_buffer[OFFSET_CDATA16];
+            break;
+        // Modern instructions use 8bit dataLength
+        // as per Ledger convention
+        default:
+            if (rx < OFFSET_CDATA || (rx != G_io_apdu_buffer[OFFSET_LC] + OFFSET_CDATA)) {
+                THROW(ApduReplySdkExceptionOverflow);
+            }
+            dataLength = G_io_apdu_buffer[OFFSET_LC];
+            dataBuffer = &G_io_apdu_buffer[OFFSET_CDATA];
+            break;
+    }
+
+    switch (G_io_apdu_buffer[OFFSET_INS]) {
+        case INS_GET_APP_CONFIGURATION:
+        case INS_GET_APP_CONFIGURATION16:
+            G_io_apdu_buffer[0] = N_storage.settings.allow_blind_sign;
+            G_io_apdu_buffer[1] = N_storage.settings.pubkey_display;
+            G_io_apdu_buffer[2] = MAJOR_VERSION;
+            G_io_apdu_buffer[3] = MINOR_VERSION;
+            G_io_apdu_buffer[4] = PATCH_VERSION;
+            *tx = 5;
+            THROW(ApduReplySuccess);
+
+        case INS_GET_PUBKEY:
+        case INS_GET_PUBKEY16:
+            handleGetPubkey(G_io_apdu_buffer[OFFSET_P1],
+                            G_io_apdu_buffer[OFFSET_P2],
+                            dataBuffer,
+                            dataLength,
+                            flags,
+                            tx);
+            break;
+
+        case INS_SIGN_MESSAGE16:
+            dataLength |= DATA_HAS_LENGTH_PREFIX;
+            // Fall through
+        case INS_SIGN_MESSAGE:
+            handle_sign_message_receive_apdus(G_io_apdu_buffer[OFFSET_P1],
+                                              G_io_apdu_buffer[OFFSET_P2],
+                                              dataBuffer,
+                                              dataLength);
+            handle_sign_message_parse_message(tx);
+            handle_sign_message_UI(flags);
+            break;
+        case INS_SIGN_OFFCHAIN_MESSAGE:
+            handleSignOffchainMessage(G_io_apdu_buffer[OFFSET_P1],
+                                      G_io_apdu_buffer[OFFSET_P2],
+                                      dataBuffer,
+                                      dataLength,
+                                      flags,
+                                      tx);
+            break;
+
+        default:
+            THROW(ApduReplyUnimplementedInstruction);
+    }
 }
 
 void app_main(void) {

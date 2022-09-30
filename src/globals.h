@@ -26,6 +26,9 @@
 #define HASH_LENGTH        32
 #define PUBKEY_LENGTH      HASH_LENGTH
 
+#define MAX_OFFCHAIN_MESSAGE_LENGTH    (MAX_MESSAGE_LENGTH - 1 > 1212 ? 1212 : MAX_MESSAGE_LENGTH - 1)
+#define OFFCHAIN_MESSAGE_HEADER_LENGTH 20
+
 enum ApduReply {
     /* ApduReplySdk* come from nanos-secure-sdk/include/os.h.  Here we add the
      * 0x68__ prefix that app_main() ORs into those values before sending them
@@ -54,6 +57,8 @@ enum ApduReply {
     ApduReplyNoApduReceived = 0x6982,
 
     ApduReplySolanaInvalidMessage = 0x6a80,
+    ApduReplySolanaInvalidMessageHeader = 0x6a81,
+    ApduReplySolanaInvalidMessageFormat = 0x6a82,
     ApduReplySolanaSummaryFinalizeFailed = 0x6f00,
     ApduReplySolanaSummaryUpdateFailed = 0x6f01,
 
