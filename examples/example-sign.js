@@ -26,6 +26,7 @@ const solana = require("@solana/web3.js");
 const assert = require("assert");
 const isValidUTF8 = require("utf-8-validate");
 
+const INS_GET_APP_CONFIG = 0x04;
 const INS_GET_PUBKEY = 0x05;
 const INS_SIGN_MESSAGE = 0x06;
 const INS_SIGN_OFFCHAIN_MESSAGE = 0x07;
@@ -151,7 +152,7 @@ class OffchainMessage {
 /*
  * Helper for chunked send of large payloads
  */
-async function solana_send(transport, instruction, p1, payload) {
+async function solanaSend(transport, instruction, p1, payload) {
   var p2 = 0;
   var payload_offset = 0;
 
@@ -174,7 +175,7 @@ async function solana_send(transport, instruction, p1, payload) {
       );
       if (reply.length != 2) {
         throw new TransportError(
-          "solana_send: Received unexpected reply payload",
+          "solanaSend: Received unexpected reply payload",
           "UnexpectedReplyPayload"
         );
       }
@@ -194,7 +195,7 @@ function _harden(n) {
   return (n | BIP32_HARDENED_BIT) >>> 0;
 }
 
-function solana_derivation_path(account, change) {
+function solanaDerivationPath(account, change) {
   var length;
   if (typeof account === "number") {
     if (typeof change === "number") {
@@ -222,16 +223,23 @@ function solana_derivation_path(account, change) {
   return derivation_path;
 }
 
-async function solana_ledger_get_pubkey(transport, derivation_path) {
-  return solana_send(
-    transport,
-    INS_GET_PUBKEY,
+async function solanaLedgerGetAppConfig(transport) {
+  const reply = await transport.send(
+    LEDGER_CLA,
+    INS_GET_APP_CONFIG,
     P1_NON_CONFIRM,
-    derivation_path
+    0,
+    Buffer.alloc(0)
   );
+
+  return reply.slice(0, reply.length - 2);
 }
 
-async function solana_ledger_sign_transaction(
+async function solanaLedgerGetPubkey(transport, derivation_path) {
+  return solanaSend(transport, INS_GET_PUBKEY, P1_NON_CONFIRM, derivation_path);
+}
+
+async function solanaLedgerSignTransaction(
   transport,
   derivation_path,
   transaction
@@ -244,10 +252,10 @@ async function solana_ledger_sign_transaction(
 
   const payload = Buffer.concat([num_paths, derivation_path, msg_bytes]);
 
-  return solana_send(transport, INS_SIGN_MESSAGE, P1_CONFIRM, payload);
+  return solanaSend(transport, INS_SIGN_MESSAGE, P1_CONFIRM, payload);
 }
 
-async function solana_ledger_sign_offchain_message(
+async function solanaLedgerSignOffchainMessage(
   transport,
   derivation_path,
   message
@@ -261,29 +269,32 @@ async function solana_ledger_sign_offchain_message(
     message.serialize(),
   ]);
 
-  return solana_send(transport, INS_SIGN_OFFCHAIN_MESSAGE, P1_CONFIRM, payload);
+  return solanaSend(transport, INS_SIGN_OFFCHAIN_MESSAGE, P1_CONFIRM, payload);
 }
 
 (async () => {
   var transport = await Transport.open();
 
+  const app_config = await solanaLedgerGetAppConfig(transport);
+  console.log("App config:", app_config);
+
   // get "from" pubkey for transfer instruction
-  const from_derivation_path = solana_derivation_path();
-  const from_pubkey_bytes = await solana_ledger_get_pubkey(
+  const from_derivation_path = solanaDerivationPath();
+  const from_pubkey_bytes = await solanaLedgerGetPubkey(
     transport,
     from_derivation_path
   );
   const from_pubkey_string = bs58.encode(from_pubkey_bytes);
-  console.log("---", from_pubkey_string);
+  console.log("From pubkey:", from_pubkey_string);
 
   // get "to" pubkey for transfer instruction
-  const to_derivation_path = solana_derivation_path(1);
-  const to_pubkey_bytes = await solana_ledger_get_pubkey(
+  const to_derivation_path = solanaDerivationPath(1);
+  const to_pubkey_bytes = await solanaLedgerGetPubkey(
     transport,
     to_derivation_path
   );
   const to_pubkey_string = bs58.encode(to_pubkey_bytes);
-  console.log("---", to_pubkey_string);
+  console.log("To pubkey:", to_pubkey_string);
 
   // create SOL transfer instruction
   const from_pubkey = new solana.PublicKey(from_pubkey_string);
@@ -310,52 +321,52 @@ async function solana_ledger_sign_offchain_message(
     feePayer: from_pubkey,
   }).add(ix);
 
-  let sig_bytes = await solana_ledger_sign_transaction(
+  let sig_bytes = await solanaLedgerSignTransaction(
     transport,
     from_derivation_path,
     tx
   );
 
   let sig_string = bs58.encode(sig_bytes);
-  console.log("--- len:", sig_bytes.length, "sig:", sig_string);
+  console.log("Sig len:", sig_bytes.length, "sig:", sig_string);
 
   // verify transfer signature
   tx.addSignature(from_pubkey, sig_bytes);
-  console.log("--- verifies:", tx.verifySignatures());
+  console.log("Sig verifies:", tx.verifySignatures());
 
   // create and sign off-chain message in ascii
   // TIP: enable expert mode in Ledger to see message details
   let message = new OffchainMessage({
     message: "Long Off-Chain Test Message.",
   });
-  console.log("---", message);
+  console.log("Off-chain message:", message);
 
-  sig_bytes = await solana_ledger_sign_offchain_message(
+  sig_bytes = await solanaLedgerSignOffchainMessage(
     transport,
     from_derivation_path,
     message
   );
   sig_string = bs58.encode(sig_bytes);
-  console.log("--- len:", sig_bytes.length, "sig:", sig_string);
+  console.log("Sig len:", sig_bytes.length, "sig:", sig_string);
 
   // verify off-chain message signature
-  console.log("--- verifies:", message.verifySignature(sig_bytes, from_pubkey));
+  console.log("Sig verifies:", message.verifySignature(sig_bytes, from_pubkey));
 
   // create and sign off-chain message in UTF8
   // NOTE: enable blind signing in Ledger for this to work
   message = new OffchainMessage({
     message: Buffer.from("Тестовое сообщение в формате UTF-8", "utf-8"),
   });
-  console.log("---", message);
+  console.log("Off-chain message:", message);
 
-  sig_bytes = await solana_ledger_sign_offchain_message(
+  sig_bytes = await solanaLedgerSignOffchainMessage(
     transport,
     from_derivation_path,
     message
   );
   sig_string = bs58.encode(sig_bytes);
-  console.log("--- len:", sig_bytes.length, "sig:", sig_string);
+  console.log("Sig len:", sig_bytes.length, "sig:", sig_string);
 
   // verify off-chain message signature
-  console.log("--- verifies:", message.verifySignature(sig_bytes, from_pubkey));
+  console.log("Sig verifies:", message.verifySignature(sig_bytes, from_pubkey));
 })().catch((e) => console.log(e));

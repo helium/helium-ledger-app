@@ -1,4 +1,3 @@
-#include "derivation_path.h"
 #include "getPubkey.h"
 #include "os.h"
 #include "ux.h"
@@ -10,106 +9,51 @@
 #include "sol/print_config.h"
 #include "sol/message.h"
 #include "sol/transaction_summary.h"
-
-enum HostKind {
-    HostKindUnknown,
-    HostKindModern,
-    HostKindDeprecated,
-};
-
-uint8_t G_message[MAX_MESSAGE_LENGTH];
-static int G_messageLength;
-static uint8_t *G_messageTxStart = NULL;
-static int G_messageTxLength = 0;
-uint8_t G_numDerivationPaths;
-static uint32_t G_derivationPath[MAX_BIP32_PATH_LENGTH];
-static uint32_t G_derivationPathLength;
-static bool G_non_confirm_requested;
-static enum HostKind G_host_kind = HostKindUnknown;
-
-static void reset_global_context(void) {
-    MEMCLEAR(G_derivationPath);
-    MEMCLEAR(G_message);
-    G_messageLength = 0;
-    G_non_confirm_requested = false;
-    G_numDerivationPaths = 1;
-    G_messageTxStart = NULL;
-    G_messageTxLength = 0;
-    G_host_kind = HostKindUnknown;
-}
-
-#define CLEAR_AND_THROW(exception) \
-    do {                           \
-        reset_global_context();    \
-        THROW(exception);          \
-    } while (0)
-
-static void derive_private_key(cx_ecfp_private_key_t *privateKey,
-                               uint32_t *derivationPath,
-                               uint8_t derivationPathLength) {
-    uint8_t privateKeyData[32];
-    BEGIN_TRY {
-        TRY {
-            os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10,
-                                                CX_CURVE_Ed25519,
-                                                derivationPath,
-                                                derivationPathLength,
-                                                privateKeyData,
-                                                NULL,
-                                                (unsigned char *) "ed25519 seed",
-                                                12);
-            cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, privateKey);
-        }
-        FINALLY {
-            MEMCLEAR(privateKeyData);
-        }
-    }
-    END_TRY;
-}
+#include "globals.h"
+#include "apdu.h"
 
 static uint8_t set_result_sign_message() {
-    uint8_t tx = 64;
     uint8_t signature[SIGNATURE_LENGTH];
     cx_ecfp_private_key_t privateKey;
     BEGIN_TRY {
         TRY {
-            derive_private_key(&privateKey, G_derivationPath, G_derivationPathLength);
+            get_private_key_with_seed(&privateKey,
+                                      G_command.derivation_path,
+                                      G_command.derivation_path_length);
             cx_eddsa_sign(&privateKey,
                           CX_LAST,
                           CX_SHA512,
-                          G_messageTxStart,
-                          G_messageTxLength,
+                          G_command.message,
+                          G_command.message_length,
                           NULL,
                           0,
                           signature,
                           SIGNATURE_LENGTH,
                           NULL);
-            memcpy(G_io_apdu_buffer, signature, 64);
+            memcpy(G_io_apdu_buffer, signature, SIGNATURE_LENGTH);
+        }
+        CATCH_OTHER(e) {
+            THROW(e);
         }
         FINALLY {
             MEMCLEAR(privateKey);
         }
     }
     END_TRY;
-    return tx;
+    return SIGNATURE_LENGTH;
 }
 
 //////////////////////////////////////////////////////////////////////
-void clearAndSendResponse(uint8_t tx, bool approve) {
-    reset_global_context();
-    sendResponse(tx, approve);
-}
-
 UX_STEP_VALID(ux_approve_step,
               pb,
-              clearAndSendResponse(set_result_sign_message(), true),
+              sendResponse(set_result_sign_message(), true),
               {
                   &C_icon_validate_14,
                   "Approve",
               });
 UX_STEP_VALID(ux_reject_step,
               pb,
-              clearAndSendResponse(0, false),
+              sendResponse(0, false),
               {
                   &C_icon_crossmark,
                   "Reject",
@@ -123,7 +67,7 @@ UX_STEP_NOCB_INIT(ux_summary_step,
                           flags |= DisplayFlagLongPubkeys;
                       }
                       if (transaction_summary_display_item(step_index, flags)) {
-                          CLEAR_AND_THROW(ApduReplySolanaSummaryUpdateFailed);
+                          THROW(ApduReplySolanaSummaryUpdateFailed);
                       }
                   },
                   {
@@ -138,85 +82,12 @@ UX_STEP_NOCB_INIT(ux_summary_step,
     )
 ux_flow_step_t const *flow_steps[MAX_FLOW_STEPS];
 
-Hash UnrecognizedMessageHash;
-
-void handle_sign_message_receive_apdus(uint8_t p1,
-                                       uint8_t p2,
-                                       const uint8_t *dataBuffer,
-                                       size_t dataLength) {
-    if (dataLength == 0) {
-        CLEAR_AND_THROW(ApduReplySolanaInvalidMessage);
-    }
-
-    // Detect old host and remove the obsolete flag if set
-    bool deprecated_host = ((dataLength & DATA_HAS_LENGTH_PREFIX) != 0);
-    if (deprecated_host) {
-        dataLength &= ~DATA_HAS_LENGTH_PREFIX;
-    }
-
-    if ((p2 & P2_EXTEND) != 0) {
-        // P2_EXTEND is set to signal that this APDU buffer extends, rather
-        // than replaces, the current message buffer. Asserting it with the
-        // first APDU buffer is an error, since we haven't yet received any
-        // data to be extended
-        if (G_messageLength == 0) {
-            CLEAR_AND_THROW(ApduReplySolanaInvalidMessage);
-        }
-    }
-
-    if (G_host_kind == HostKindUnknown) {
-        if (deprecated_host) {
-            G_host_kind = HostKindDeprecated;
-        } else {
-            G_host_kind = HostKindModern;
-        }
-    } else {
-        // host kind may not change mid-message
-        bool host_kind_changed = (deprecated_host && G_host_kind == HostKindModern) ||
-                                 (!deprecated_host && G_host_kind == HostKindDeprecated);
-        if (host_kind_changed) {
-            CLEAR_AND_THROW(ApduReplySolanaInvalidMessage);
-        }
-    }
-
-    size_t messageLength;
-    if (G_host_kind == HostKindDeprecated) {
-        // Deprecated APDU format uses 2 bytes to write remaining length
-        messageLength = U2BE(dataBuffer, 0);
-        dataBuffer += 2;
-        if (messageLength != (dataLength - 2)) {
-            CLEAR_AND_THROW(ApduReplySolanaInvalidMessage);
-        }
-    } else {
-        messageLength = dataLength;
-    }
-
-    // Append current message to global message reception buffer
-    if (G_messageLength + messageLength > MAX_MESSAGE_LENGTH) {
-        CLEAR_AND_THROW(ApduReplySdkExceptionOverflow);
-    }
-    memcpy(G_message + G_messageLength, dataBuffer, messageLength);
-    G_messageLength += messageLength;
-
-    // Stop processing here if another APDU is expected
-    if (p2 & P2_MORE) {
-        // Host wants to send us more data. Don't clear the message buffer
-        THROW(ApduReplySuccess);
-    }
-
-    if (p1 == P1_NON_CONFIRM) {
-        G_non_confirm_requested = true;
-    }
-
-    // Host has signaled that the message is complete. We won't be receiving
-    // any more extending APDU buffers. Clear the derivation path count so we
-    // can detect P2_EXTEND misuse at the start of the next exchange
-    G_numDerivationPaths = 0;
-}
-
-static int scan_header_for_signer(size_t *signer_index, const MessageHeader *header) {
-    uint8_t signer_pubkey[32];
-    get_public_key(signer_pubkey, G_derivationPath, G_derivationPathLength);
+static int scan_header_for_signer(const uint32_t *derivation_path,
+                                  uint32_t derivation_path_length,
+                                  size_t *signer_index,
+                                  const MessageHeader *header) {
+    uint8_t signer_pubkey[PUBKEY_SIZE];
+    get_public_key(signer_pubkey, derivation_path, derivation_path_length);
     for (size_t i = 0; i < header->pubkeys_header.num_required_signatures; ++i) {
         const Pubkey *current_pubkey = &(header->pubkeys[i]);
         if (memcmp(current_pubkey, signer_pubkey, PUBKEY_SIZE) == 0) {
@@ -228,32 +99,14 @@ static int scan_header_for_signer(size_t *signer_index, const MessageHeader *hea
 }
 
 void handle_sign_message_parse_message(volatile unsigned int *tx) {
-    uint8_t *message = G_message;
-    size_t messageLength = G_messageLength;
-    // First consume the derivation path
-    MEMCLEAR(G_derivationPath);
-    G_numDerivationPaths = 1;
-    if (G_host_kind == HostKindModern) {
-        if (messageLength < 1) {
-            CLEAR_AND_THROW(ApduReplySdkExceptionOverflow);
-        }
-        G_numDerivationPaths = message[0];
-        message++;
-        messageLength--;
-        // We only support one derivation path ATM
-        if (G_numDerivationPaths != 1) {
-            CLEAR_AND_THROW(ApduReplySdkExceptionOverflow);
-        }
+    if (!tx ||
+        (G_command.instruction != InsDeprecatedSignMessage &&
+         G_command.instruction != InsSignMessage) ||
+        G_command.state != ApduStatePayloadComplete) {
+        THROW(ApduReplySdkInvalidParameter);
     }
-    G_derivationPathLength = read_derivation_path(message, messageLength, G_derivationPath);
-    message += 1 + G_derivationPathLength * 4;
-    messageLength -= 1 + G_derivationPathLength * 4;
-
-    G_messageTxStart = message;
-    G_messageTxLength = messageLength;
-
-    // Next handle the transaction message signing
-    Parser parser = {message, messageLength};
+    // Handle the transaction message signing
+    Parser parser = {G_command.message, G_command.message_length};
     PrintConfig print_config;
     print_config.expert_mode = (N_storage.settings.display_mode == DisplayModeExpert);
     print_config.signer_pubkey = NULL;
@@ -262,22 +115,24 @@ void handle_sign_message_parse_message(volatile unsigned int *tx) {
 
     if (parse_message_header(&parser, header) != 0) {
         // This is not a valid Solana message
-        CLEAR_AND_THROW(ApduReplySolanaInvalidMessage);
+        THROW(ApduReplySolanaInvalidMessage);
     }
 
     // Ensure the requested signer is present in the header
-    if (scan_header_for_signer(&signer_index, header) != 0) {
-        CLEAR_AND_THROW(ApduReplySdkInvalidParameter);
+    if (scan_header_for_signer(G_command.derivation_path,
+                               G_command.derivation_path_length,
+                               &signer_index,
+                               header) != 0) {
+        THROW(ApduReplySolanaInvalidMessageHeader);
     }
     print_config.signer_pubkey = &header->pubkeys[signer_index];
 
-    if (G_non_confirm_requested) {
+    if (G_command.non_confirm) {
         // Uncomment this to allow unattended signing.
         //*tx = set_result_sign_message();
         // THROW(ApduReplySuccess);
         UNUSED(tx);
-
-        sendResponse(0, false);
+        THROW(ApduReplySdkNotSupported);
     }
 
     // Set the transaction summary
@@ -287,16 +142,17 @@ void handle_sign_message_parse_message(volatile unsigned int *tx) {
         if (N_storage.settings.allow_blind_sign == BlindSignEnabled) {
             SummaryItem *item = transaction_summary_primary_item();
             summary_item_set_string(item, "Unrecognized", "format");
+            Hash UnrecognizedMessageHash;
 
-            cx_hash_sha256(G_messageTxStart,
-                           G_messageTxLength,
+            cx_hash_sha256(G_command.message,
+                           G_command.message_length,
                            (uint8_t *) &UnrecognizedMessageHash,
                            HASH_LENGTH);
 
             item = transaction_summary_general_item();
             summary_item_set_hash(item, "Message Hash", &UnrecognizedMessageHash);
         } else {
-            CLEAR_AND_THROW(ApduReplySdkNotSupported);
+            THROW(ApduReplySdkNotSupported);
         }
     }
 
@@ -307,7 +163,7 @@ void handle_sign_message_parse_message(volatile unsigned int *tx) {
     }
 }
 
-void handle_sign_message_UI(volatile unsigned int *flags) {
+void handle_sign_message_ui(volatile unsigned int *flags) {
     // Display the transaction summary
     enum SummaryItemKind summary_step_kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_summary_steps = 0;
@@ -324,7 +180,7 @@ void handle_sign_message_UI(volatile unsigned int *flags) {
 
         ux_flow_init(0, flow_steps, NULL);
     } else {
-        CLEAR_AND_THROW(ApduReplySolanaSummaryFinalizeFailed);
+        THROW(ApduReplySolanaSummaryFinalizeFailed);
     }
 
     *flags |= IO_ASYNCH_REPLY;

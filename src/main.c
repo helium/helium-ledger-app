@@ -19,67 +19,32 @@
 #include "getPubkey.h"
 #include "signMessage.h"
 #include "signOffchainMessage.h"
+#include "apdu.h"
 #include "menu.h"
-#include <assert.h>
 
+ApduCommand G_command;
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
-#define CLA 0xE0
-
-// DEPRECATED - Use non "16" suffixed variants below
-#define INS_GET_APP_CONFIGURATION16 0x01
-#define INS_GET_PUBKEY16            0x02
-#define INS_SIGN_MESSAGE16          0x03
-#define OFFSET_CDATA16              6
-// END DEPRECATED
-
-#define INS_GET_APP_CONFIGURATION 0x04
-#define INS_GET_PUBKEY            0x05
-#define INS_SIGN_MESSAGE          0x06
-#define INS_SIGN_OFFCHAIN_MESSAGE 0x07
-
-#define OFFSET_CLA   0
-#define OFFSET_INS   1
-#define OFFSET_P1    2
-#define OFFSET_P2    3
-#define OFFSET_LC    4
-#define OFFSET_CDATA 5
-
 void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx, int rx) {
-    assert(rx >= 0 && rx <= UINT16_MAX);
-
-    if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
-        THROW(ApduReplyInvalidCla);
+    if (!flags || !tx) {
+        THROW(ApduReplySdkInvalidParameter);
     }
 
-    int dataLength;
-    uint8_t *dataBuffer;
-    switch (G_io_apdu_buffer[OFFSET_INS]) {
-        // Handle deprecated instructions expecting a 16bit dataLength
-        case INS_GET_APP_CONFIGURATION16:
-        case INS_GET_PUBKEY16:
-        case INS_SIGN_MESSAGE16:
-            if (rx < OFFSET_CDATA16 ||
-                ((uint16_t) rx != U2BE(G_io_apdu_buffer, OFFSET_LC) + OFFSET_CDATA16)) {
-                THROW(ApduReplySdkExceptionOverflow);
-            }
-            dataLength = U2BE(G_io_apdu_buffer, OFFSET_LC);
-            dataBuffer = &G_io_apdu_buffer[OFFSET_CDATA16];
-            break;
-        // Modern instructions use 8bit dataLength
-        // as per Ledger convention
-        default:
-            if (rx < OFFSET_CDATA || (rx != G_io_apdu_buffer[OFFSET_LC] + OFFSET_CDATA)) {
-                THROW(ApduReplySdkExceptionOverflow);
-            }
-            dataLength = G_io_apdu_buffer[OFFSET_LC];
-            dataBuffer = &G_io_apdu_buffer[OFFSET_CDATA];
-            break;
+    if (rx < 0) {
+        THROW(ApduReplySdkExceptionIoOverflow);
     }
 
-    switch (G_io_apdu_buffer[OFFSET_INS]) {
-        case INS_GET_APP_CONFIGURATION:
-        case INS_GET_APP_CONFIGURATION16:
+    const int ret = apdu_handle_message(G_io_apdu_buffer, rx, &G_command);
+    if (ret != 0) {
+        THROW(ret);
+    }
+    if (G_command.state == ApduStatePayloadInProgress) {
+        THROW(ApduReplySuccess);
+    }
+
+    switch (G_command.instruction) {
+        case InsDeprecatedGetAppConfiguration:
+        case InsGetAppConfiguration:
             G_io_apdu_buffer[0] = N_storage.settings.allow_blind_sign;
             G_io_apdu_buffer[1] = N_storage.settings.pubkey_display;
             G_io_apdu_buffer[2] = MAJOR_VERSION;
@@ -88,34 +53,19 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx, int rx)
             *tx = 5;
             THROW(ApduReplySuccess);
 
-        case INS_GET_PUBKEY:
-        case INS_GET_PUBKEY16:
-            handleGetPubkey(G_io_apdu_buffer[OFFSET_P1],
-                            G_io_apdu_buffer[OFFSET_P2],
-                            dataBuffer,
-                            dataLength,
-                            flags,
-                            tx);
+        case InsDeprecatedGetPubkey:
+        case InsGetPubkey:
+            handle_get_pubkey(flags, tx);
             break;
 
-        case INS_SIGN_MESSAGE16:
-            dataLength |= DATA_HAS_LENGTH_PREFIX;
-            // Fall through
-        case INS_SIGN_MESSAGE:
-            handle_sign_message_receive_apdus(G_io_apdu_buffer[OFFSET_P1],
-                                              G_io_apdu_buffer[OFFSET_P2],
-                                              dataBuffer,
-                                              dataLength);
+        case InsDeprecatedSignMessage:
+        case InsSignMessage:
             handle_sign_message_parse_message(tx);
-            handle_sign_message_UI(flags);
+            handle_sign_message_ui(flags);
             break;
-        case INS_SIGN_OFFCHAIN_MESSAGE:
-            handleSignOffchainMessage(G_io_apdu_buffer[OFFSET_P1],
-                                      G_io_apdu_buffer[OFFSET_P2],
-                                      dataBuffer,
-                                      dataLength,
-                                      flags,
-                                      tx);
+
+        case InsSignOffchainMessage:
+            handle_sign_offchain_message(flags, tx);
             break;
 
         default:
@@ -128,9 +78,9 @@ void app_main(void) {
     volatile unsigned int tx = 0;
     volatile unsigned int flags = 0;
 
-    // Initialize derivation path count so we can accurately track the message
-    // buffer handling state
-    G_numDerivationPaths = 0;
+    // Stores the information about the current command. Some commands expect
+    // multiple APDUs before they become complete and executed.
+    explicit_bzero(&G_command, sizeof(ApduCommand));
 
     // DESIGN NOTE: the bootloader ignores the way APDU are fetched. The only
     // goal is to retrieve APDU.

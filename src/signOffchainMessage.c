@@ -9,12 +9,8 @@
 #include "sol/print_config.h"
 #include "sol/message.h"
 #include "sol/transaction_summary.h"
-
-extern uint8_t G_message[MAX_MESSAGE_LENGTH];
-static int G_messageLength;
-extern uint8_t G_numDerivationPaths;
-static uint32_t G_derivationPath[BIP32_PATH];
-static int G_derivationPathLength;
+#include "globals.h"
+#include "apdu.h"
 
 /**
  * Checks if data is in UTF-8 format.
@@ -80,54 +76,35 @@ static bool is_data_ascii(const uint8_t *data, size_t length) {
     return true;
 }
 
-static void derive_private_key(cx_ecfp_private_key_t *privateKey,
-                               uint32_t *derivationPath,
-                               uint8_t derivationPathLength) {
-    uint8_t privateKeyData[32];
-    BEGIN_TRY {
-        TRY {
-            os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10,
-                                                CX_CURVE_Ed25519,
-                                                derivationPath,
-                                                derivationPathLength,
-                                                privateKeyData,
-                                                NULL,
-                                                (unsigned char *) "ed25519 seed",
-                                                12);
-            cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, privateKey);
-        }
-        FINALLY {
-            MEMCLEAR(privateKeyData);
-        }
-    }
-    END_TRY;
-}
-
 static uint8_t set_result_sign_message() {
-    uint8_t tx = 64;
     uint8_t signature[SIGNATURE_LENGTH];
     cx_ecfp_private_key_t privateKey;
     BEGIN_TRY {
         TRY {
-            derive_private_key(&privateKey, G_derivationPath, G_derivationPathLength);
+            get_private_key_with_seed(&privateKey,
+                                      G_command.derivation_path,
+                                      G_command.derivation_path_length);
             cx_eddsa_sign(&privateKey,
                           CX_LAST,
                           CX_SHA512,
-                          G_message,
-                          G_messageLength,
+                          G_command.message,
+                          G_command.message_length,
                           NULL,
                           0,
                           signature,
                           SIGNATURE_LENGTH,
                           NULL);
-            memcpy(G_io_apdu_buffer, signature, 64);
+            memcpy(G_io_apdu_buffer, signature, SIGNATURE_LENGTH);
+        }
+        CATCH_OTHER(e) {
+            THROW(e);
         }
         FINALLY {
             MEMCLEAR(privateKey);
         }
     }
     END_TRY;
-    return tx;
+    return SIGNATURE_LENGTH;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -136,7 +113,7 @@ UX_STEP_NOCB(ux_sign_msg_text_step,
              bnnn_paging,
              {
                  .title = "Message",
-                 .text = (const char *) G_message + OFFCHAIN_MESSAGE_HEADER_LENGTH,
+                 .text = (const char *) G_command.message + OFFCHAIN_MESSAGE_HEADER_LENGTH,
              });
 UX_STEP_VALID(ux_sign_msg_approve_step,
               pb,
@@ -187,87 +164,37 @@ if ascii:
 */
 static ux_flow_step_t const *flow_steps[8];
 
-void handleSignOffchainMessage(uint8_t p1,
-                               uint8_t p2,
-                               uint8_t *dataBuffer,
-                               uint16_t dataLength,
-                               volatile unsigned int *flags,
-                               volatile unsigned int *tx) {
-    UNUSED(tx);
-
-    if (dataLength == 0) {
-        THROW(ApduReplySolanaInvalidMessage);
+void handle_sign_offchain_message(volatile unsigned int *flags, volatile unsigned int *tx) {
+    if (!tx || G_command.instruction != InsSignOffchainMessage ||
+        G_command.state != ApduStatePayloadComplete) {
+        THROW(ApduReplySdkInvalidParameter);
     }
 
-    if ((p2 & P2_EXTEND) == 0) {
-        MEMCLEAR(G_derivationPath);
-        MEMCLEAR(G_message);
-        G_messageLength = 0;
-        G_numDerivationPaths = 1;
-
-        G_numDerivationPaths = dataBuffer[0];
-        dataBuffer++;
-        dataLength--;
-        // We only support one derivation path ATM
-        if (G_numDerivationPaths != 1) {
-            THROW(ApduReplySdkExceptionOverflow);
-        }
-
-        G_derivationPathLength = read_derivation_path(dataBuffer, dataLength, G_derivationPath);
-        dataBuffer += 1 + G_derivationPathLength * 4;
-        dataLength -= 1 + G_derivationPathLength * 4;
-    } else {
-        // P2_EXTEND is set to signal that this APDU buffer extends, rather
-        // than replaces, the current message buffer. Asserting it with the
-        // first APDU buffer is an error, since we haven't yet received a
-        // derivation path.
-        if (G_numDerivationPaths == 0) {
-            THROW(ApduReplySolanaInvalidMessage);
-        }
-    }
-
-    int messageLength = dataLength;
-
-    if (G_messageLength + messageLength > MAX_MESSAGE_LENGTH) {
-        THROW(ApduReplySdkExceptionOverflow);
-    }
-    memcpy(G_message + G_messageLength, dataBuffer, messageLength);
-    G_messageLength += messageLength;
-
-    if (p2 & P2_MORE) {
-        THROW(ApduReplySuccess);
-    }
-
-    if (p1 == P1_NON_CONFIRM) {
-        // Uncomment this to allow blind signing.
+    if (G_command.non_confirm) {
+        // Uncomment this to allow unattended signing.
         //*tx = set_result_sign_message();
         // THROW(ApduReplySuccess);
-
-        sendResponse(0, false);
+        UNUSED(tx);
+        THROW(ApduReplySdkNotSupported);
     }
 
-    // Host has signaled that the message is complete. We won't be receiving
-    // any more extending APDU buffers. Clear the derivation path count so we
-    // can detect P2_EXTEND misuse at the start of the next exchange
-    G_numDerivationPaths = 0;
-
     // parse header
-    Parser parser = {G_message, G_messageLength};
-    struct OffchainMessageHeader header;
+    Parser parser = {G_command.message, G_command.message_length};
+    OffchainMessageHeader header;
     if (parse_offchain_message_header(&parser, &header)) {
-        PRINTF("%u %u %u\n", header.version, header.format, header.length);
         THROW(ApduReplySolanaInvalidMessageHeader);
     }
 
     // validate message
     if (header.version != 0 || header.format > 1 || header.length > MAX_OFFCHAIN_MESSAGE_LENGTH ||
-        header.length + OFFCHAIN_MESSAGE_HEADER_LENGTH != G_messageLength) {
+        header.length + OFFCHAIN_MESSAGE_HEADER_LENGTH != G_command.message_length) {
         THROW(ApduReplySolanaInvalidMessageHeader);
     }
-    const bool is_ascii = is_data_ascii(G_message + OFFCHAIN_MESSAGE_HEADER_LENGTH, header.length);
+    const bool is_ascii =
+        is_data_ascii(G_command.message + OFFCHAIN_MESSAGE_HEADER_LENGTH, header.length);
     const bool is_utf8 =
-        is_ascii ? true : is_data_utf8(G_message + OFFCHAIN_MESSAGE_HEADER_LENGTH, header.length);
-    PRINTF("%d %d\n", is_ascii, is_utf8);
+        is_ascii ? true
+                 : is_data_utf8(G_command.message + OFFCHAIN_MESSAGE_HEADER_LENGTH, header.length);
     if (!is_ascii && (!is_utf8 || header.format == 0)) {
         THROW(ApduReplySolanaInvalidMessageFormat);
     } else if (!is_ascii && N_storage.settings.allow_blind_sign != BlindSignEnabled) {
@@ -277,7 +204,10 @@ void handleSignOffchainMessage(uint8_t p1,
     // compute message hash if needed
     Hash messageHash;
     if (!is_ascii || N_storage.settings.display_mode == DisplayModeExpert) {
-        cx_hash_sha256(G_message, G_messageLength, (uint8_t *) &messageHash, HASH_LENGTH);
+        cx_hash_sha256(G_command.message,
+                       G_command.message_length,
+                       (uint8_t *) &messageHash,
+                       HASH_LENGTH);
     }
 
     // fill out UX steps
@@ -292,7 +222,9 @@ void handleSignOffchainMessage(uint8_t p1,
         summary_item_set_hash(transaction_summary_general_item(), "Hash", &messageHash);
 
         Pubkey signer_pubkey;
-        getPublicKey(G_derivationPath, signer_pubkey.data, G_derivationPathLength);
+        get_public_key(signer_pubkey.data,
+                       G_command.derivation_path,
+                       G_command.derivation_path_length);
         summary_item_set_pubkey(transaction_summary_general_item(), "Signer", &signer_pubkey);
     } else if (!is_ascii) {
         summary_item_set_hash(transaction_summary_general_item(), "Hash", &messageHash);

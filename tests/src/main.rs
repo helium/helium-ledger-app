@@ -112,8 +112,9 @@ fn test_ledger_sign_offchain_message_ascii() -> Result<(), RemoteWalletError> {
     let from = ledger.get_pubkey(&derivation_path, false)?;
 
     let message = solana_sdk::offchain_message::OffchainMessage::new(0, b"Test message")
-        .ok_or(RemoteWalletError::InvalidInput("Bad message".to_string()))?;
-    assert!(message)
+        .map_err(|_| RemoteWalletError::InvalidInput("Bad message".to_string()))?
+        .serialize()
+        .map_err(|_| RemoteWalletError::InvalidInput("Failed to serialize message".to_string()))?;
     let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(from.as_ref(), &message));
 
@@ -128,9 +129,13 @@ fn test_ledger_sign_offchain_message_utf8() -> Result<(), RemoteWalletError> {
 
     let from = ledger.get_pubkey(&derivation_path, false)?;
 
-    let message = solana_sdk::offchain_message::OffchainMessage::new(0, b"Тестовое сообщение")
-        .ok_or(RemoteWalletError::InvalidInput("Bad message".to_string()))?
-        .serialize();
+    let message =
+        solana_sdk::offchain_message::OffchainMessage::new(0, "Тестовое сообщение".as_bytes())
+            .map_err(|_| RemoteWalletError::InvalidInput("Bad message".to_string()))?
+            .serialize()
+            .map_err(|_| {
+                RemoteWalletError::InvalidInput("Failed to serialize message".to_string())
+            })?;
     let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(from.as_ref(), &message));
 
