@@ -172,7 +172,7 @@ int apdu_handle_message(const uint8_t* apdu_message,
         }
     }
 
-    if (header.data_length) {
+    if (header.data) {
         if (apdu_command->message_length + header.data_length > MAX_MESSAGE_LENGTH) {
             return ApduReplySolanaInvalidMessageSize;
         }
