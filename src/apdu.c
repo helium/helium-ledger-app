@@ -49,7 +49,7 @@ int apdu_handle_message(const uint8_t* apdu_message,
                 return ApduReplySolanaInvalidMessageSize;
             }
 
-            header.data_length = U2BE(apdu_message, OFFSET_LC);
+            header.data_length = apdu_message ? U2BE(apdu_message, OFFSET_LC) : 0;
             if (apdu_message_len != header.data_length + DEPRECATED_OFFSET_CDATA) {
                 return ApduReplySolanaInvalidMessageSize;
             }
@@ -164,7 +164,7 @@ int apdu_handle_message(const uint8_t* apdu_message,
         if (header.data_length < 2) {
             return ApduReplySolanaInvalidMessageSize;
         }
-        const size_t data_len = U2BE(header.data, 0);
+        const size_t data_len = header.data ? U2BE(header.data, 0) : 0;
         header.data += 2;
         header.data_length -= 2;
         if (header.data_length != data_len) {
