@@ -1,12 +1,12 @@
 [package]
 name = "ledger-app-solana-tests"
-version = "0.1.0"
+version = "0.2.0"
 description = "Ledger-app integration tests using Solana tools"
 authors = ["Solana Maintainers <maintainers@solana.com>"]
 repository = "https://github.com/solana-labs/solana"
 license = "Apache-2.0"
 homepage = "https://solana.com/"
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 hex = "0.4.1"

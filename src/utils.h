@@ -2,6 +2,7 @@
 #include "cx.h"
 #include "globals.h"
 #include <string.h>
+#include "apdu.h"
 
 #ifndef _UTILS_H_
 #define _UTILS_H_
@@ -27,6 +28,30 @@ uint32_t readUint32BE(uint8_t *buffer);
 void get_private_key(cx_ecfp_private_key_t *privateKey,
                      const uint32_t *derivationPath,
                      size_t pathLength);
+
+void get_private_key_with_seed(cx_ecfp_private_key_t *privateKey,
+                               const uint32_t *derivationPath,
+                               uint8_t pathLength);
+
+/**
+ * Deserialize derivation path from raw bytes.
+ *
+ * @param[in] data_buffer
+ *   Pointer to serialized bytes.
+ * @param[in] data_size
+ *   Size of the data_buffer.
+ * @param[out] derivation_path
+ *   Pointer to the target array to store deserialized data into.
+ * @param[out] derivation_path_length
+ *   Pointer to the variable that will hold derivation path length.
+ *
+ * @return zero on success, ApduReply error code otherwise.
+ *
+ */
+int read_derivation_path(const uint8_t *data_buffer,
+                         size_t data_size,
+                         uint32_t *derivation_path,
+                         uint32_t *derivation_path_length);
 
 void sendResponse(uint8_t tx, bool approve);
 
