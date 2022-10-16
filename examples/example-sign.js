@@ -25,6 +25,7 @@ const nacl = require("tweetnacl");
 const solana = require("@solana/web3.js");
 const assert = require("assert");
 const isValidUTF8 = require("utf-8-validate");
+const crypto = require("crypto");
 
 const INS_GET_APP_CONFIG = 0x04;
 const INS_GET_PUBKEY = 0x05;
@@ -358,6 +359,9 @@ async function solanaLedgerSignOffchainMessage(
     message: Buffer.from("Тестовое сообщение в формате UTF-8", "utf-8"),
   });
   console.log("Off-chain message:", message);
+  const hash = crypto.createHash("sha256");
+  hash.update(message.serialize());
+  console.log("Expected hash:", bs58.encode(hash.digest()));
 
   sig_bytes = await solanaLedgerSignOffchainMessage(
     transport,

@@ -202,11 +202,10 @@ void handle_sign_offchain_message(volatile unsigned int *flags, volatile unsigne
     }
 
     // compute message hash if needed
-    Hash messageHash;
     if (!is_ascii || N_storage.settings.display_mode == DisplayModeExpert) {
         cx_hash_sha256(G_command.message,
                        G_command.message_length,
-                       (uint8_t *) &messageHash,
+                       (uint8_t *) &G_command.message_hash,
                        HASH_LENGTH);
     }
 
@@ -219,7 +218,7 @@ void handle_sign_offchain_message(volatile unsigned int *flags, volatile unsigne
         summary_item_set_u64(transaction_summary_general_item(), "Version", header.version);
         summary_item_set_u64(transaction_summary_general_item(), "Format", header.format);
         summary_item_set_u64(transaction_summary_general_item(), "Size", header.length);
-        summary_item_set_hash(transaction_summary_general_item(), "Hash", &messageHash);
+        summary_item_set_hash(transaction_summary_general_item(), "Hash", &G_command.message_hash);
 
         Pubkey signer_pubkey;
         get_public_key(signer_pubkey.data,
@@ -227,7 +226,7 @@ void handle_sign_offchain_message(volatile unsigned int *flags, volatile unsigne
                        G_command.derivation_path_length);
         summary_item_set_pubkey(transaction_summary_general_item(), "Signer", &signer_pubkey);
     } else if (!is_ascii) {
-        summary_item_set_hash(transaction_summary_general_item(), "Hash", &messageHash);
+        summary_item_set_hash(transaction_summary_general_item(), "Hash", &G_command.message_hash);
     }
 
     enum SummaryItemKind summary_step_kinds[MAX_TRANSACTION_SUMMARY_ITEMS];

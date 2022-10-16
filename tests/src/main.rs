@@ -136,6 +136,8 @@ fn test_ledger_sign_offchain_message_utf8() -> Result<(), RemoteWalletError> {
             .map_err(|_| {
                 RemoteWalletError::InvalidInput("Failed to serialize message".to_string())
             })?;
+    let hash = solana_sdk::hash::hash(&message);
+    println!("Expected hash: {}", hash);
     let signature = ledger.sign_message(&derivation_path, &message)?;
     assert!(signature.verify(from.as_ref(), &message));
 
