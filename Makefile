@@ -40,7 +40,7 @@ endif
 
 APPVERSION_M = 2
 APPVERSION_N = 3
-APPVERSION_P = 1
+APPVERSION_P = 2
 APPVERSION   = "$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)"
 
 ifeq ($(TARGET_NAME),TARGET_NANOS)
@@ -60,10 +60,8 @@ endif
 APP_LOAD_PARAMS += $(COMMON_LOAD_PARAMS)
 
 # Ledger: add the "Pending security review" disclaimer
-ifeq ($(COIN),helium_tn)
 APP_LOAD_PARAMS += --tlvraw 9F:01
 DEFINES += HAVE_PENDING_REVIEW_SCREEN
-endif
 
 APP_SOURCE_PATH = src
 SDK_SOURCE_PATH = lib_stusb lib_stusb_impl
