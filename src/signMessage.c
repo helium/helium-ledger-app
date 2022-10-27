@@ -43,21 +43,26 @@ static uint8_t set_result_sign_message() {
     return SIGNATURE_LENGTH;
 }
 
+static void send_result_sign_message(void) {
+    sendResponse(set_result_sign_message(), true);
+}
+
 //////////////////////////////////////////////////////////////////////
-UX_STEP_VALID(ux_approve_step,
-              pb,
-              sendResponse(set_result_sign_message(), true),
-              {
-                  &C_icon_validate_14,
-                  "Approve",
-              });
-UX_STEP_VALID(ux_reject_step,
-              pb,
-              sendResponse(0, false),
-              {
-                  &C_icon_crossmark,
-                  "Reject",
-              });
+
+UX_STEP_CB(ux_approve_step,
+           pb,
+           send_result_sign_message(),
+           {
+               &C_icon_validate_14,
+               "Approve",
+           });
+UX_STEP_CB(ux_reject_step,
+           pb,
+           sendResponse(0, false),
+           {
+               &C_icon_crossmark,
+               "Reject",
+           });
 UX_STEP_NOCB_INIT(ux_summary_step,
                   bnnn_paging,
                   {
@@ -165,7 +170,7 @@ void handle_sign_message_parse_message(volatile unsigned int *tx) {
 
 void handle_sign_message_ui(volatile unsigned int *flags) {
     // Display the transaction summary
-    enum SummaryItemKind summary_step_kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
+    SummaryItemKind_t summary_step_kinds[MAX_TRANSACTION_SUMMARY_ITEMS];
     size_t num_summary_steps = 0;
     if (transaction_summary_finalize(summary_step_kinds, &num_summary_steps) == 0) {
         size_t num_flow_steps = 0;
