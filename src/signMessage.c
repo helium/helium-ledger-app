@@ -147,15 +147,14 @@ void handle_sign_message_parse_message(volatile unsigned int *tx) {
         if (N_storage.settings.allow_blind_sign == BlindSignEnabled) {
             SummaryItem *item = transaction_summary_primary_item();
             summary_item_set_string(item, "Unrecognized", "format");
-            Hash UnrecognizedMessageHash;
 
             cx_hash_sha256(G_command.message,
                            G_command.message_length,
-                           (uint8_t *) &UnrecognizedMessageHash,
+                           (uint8_t *) &G_command.message_hash,
                            HASH_LENGTH);
 
             item = transaction_summary_general_item();
-            summary_item_set_hash(item, "Message Hash", &UnrecognizedMessageHash);
+            summary_item_set_hash(item, "Message Hash", &G_command.message_hash);
         } else {
             THROW(ApduReplySdkNotSupported);
         }

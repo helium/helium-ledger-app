@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "globals.h"
+#include "sol/parser.h"
 
 typedef enum ApduState {
     ApduStateUninitialized = 0,
@@ -71,6 +72,7 @@ typedef struct ApduCommand {
     bool deprecated_host;
     uint8_t message[MAX_MESSAGE_LENGTH];
     int message_length;
+    Hash message_hash;
 } ApduCommand;
 
 extern ApduCommand G_command;
