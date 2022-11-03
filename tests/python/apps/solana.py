@@ -99,7 +99,7 @@ class SolanaClient:
 
     def send_first_message_batch(self, messages: List[bytes], p1: int) -> RAPDU:
         self._client.exchange(CLA, INS.INS_SIGN_MESSAGE, p1, P2_MORE, messages[0])
-        for m in messages[:1]:
+        for m in messages[1:]:
             self._client.exchange(CLA, INS.INS_SIGN_MESSAGE, p1, P2_MORE | P2_EXTEND, m)
 
 
