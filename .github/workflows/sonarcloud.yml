@@ -16,7 +16,7 @@ jobs:
     name: SonarQube analyze
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder-legacy:latest
     env:
       SONAR_SCANNER_VERSION: 4.7.0.2747
       SONAR_SERVER_URL: "https://sonarcloud.io"
@@ -35,6 +35,7 @@ jobs:
         run: |
           apt-get update -y
           apt-get upgrade -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata
           curl -sL https://deb.nodesource.com/setup_16.x | bash -
           apt-get install -y gcovr nodejs unzip
           mkdir -p $HOME/.sonar
