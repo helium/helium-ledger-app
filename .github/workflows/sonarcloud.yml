@@ -37,7 +37,7 @@ jobs:
           apt-get upgrade -y
           DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata
           curl -sL https://deb.nodesource.com/setup_16.x | bash -
-          apt-get install -y gcovr nodejs unzip
+          apt-get install -y gcovr nodejs unzip lcov
           mkdir -p $HOME/.sonar
           curl -sSLo $HOME/.sonar/sonar-scanner.zip ${{ env.SONAR_SCANNER_DOWNLOAD_URL }}
           unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
