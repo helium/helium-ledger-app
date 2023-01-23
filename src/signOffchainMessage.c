@@ -97,6 +97,7 @@ static uint8_t set_result_sign_message() {
             memcpy(G_io_apdu_buffer, signature, SIGNATURE_LENGTH);
         }
         CATCH_OTHER(e) {
+            MEMCLEAR(privateKey);
             THROW(e);
         }
         FINALLY {
