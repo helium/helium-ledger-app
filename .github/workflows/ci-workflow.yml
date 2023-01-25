@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Build application
         run: |
@@ -36,7 +36,7 @@ jobs:
           cp bin/app.elf bin/solana_${{ matrix.sdk.name }}.elf
 
       - name: Upload application binaries
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: solana_binaries
           path: ./bin/solana_${{ matrix.sdk.name }}.elf
@@ -49,12 +49,12 @@ jobs:
     container:
       image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build with Clang Static Analyzer
         run: |
           make clean
           scan-build --use-cc=clang -analyze-headers -enable-checker security -enable-checker unix -enable-checker valist -o scan-build --status-bugs make default
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: scan-build
@@ -66,9 +66,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Download all binaries
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
       - name: Gather artifacts
         run: |
           mkdir tests/elfs
@@ -85,9 +85,9 @@ jobs:
     name: C tests
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder-legacy:latest
     steps:
       - name: Clone
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build unit tests
         run: make -C libsol
