@@ -102,9 +102,9 @@ class Message:
         # Cheat as we only support 1 SystemInstructionTransfer currently
         # TODO add support for multiple transfers and other instructions if the needs arises
         self.header = MessageHeader(2, 0, 1)
-        self.account_keys = [instructions[0].to_pubkey, instructions[0].from_pubkey, instructions[0].program_id]
+        self.account_keys = [instructions[0].from_pubkey, instructions[0].to_pubkey, instructions[0].program_id]
         self.recent_blockhash = base58.b58decode(FAKE_RECENT_BLOCKHASH)
-        self.compiled_instructions = [CompiledInstruction(2, [1, 0], instructions[0].data)]
+        self.compiled_instructions = [CompiledInstruction(2, [0, 1], instructions[0].data)]
 
     def serialize(self) -> bytes:
         serialized: bytes = self.header.serialize()
