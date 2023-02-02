@@ -7,7 +7,6 @@ on:
       - master
       - develop
   pull_request:
-    types: [opened, synchronize, reopened]
 
 jobs:
   job_lint:
