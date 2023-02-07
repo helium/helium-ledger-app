@@ -15,6 +15,7 @@ void get_public_key(uint8_t *publicKeyArray, const uint32_t *derivationPath, siz
             cx_ecfp_generate_pair(CX_CURVE_Ed25519, &publicKey, &privateKey, 1);
         }
         CATCH_OTHER(e) {
+            MEMCLEAR(privateKey);
             THROW(e);
         }
         FINALLY {
@@ -55,6 +56,7 @@ void get_private_key(cx_ecfp_private_key_t *privateKey,
                                      privateKey);
         }
         CATCH_OTHER(e) {
+            MEMCLEAR(privateKeyData);
             THROW(e);
         }
         FINALLY {
@@ -84,6 +86,7 @@ void get_private_key_with_seed(cx_ecfp_private_key_t *privateKey,
                                      privateKey);
         }
         CATCH_OTHER(e) {
+            MEMCLEAR(privateKeyData);
             THROW(e);
         }
         FINALLY {
