@@ -34,19 +34,19 @@ ifeq ($(TARGET_NAME), TARGET_NANOX)
 else
     APP_LOAD_PARAMS += --appFlags 0x000
 endif
-APP_LOAD_PARAMS += --path "44'/501'"
+APP_LOAD_PARAMS += --path "44'/904'"
 APP_LOAD_PARAMS += $(COMMON_LOAD_PARAMS)
 
-APPNAME      = "Solana"
-APPVERSION_M = 1
-APPVERSION_N = 3
-APPVERSION_P = 1
+APPNAME      = "Helium"
+APPVERSION_M = 3
+APPVERSION_N = 0
+APPVERSION_P = 0
 APPVERSION   = "$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)"
 
 ifeq ($(TARGET_NAME),TARGET_NANOS)
-    ICONNAME=icons/nanos_app_solana.gif
+    ICONNAME=icons/nanos_app_helium.gif
 else
-    ICONNAME=icons/nanox_app_solana.gif
+    ICONNAME=icons/nanox_app_helium.gif
 endif
 
 ################
